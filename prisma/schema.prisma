@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js" 
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ==========================================
+// 1. Tenant = الأكاديمية نفسها (الشقة)
+// ==========================================
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  profiles      Profile[]
+  players       Player[]
+  subscriptions Subscription[]
+  attendances   Attendance[]
+  weightLogs    WeightLog[]
+  progress      PlayerProgress[]
+  payments      Payment[]
+  tournaments   Tournament[]
+}
+
+// ==========================================
+// 2. Role = نوع المستخدم
+// ==========================================
+enum Role {
+  ADMIN
+  COACH
+  PLAYER
+}
+
+// ==========================================
+// 3. Profile = أي شخص بيدخل على النظام
+// ==========================================
+model Profile {
+  id       String @id @default(uuid())
+  fullName String
+  phone    String @unique
+  role     Role
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  players Player[]
+
+  createdAt DateTime @default(now())
+}
+
+// ==========================================
+// 4. Player = بيانات اللاعب الأساسية
+// ==========================================
+model Player {
+  id                 String    @id @default(uuid())
+  fullName           String
+  phone              String?
+  birthDate          DateTime?
+  sportsBackground   String?
+  medicalCheckExpiry DateTime?
+  joinDate           DateTime?
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  coachId String?
+  coach   Profile? @relation(fields: [coachId], references: [id])
+
+  subscriptions Subscription[]
+  attendances   Attendance[]
+  weightLogs    WeightLog[]
+  progress      PlayerProgress[]
+  payments      Payment[]
+  tournaments   Tournament[]
+
+  createdAt DateTime @default(now())
+}
+
+// ==========================================
+// 5. Subscription = الاشتراك ورصيد الحصص
+// ==========================================
+model Subscription {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  totalSessions Int
+  remaining     Int
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  
+isFrozen  Boolean   @default(false)
+  frozenAt  DateTime?
+  
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+}
+
+// ==========================================
+// 6. Attendance = الحضور والغياب
+// ==========================================
+model Attendance {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  date    DateTime @default(now())
+  present Boolean
+
+  coachNote String?
+}
+
+// ==========================================
+// 7. WeightLog = تاريخ الأوزان
+// ==========================================
+model WeightLog {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  weightKg Float
+  date     DateTime @default(now())
+}
+
+// ==========================================
+// 8. PlayerProgress = تقييم المهارات وملاحظات المدرب
+// ==========================================
+model PlayerProgress {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  skillRating Int
+  coachNote   String?
+  date        DateTime @default(now())
+}
+
+// ==========================================
+// 9. Payment = كل عملية دفع / إيراد
+// ==========================================
+enum PaymentSource {
+  SUBSCRIPTION
+  MANUAL
+}
+
+model Payment {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  playerId String?
+  player   Player? @relation(fields: [playerId], references: [id])
+
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  amount      Float
+  source      PaymentSource
+  description String?
+  date        DateTime @default(now())
+}
+// ==========================================
+// 10. Tournament = بطولات اللاعب
+// ==========================================
+model Tournament {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name     String   // اسم البطولة
+  year     Int      // السنة
+  result   String?  // النتيجة/المركز (مثلاً "المركز الأول")
+
+  createdAt DateTime @default(now())
+}
