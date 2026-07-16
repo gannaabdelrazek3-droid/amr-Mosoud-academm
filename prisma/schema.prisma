@@ -62,6 +62,8 @@ model Player {
   id                 String    @id @default(uuid())
   fullName           String
   phone              String?
+  email              String? @unique
+  userId             String? @unique
   birthDate          DateTime?
   sportsBackground   String?
   medicalCheckExpiry DateTime?

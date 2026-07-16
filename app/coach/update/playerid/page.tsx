@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function UpdatePlayerPage({ params }: { params: { playerId: string } }) {
+export default function UpdatePlayerPage({ params }: { params: Promise<{ playerid: string }> }) {
   const router = useRouter()
+  const [playerId, setPlayerId] = useState('')
   const [weight, setWeight] = useState('')
   const [rating, setRating] = useState('3')
   const [present, setPresent] = useState(true)
@@ -14,6 +15,10 @@ export default function UpdatePlayerPage({ params }: { params: { playerId: strin
   const [freezeLoading, setFreezeLoading] = useState(false)
   const [freezeMessage, setFreezeMessage] = useState('')
 
+  useEffect(() => {
+    params.then((p) => setPlayerId(p.playerid))
+  }, [params])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -22,7 +27,7 @@ export default function UpdatePlayerPage({ params }: { params: { playerId: strin
     const res = await fetch('/api/coach/update-player', {
       method: 'POST',
       body: JSON.stringify({
-        playerId: params.playerId,
+        playerId: playerId,
         weight: weight ? parseFloat(weight) : null,
         rating: parseInt(rating),
         present,
@@ -46,7 +51,7 @@ export default function UpdatePlayerPage({ params }: { params: { playerId: strin
 
     const res = await fetch('/api/coach/toggle-freeze', {
       method: 'POST',
-      body: JSON.stringify({ playerId: params.playerId }),
+      body: JSON.stringify({ playerId: playerId }),
     })
 
     setFreezeLoading(false)

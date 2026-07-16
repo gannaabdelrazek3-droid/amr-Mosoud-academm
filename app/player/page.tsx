@@ -1,18 +1,20 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { PrismaClient } from '@prisma/client'
+import WeightChart from './WeightChart'
+
 const prisma = new PrismaClient()
 
 export default async function PlayerDashboard() {
-  const cookieStore = await cookies()
-  const playerId = cookieStore.get('player_id')?.value
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!playerId) {
+  if (!user) {
     redirect('/login')
   }
 
   const player = await prisma.player.findUnique({
-    where: { id: playerId },
+    where: { userId: user.id },
     include: {
       subscriptions: {
         orderBy: { endDate: 'desc' },
@@ -22,6 +24,9 @@ export default async function PlayerDashboard() {
         orderBy: { year: 'desc' },
       },
       attendances: true,
+      weightLogs: {
+        orderBy: { date: 'asc' },
+      },
     },
   })
 
@@ -40,8 +45,13 @@ export default async function PlayerDashboard() {
     ? Math.floor((Date.now() - new Date(player.joinDate).getTime()) / (1000 * 60 * 60 * 24 * 30))
     : null
 
+  const weightData = player.weightLogs.map((w) => ({
+    date: new Date(w.date).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }),
+    weight: w.weightKg,
+  }))
+
   return (
-    <div style={{ maxWidth: 500, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#ffffff', color: '#000000' }}>
+    <div style={{ maxWidth: 500, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#fff', color: '#000' }}>
       <h1>أهلاً، {player.fullName} 👋</h1>
 
       <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
@@ -63,6 +73,15 @@ export default async function PlayerDashboard() {
         <p>عدد التمارين اللي حضرتها: <strong>{attendedCount}</strong></p>
         {trainingSince !== null && (
           <p>بتتمرن معانا من: <strong>{trainingSince} شهر</strong></p>
+        )}
+      </div>
+
+      <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
+        <h3>⚖️ تطور الوزن</h3>
+        {weightData.length > 0 ? (
+          <WeightChart data={weightData} />
+        ) : (
+          <p>لسه مفيش أوزان مسجلة</p>
         )}
       </div>
 
