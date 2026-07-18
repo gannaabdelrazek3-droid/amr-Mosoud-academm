@@ -3,20 +3,27 @@ import { cookies } from 'next/headers'
 
 export async function createClient() {
   const cookieStore = await cookies()
+  
+  // القيم ثابتة هنا
+  const supabaseUrl = "https://yxobqgrhpnltbtjnqzwz.supabase.co";
+  const supabaseAnonKey = "sb_publishable_41gsQ8FyUs53LI7QT4Wi7Q_UPfCfhmg_";
 
- return createServerClient(
-    "https://yxobqgrhpnltbtjnqzwz.supabase.co",
-    "sb_publishable_41gsQ8FyUs53Ll7QT4Wl7Q_UPfCf_",
+  return createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
-          console.log("URL IS:", process.env.NEXT_PUBLIC_SUPABASE_URL);
           return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
+          cookiesToSet.forEach(({ name, value, options }) => {
+            try {
+              cookieStore.set(name, value, options)
+            } catch {
+              // هذا الجزء ضروري لتجنب الأخطاء في دوال السيرفر
+            }
+          })
         },
       },
     }
