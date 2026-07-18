@@ -10,6 +10,7 @@ export async function createClient() {
     {
       cookies: {
         getAll() {
+          console.log("URL IS:", process.env.NEXT_PUBLIC_SUPABASE_URL);
           return cookieStore.getAll()
         },
         setAll(cookiesToSet) {
