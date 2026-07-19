@@ -79,13 +79,19 @@ export default async function DashboardPage() {
             <p style={{ color: '#666', marginTop: 10 }}>مفيش اشتراكات هتخلص قريب</p>
           )}
         </div>
-        <a
-          href="/admin/add-payment"
-          style={{ display: 'inline-block', marginTop: 24, padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
-        >
-          + تسجيل دخل جديد
-        </a>
-      </div>
+       <a
+    href="/admin/add-payment"
+    style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+  >
+    + تسجيل دخل جديد
+  </a>
+  <a
+    href="/admin/add-player"
+    style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+  >
+    + إضافة لاعب
+  </a>
+</div>
     )
   }
 

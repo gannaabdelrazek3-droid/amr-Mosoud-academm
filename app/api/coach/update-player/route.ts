@@ -14,39 +14,35 @@ export async function POST(req: NextRequest) {
     where: { id: user.id },
   })
 
-  if (!profile) {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 401 })
+  if (!profile || profile.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
   }
 
-  const { playerId, weight, rating, present, note } = await req.json()
+  const { fullName, phone, birthDate, sportsBackground, sportIds } = await req.json()
 
-  if (weight) {
-    await prisma.weightLog.create({
-      data: {
-        playerId,
-        tenantId: profile.tenantId,
-        weightKg: weight,
-      },
+  if (!fullName) {
+    return NextResponse.json({ error: 'اسم اللاعب مطلوب' }, { status: 400 })
+  }
+
+  const player = await prisma.player.create({
+    data: {
+      fullName,
+      phone: phone || null,
+      birthDate: birthDate ? new Date(birthDate) : null,
+      sportsBackground: sportsBackground || null,
+      tenantId: profile.tenantId,
+      joinDate: new Date(),
+    },
+  })
+
+  if (sportIds && sportIds.length > 0) {
+    await prisma.playerSport.createMany({
+      data: sportIds.map((sportId: string) => ({
+        playerId: player.id,
+        sportId,
+      })),
     })
   }
 
-  await prisma.playerProgress.create({
-    data: {
-      playerId,
-      tenantId: profile.tenantId,
-      skillRating: rating,
-      coachNote: note || null,
-    },
-  })
-
-  await prisma.attendance.create({
-    data: {
-      playerId,
-      tenantId: profile.tenantId,
-      present,
-      coachNote: note || null,
-    },
-  })
-
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, player })
 }
