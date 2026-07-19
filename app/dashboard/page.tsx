@@ -91,6 +91,12 @@ export default async function DashboardPage() {
   >
     + إضافة لاعب
   </a>
+  <a
+  href="/admin/add-coach"
+  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+>
+  + إضافة مدرب
+</a>
 </div>
     )
   }
