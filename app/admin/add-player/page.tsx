@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { adminStyles as s } from '../adminStyles'
 
 interface Sport {
   id: string
@@ -38,13 +39,7 @@ export default function AddPlayerPage() {
 
     const res = await fetch('/api/admin/add-player', {
       method: 'POST',
-      body: JSON.stringify({
-        fullName,
-        phone,
-        birthDate,
-        sportsBackground,
-        sportIds: selectedSports,
-      }),
+      body: JSON.stringify({ fullName, phone, birthDate, sportsBackground, sportIds: selectedSports }),
     })
 
     setLoading(false)
@@ -59,76 +54,47 @@ export default function AddPlayerPage() {
   }
 
   return (
-    <div style={{ maxWidth: 500, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#fff', color: '#000' }}>
-      <h1>إضافة لاعب جديد</h1>
+    <div style={s.page}>
+      <h1 style={s.title}>إضافة لاعب جديد</h1>
+      <p style={s.subtitle}>سجّل بيانات اللاعب وحدد الرياضات اللي هيلعبها</p>
 
       <form onSubmit={handleSubmit}>
-        <label style={{ display: 'block', marginTop: 16 }}>
+        <label style={s.label}>
           الاسم بالكامل
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-            required
-          />
+          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
         </label>
 
-        <label style={{ display: 'block', marginTop: 16 }}>
+        <label style={s.label}>
           رقم التليفون
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-          />
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} />
         </label>
 
-        <label style={{ display: 'block', marginTop: 16 }}>
+        <label style={s.label}>
           تاريخ الميلاد
-          <input
-            type="date"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-          />
+          <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={s.input} />
         </label>
 
-        <label style={{ display: 'block', marginTop: 16 }}>
+        <label style={s.label}>
           خلفية رياضية (اختياري)
-          <input
-            type="text"
-            value={sportsBackground}
-            onChange={(e) => setSportsBackground(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-          />
+          <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={s.input} />
         </label>
 
-        <div style={{ marginTop: 16 }}>
-          <p style={{ marginBottom: 8 }}>الرياضات (يمكن اختيار أكثر من واحدة)</p>
+        <div style={{ marginTop: 24 }}>
+          <p style={{ ...s.label, marginTop: 0 }}>الرياضات (يمكن اختيار أكثر من واحدة)</p>
           {sports.length === 0 && <p style={{ color: '#999' }}>لا يوجد رياضات مسجلة بعد</p>}
           {sports.map((sport) => (
-            <label key={sport.id} style={{ display: 'block', marginBottom: 6 }}>
-              <input
-                type="checkbox"
-                checked={selectedSports.includes(sport.id)}
-                onChange={() => toggleSport(sport.id)}
-                style={{ marginLeft: 8 }}
-              />
+            <label key={sport.id} style={s.checkboxLabel}>
+              <input type="checkbox" checked={selectedSports.includes(sport.id)} onChange={() => toggleSport(sport.id)} style={s.checkbox} />
               {sport.name}
             </label>
           ))}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: '100%', padding: 12, marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 8 }}
-        >
+        <button type="submit" disabled={loading} style={s.button}>
           {loading ? 'جاري الحفظ...' : 'حفظ اللاعب'}
         </button>
 
-        {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
+        {error && <p style={s.error}>{error}</p>}
       </form>
     </div>
   )
