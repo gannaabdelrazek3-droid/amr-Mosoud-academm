@@ -88,6 +88,10 @@ model Sport {
   players PlayerSport[]
   coaches CoachSport[]
 
+  attendances Attendance[]
+  weightLogs  WeightLog[]
+  progress    PlayerProgress[]
+
   createdAt DateTime @default(now())
 }
 
@@ -137,6 +141,9 @@ model Attendance {
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
 
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
@@ -151,6 +158,9 @@ model WeightLog {
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
 
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
@@ -163,6 +173,9 @@ model PlayerProgress {
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
 
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
@@ -170,7 +183,6 @@ model PlayerProgress {
   coachNote   String?
   date        DateTime @default(now())
 }
-
 enum PaymentSource {
   SUBSCRIPTION
   MANUAL
