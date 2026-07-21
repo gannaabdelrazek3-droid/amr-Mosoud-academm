@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { adminStyles as s } from '../../adminStyles'
+import Link from 'next/link'
 
 interface Player {
   id: string
@@ -75,7 +76,9 @@ export default function SportPage() {
     <div style={s.page}>
       <h1 style={s.title}>حضور وتقييم اللاعبين</h1>
       <p style={s.subtitle}>عدد اللاعبين المسجلين في الرياضة دي: {players.length}</p>
-
+<Link href={`/admin/sports/${sportId}/skills`} style={{ display: 'inline-block', marginBottom: 20, color: '#111', textDecoration: 'underline' }}>
+  ⚙️ إدارة مهارات هذه الرياضة
+</Link>
       {players.length === 0 ? (
         <p style={{ color: '#999' }}>لا يوجد لاعبين مسجلين في الرياضة دي</p>
       ) : (
