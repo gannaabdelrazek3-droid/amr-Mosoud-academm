@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PrismaClient } from '@prisma/client'
 import WeightChart from './WeightChart'
+import SkillsRadarChart from './SkillsRadarChart'
 
 const prisma = new PrismaClient()
 
@@ -27,6 +28,10 @@ export default async function PlayerDashboard() {
       weightLogs: {
         orderBy: { date: 'asc' },
       },
+      skillRatings: {
+        include: { skill: true },
+        orderBy: { date: 'desc' },
+      },
     },
   })
 
@@ -49,6 +54,14 @@ export default async function PlayerDashboard() {
     date: new Date(w.date).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }),
     weight: w.weightKg,
   }))
+
+  const latestSkillsMap = new Map<string, { name: string; value: number }>()
+  for (const r of player.skillRatings) {
+    if (!latestSkillsMap.has(r.skillId)) {
+      latestSkillsMap.set(r.skillId, { name: r.skill.name, value: r.value })
+    }
+  }
+  const skillsData = Array.from(latestSkillsMap.values())
 
   return (
     <div style={{ maxWidth: 500, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#fff', color: '#000' }}>
@@ -75,6 +88,13 @@ export default async function PlayerDashboard() {
           <p>بتتمرن معانا من: <strong>{trainingSince} شهر</strong></p>
         )}
       </div>
+
+      {skillsData.length > 0 && (
+        <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
+          <h3>🎯 مستواك في المهارات</h3>
+          <SkillsRadarChart data={skillsData} />
+        </div>
+      )}
 
       <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
         <h3>⚖️ تطور الوزن</h3>
