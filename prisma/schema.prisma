@@ -214,6 +214,7 @@ model Product {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
   name           String
+  defaultPrice   Float?
   totalPurchased Int    @default(0)
   totalSold      Int    @default(0)
 

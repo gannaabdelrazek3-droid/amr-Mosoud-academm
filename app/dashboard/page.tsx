@@ -105,6 +105,12 @@ export default async function DashboardPage() {
           >
             🏅 الرياضات
           </a>
+          <a
+  href="/admin/inventory"
+  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+>
+  📦 المخزون
+</a>
         </div>
       </div>
     )
