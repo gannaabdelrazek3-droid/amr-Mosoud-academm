@@ -117,6 +117,12 @@ export default async function DashboardPage() {
 >
   📅 تجديد الاشتراكات
 </a>
+<a
+  href="/admin/search"
+  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+>
+  🔍 بحث
+</a>
         </div>
       </div>
     )
