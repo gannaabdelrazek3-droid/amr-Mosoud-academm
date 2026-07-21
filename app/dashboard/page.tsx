@@ -111,6 +111,12 @@ export default async function DashboardPage() {
 >
   📦 المخزون
 </a>
+<a
+  href="/admin/subscriptions"
+  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+>
+  📅 تجديد الاشتراكات
+</a>
         </div>
       </div>
     )
