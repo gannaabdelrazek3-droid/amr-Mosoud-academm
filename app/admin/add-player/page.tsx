@@ -46,7 +46,7 @@ export default function AddPlayerPage() {
 
     if (!res.ok) {
       const data = await res.json()
-      setError(data.error || 'حصلت مشكلة، حاول تاني')
+      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
       return
     }
 
@@ -56,16 +56,16 @@ export default function AddPlayerPage() {
   return (
     <div style={s.page}>
       <h1 style={s.title}>إضافة لاعب جديد</h1>
-      <p style={s.subtitle}>سجّل بيانات اللاعب وحدد الرياضات اللي هيلعبها</p>
+      <p style={s.subtitle}>سجّل بيانات اللاعب وحدّد الرياضات التي سيمارسها</p>
 
       <form onSubmit={handleSubmit}>
         <label style={s.label}>
-          الاسم بالكامل
+          الاسم الكامل
           <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
         </label>
 
         <label style={s.label}>
-          رقم التليفون
+          رقم الهاتف
           <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} />
         </label>
 
@@ -75,13 +75,13 @@ export default function AddPlayerPage() {
         </label>
 
         <label style={s.label}>
-          خلفية رياضية (اختياري)
+          الخلفية الرياضية (اختياري)
           <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={s.input} />
         </label>
 
         <div style={{ marginTop: 24 }}>
           <p style={{ ...s.label, marginTop: 0 }}>الرياضات (يمكن اختيار أكثر من واحدة)</p>
-          {sports.length === 0 && <p style={{ color: '#999' }}>لا يوجد رياضات مسجلة بعد</p>}
+          {sports.length === 0 && <p style={{ color: '#999' }}>لا توجد رياضات مسجّلة بعد</p>}
           {sports.map((sport) => (
             <label key={sport.id} style={s.checkboxLabel}>
               <input type="checkbox" checked={selectedSports.includes(sport.id)} onChange={() => toggleSport(sport.id)} style={s.checkbox} />
@@ -90,8 +90,8 @@ export default function AddPlayerPage() {
           ))}
         </div>
 
-        <button type="submit" disabled={loading} style={s.button}>
-          {loading ? 'جاري الحفظ...' : 'حفظ اللاعب'}
+        <button type="submit" disabled={loading} className="btn-primary" style={s.button}>
+          {loading ? 'جارٍ الحفظ...' : 'حفظ اللاعب'}
         </button>
 
         {error && <p style={s.error}>{error}</p>}

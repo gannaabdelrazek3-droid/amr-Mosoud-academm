@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { adminStyles as s } from '../adminStyles'
 
 interface Sport {
   id: string
@@ -51,7 +52,7 @@ export default function AddCoachPage() {
 
     if (!res.ok) {
       const data = await res.json()
-      setError(data.error || 'حصلت مشكلة، حاول تاني')
+      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
       return
     }
 
@@ -59,80 +60,47 @@ export default function AddCoachPage() {
   }
 
   return (
-    <div style={{ maxWidth: 500, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#fff', color: '#000' }}>
-      <h1>إضافة مدرب جديد</h1>
+    <div style={s.page}>
+      <h1 style={s.title}>إضافة مدرب جديد</h1>
+      <p style={s.subtitle}>سجّل بيانات المدرب وحدّد الرياضات التي سيدرّبها</p>
 
       <form onSubmit={handleSubmit}>
-        <label style={{ display: 'block', marginTop: 16 }}>
-          الاسم بالكامل
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-            required
-          />
+        <label style={s.label}>
+          الاسم الكامل
+          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
         </label>
 
-        <label style={{ display: 'block', marginTop: 16 }}>
-          رقم التليفون
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-            required
-          />
+        <label style={s.label}>
+          رقم الهاتف
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} required />
         </label>
 
-        <label style={{ display: 'block', marginTop: 16 }}>
-          الإيميل (لتسجيل الدخول)
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-            required
-          />
+        <label style={s.label}>
+          البريد الإلكتروني (لتسجيل الدخول)
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} required />
         </label>
 
-        <label style={{ display: 'block', marginTop: 16 }}>
-          الباسورد (لتسجيل الدخول)
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: 10, marginTop: 4 }}
-            required
-            minLength={6}
-          />
+        <label style={s.label}>
+          كلمة المرور (لتسجيل الدخول)
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} required minLength={6} />
         </label>
 
-        <div style={{ marginTop: 16 }}>
-          <p style={{ marginBottom: 8 }}>الرياضات اللي هيدربها (يمكن اختيار أكثر من واحدة)</p>
-          {sports.length === 0 && <p style={{ color: '#999' }}>لا يوجد رياضات مسجلة بعد</p>}
+        <div style={{ marginTop: 24 }}>
+          <p style={{ ...s.label, marginTop: 0 }}>الرياضات التي سيدرّبها (يمكن اختيار أكثر من واحدة)</p>
+          {sports.length === 0 && <p style={{ color: '#999' }}>لا توجد رياضات مسجّلة بعد</p>}
           {sports.map((sport) => (
-            <label key={sport.id} style={{ display: 'block', marginBottom: 6 }}>
-              <input
-                type="checkbox"
-                checked={selectedSports.includes(sport.id)}
-                onChange={() => toggleSport(sport.id)}
-                style={{ marginLeft: 8 }}
-              />
+            <label key={sport.id} style={s.checkboxLabel}>
+              <input type="checkbox" checked={selectedSports.includes(sport.id)} onChange={() => toggleSport(sport.id)} style={s.checkbox} />
               {sport.name}
             </label>
           ))}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ width: '100%', padding: 12, marginTop: 20, background: '#111', color: '#fff', border: 'none', borderRadius: 8 }}
-        >
-          {loading ? 'جاري الحفظ...' : 'حفظ المدرب'}
+        <button type="submit" disabled={loading} className="btn-primary" style={s.button}>
+          {loading ? 'جارٍ الحفظ...' : 'حفظ المدرب'}
         </button>
 
-        {error && <p style={{ color: 'red', marginTop: 10 }}>{error}</p>}
+        {error && <p style={s.error}>{error}</p>}
       </form>
     </div>
   )
