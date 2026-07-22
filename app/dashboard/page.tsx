@@ -148,12 +148,20 @@ export default async function DashboardPage() {
         <h1>أهلاً كوتش {profile.fullName} 🏃</h1>
         <p style={{ color: '#666' }}>فريقك ({myPlayers.length} لاعب)</p>
 
-        <a
-          href="/coach/search"
-          style={{ display: 'inline-block', padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none', marginTop: 12, marginBottom: 12 }}
-        >
-          🔍 بحث عن لاعب
-        </a>
+       <div style={{ display: 'flex', gap: 12, marginTop: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+  <a
+    href="/coach/add-player"
+    style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+  >
+    + إضافة لاعب
+  </a>
+  <a
+    href="/coach/search"
+    style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+  >
+    🔍 بحث عن لاعب
+  </a>
+</div>
 
         <div style={{ marginTop: 24 }}>
           {myPlayers.length > 0 ? (
