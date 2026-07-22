@@ -106,23 +106,23 @@ export default async function DashboardPage() {
             🏅 الرياضات
           </a>
           <a
-  href="/admin/inventory"
-  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
->
-  📦 المخزون
-</a>
-<a
-  href="/admin/subscriptions"
-  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
->
-  📅 تجديد الاشتراكات
-</a>
-<a
-  href="/admin/search"
-  style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
->
-  🔍 بحث
-</a>
+            href="/admin/inventory"
+            style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+          >
+            📦 المخزون
+          </a>
+          <a
+            href="/admin/subscriptions"
+            style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+          >
+            📅 تجديد الاشتراكات
+          </a>
+          <a
+            href="/admin/search"
+            style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+          >
+            🔍 بحث
+          </a>
         </div>
       </div>
     )
@@ -147,6 +147,13 @@ export default async function DashboardPage() {
       <div style={{ maxWidth: 700, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#fff', color: '#000' }}>
         <h1>أهلاً كوتش {profile.fullName} 🏃</h1>
         <p style={{ color: '#666' }}>فريقك ({myPlayers.length} لاعب)</p>
+
+        <a
+          href="/coach/search"
+          style={{ display: 'inline-block', padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none', marginTop: 12, marginBottom: 12 }}
+        >
+          🔍 بحث عن لاعب
+        </a>
 
         <div style={{ marginTop: 24 }}>
           {myPlayers.length > 0 ? (
