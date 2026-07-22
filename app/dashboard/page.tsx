@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
-import { adminStyles as s } from '../adminStyles'
+import { adminStyles as s } from '../admin/adminStyles'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
