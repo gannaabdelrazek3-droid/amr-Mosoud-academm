@@ -148,7 +148,8 @@ export default async function DashboardPage() {
         <h1>أهلاً كوتش {profile.fullName} 🏃</h1>
         <p style={{ color: '#666' }}>فريقك ({myPlayers.length} لاعب)</p>
 
-       <div style={{ display: 'flex', gap: 12, marginTop: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+      
+  <div style={{ display: 'flex', gap: 12, marginTop: 12, marginBottom: 12, flexWrap: 'wrap' }}>
   <a
     href="/coach/add-player"
     style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
@@ -160,6 +161,12 @@ export default async function DashboardPage() {
     style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
   >
     🔍 بحث عن لاعب
+  </a>
+  <a
+    href="/coach/subscriptions"
+    style={{ padding: '10px 20px', background: '#111', color: '#fff', borderRadius: 8, textDecoration: 'none' }}
+  >
+    📅 متابعة الاشتراكات
   </a>
 </div>
 
