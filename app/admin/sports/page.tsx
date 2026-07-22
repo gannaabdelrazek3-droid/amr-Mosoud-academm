@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { adminStyles as s } from '../adminStyles'
+import AdminShell from '../AdminShell'
 
 interface Sport {
   id: string
@@ -19,17 +20,24 @@ export default function SportsIndexPage() {
   }, [])
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>الرياضات</h1>
-      <p style={s.subtitle}>اختار رياضة لتسجيل الحضور والتقييم</p>
-
-      {sports.map((sport) => (
-        <Link key={sport.id} href={`/admin/sports/${sport.id}`} style={{ textDecoration: 'none' }}>
-          <div style={s.checkboxLabel}>
-            <span style={{ fontSize: 16, color: '#111' }}>{sport.name}</span>
+    <AdminShell fullName="">
+      <div style={s.page}>
+        <div style={s.headerBar}>
+          <div>
+            <h1 style={s.title}>الرياضات</h1>
+            <p style={{ color: '#94a3b8', margin: 0 }}>اختر رياضة لتسجيل الحضور والتقييم</p>
           </div>
-        </Link>
-      ))}
-    </div>
+        </div>
+
+        <div style={s.actionGrid}>
+          {sports.map((sport) => (
+            <Link key={sport.id} href={`/admin/sports/${sport.id}`} className="action-card" style={s.actionCard}>
+              <span style={{ fontSize: 26 }}>🏅</span>
+              {sport.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </AdminShell>
   )
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { adminStyles as s } from '../../adminStyles'
+import AdminShell from '../../AdminShell'
 
 interface Player {
   id: string
@@ -43,11 +44,8 @@ export default function SportPage() {
         setPlayers(playersData.players || [])
         const fetchedSkills: Skill[] = skillsData.skills || []
         setSkills(fetchedSkills)
-
         const initialValues: Record<string, number> = {}
-        fetchedSkills.forEach((sk) => {
-          initialValues[sk.id] = 50
-        })
+        fetchedSkills.forEach((sk) => { initialValues[sk.id] = 50 })
         setSkillValues(initialValues)
       })
       .finally(() => setLoading(false))
@@ -60,7 +58,7 @@ export default function SportPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedPlayerId) {
-      setMessage('اختار لاعب الأول')
+      setMessage('اختر لاعبًا أولاً')
       return
     }
 
@@ -81,24 +79,19 @@ export default function SportPage() {
 
     if (!sportLogRes.ok) {
       setSaving(false)
-      setMessage('حصلت مشكلة، حاول تاني')
+      setMessage('حدثت مشكلة، حاول مرة أخرى')
       return
     }
 
     if (skills.length > 0) {
-      const ratingsPayload = skills.map((sk) => ({
-        skillId: sk.id,
-        value: skillValues[sk.id] ?? 50,
-      }))
-
+      const ratingsPayload = skills.map((sk) => ({ skillId: sk.id, value: skillValues[sk.id] ?? 50 }))
       const skillRes = await fetch('/api/admin/skill-ratings', {
         method: 'POST',
         body: JSON.stringify({ playerId: selectedPlayerId, ratings: ratingsPayload }),
       })
-
       if (!skillRes.ok) {
         setSaving(false)
-        setMessage('اتحفظ الحضور بس حصلت مشكلة في حفظ المهارات')
+        setMessage('تم حفظ الحضور، لكن حدثت مشكلة في حفظ المهارات')
         return
       }
     }
@@ -110,108 +103,90 @@ export default function SportPage() {
   }
 
   if (loading) {
-    return <div style={s.page}><p>جاري التحميل...</p></div>
+    return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
   }
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>حضور وتقييم اللاعبين</h1>
+    <AdminShell fullName="">
+      <div style={s.page}>
+        <div style={s.headerBar}>
+          <div>
+            <h1 style={s.title}>حضور وتقييم اللاعبين</h1>
+            <Link href={`/admin/sports/${sportId}/skills`} style={{ color: '#d4af37', textDecoration: 'underline', fontSize: 14 }}>
+              ⚙️ إدارة مهارات هذه الرياضة
+            </Link>
+            <p style={{ color: '#94a3b8', marginTop: 8 }}>عدد اللاعبين المسجّلين: {players.length}</p>
+          </div>
+        </div>
 
-      <Link href={`/admin/sports/${sportId}/skills`} style={{ display: 'inline-block', marginBottom: 16, color: '#111', textDecoration: 'underline' }}>
-        ⚙️ إدارة مهارات هذه الرياضة
-      </Link>
+        {players.length === 0 ? (
+          <p style={{ color: '#94a3b8' }}>لا يوجد لاعبون مسجّلون في هذه الرياضة</p>
+        ) : (
+          <div style={s.formCard}>
+            <form onSubmit={handleSave}>
+              <label style={s.label}>
+                اختر اللاعب
+                <select value={selectedPlayerId} onChange={(e) => setSelectedPlayerId(e.target.value)} style={s.input} required>
+                  <option value="">-- اختر لاعبًا --</option>
+                  {players.map((p) => <option key={p.id} value={p.id}>{p.fullName}</option>)}
+                </select>
+              </label>
 
-      <p style={s.subtitle}>عدد اللاعبين المسجلين في الرياضة دي: {players.length}</p>
+              <label style={s.checkboxLabel}>
+                <input type="checkbox" checked={present} onChange={(e) => setPresent(e.target.checked)} style={s.checkbox} />
+                حضر اليوم
+              </label>
 
-      {players.length === 0 ? (
-        <p style={{ color: '#999' }}>لا يوجد لاعبين مسجلين في الرياضة دي</p>
-      ) : (
-        <form onSubmit={handleSave}>
-          <label style={s.label}>
-            اختار اللاعب
-            <select
-              value={selectedPlayerId}
-              onChange={(e) => setSelectedPlayerId(e.target.value)}
-              style={s.input}
-              required
-            >
-              <option value="">-- اختار لاعب --</option>
-              {players.map((p) => (
-                <option key={p.id} value={p.id}>{p.fullName}</option>
-              ))}
-            </select>
-          </label>
-
-          <label style={s.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={present}
-              onChange={(e) => setPresent(e.target.checked)}
-              style={s.checkbox}
-            />
-            حضر النهاردة
-          </label>
-
-          {skills.length > 0 ? (
-            <div style={{ marginTop: 20 }}>
-              <p style={{ ...s.label, marginTop: 0 }}>تقييم المهارات</p>
-              {skills.map((sk) => (
-                <div key={sk.id} style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, marginBottom: 6 }}>
-                    <span>{sk.name}</span>
-                    <strong>{skillValues[sk.id] ?? 50}%</strong>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={skillValues[sk.id] ?? 50}
-                    onChange={(e) => handleSkillChange(sk.id, parseInt(e.target.value))}
-                    style={{ width: '100%' }}
-                  />
+              {skills.length > 0 ? (
+                <div style={{ marginTop: 20 }}>
+                  <p style={{ ...s.label, marginTop: 0 }}>تقييم المهارات</p>
+                  {skills.map((sk) => (
+                    <div key={sk.id} style={{ marginBottom: 20 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, marginBottom: 6, color: '#e2e8f0' }}>
+                        <span>{sk.name}</span>
+                        <strong style={{ color: '#d4af37' }}>{skillValues[sk.id] ?? 50}%</strong>
+                      </div>
+                      <input
+                        type="range" min="0" max="100"
+                        value={skillValues[sk.id] ?? 50}
+                        onChange={(e) => handleSkillChange(sk.id, parseInt(e.target.value))}
+                        style={{ width: '100%', accentColor: '#d4af37' }}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <label style={s.label}>
-              التقييم العام (1 لـ 5)
-              <select value={rating} onChange={(e) => setRating(e.target.value)} style={s.input}>
-                <option value="1">1 ⭐</option>
-                <option value="2">2 ⭐⭐</option>
-                <option value="3">3 ⭐⭐⭐</option>
-                <option value="4">4 ⭐⭐⭐⭐</option>
-                <option value="5">5 ⭐⭐⭐⭐⭐</option>
-              </select>
-            </label>
-          )}
+              ) : (
+                <label style={s.label}>
+                  التقييم العام (1 إلى 5)
+                  <select value={rating} onChange={(e) => setRating(e.target.value)} style={s.input}>
+                    <option value="1">1 ⭐</option>
+                    <option value="2">2 ⭐⭐</option>
+                    <option value="3">3 ⭐⭐⭐</option>
+                    <option value="4">4 ⭐⭐⭐⭐</option>
+                    <option value="5">5 ⭐⭐⭐⭐⭐</option>
+                  </select>
+                </label>
+              )}
 
-          <label style={s.label}>
-            الوزن (كجم) - اختياري
-            <input
-              type="number"
-              step="0.1"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              style={s.input}
-            />
-          </label>
+              <label style={s.label}>
+                الوزن (كجم) - اختياري
+                <input type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} style={s.input} />
+              </label>
 
-          <label style={s.label}>
-            ملاحظة (اختياري)
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              style={{ ...s.input, minHeight: 80 }}
-            />
-          </label>
+              <label style={s.label}>
+                ملاحظة (اختياري)
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} style={{ ...s.input, minHeight: 80 }} />
+              </label>
 
-          <button type="submit" disabled={saving} style={s.button}>
-            {saving ? 'جاري الحفظ...' : 'حفظ'}
-          </button>
+              <button type="submit" disabled={saving} className="btn-primary" style={s.button}>
+                {saving ? 'جارٍ الحفظ...' : 'حفظ'}
+              </button>
 
-          {message && <p style={s.error}>{message}</p>}
-        </form>
-      )}
-    </div>
+              {message && <p style={s.error}>{message}</p>}
+            </form>
+          </div>
+        )}
+      </div>
+    </AdminShell>
   )
 }

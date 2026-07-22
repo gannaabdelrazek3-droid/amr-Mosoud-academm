@@ -10,34 +10,20 @@ export default async function PlayerDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/login')
-  }
+  if (!user) redirect('/login')
 
   const player = await prisma.player.findUnique({
     where: { userId: user.id },
     include: {
-      subscriptions: {
-        orderBy: { endDate: 'desc' },
-        take: 1,
-      },
-      tournaments: {
-        orderBy: { year: 'desc' },
-      },
+      subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
+      tournaments: { orderBy: { year: 'desc' } },
       attendances: true,
-      weightLogs: {
-        orderBy: { date: 'asc' },
-      },
-      skillRatings: {
-        include: { skill: true },
-        orderBy: { date: 'desc' },
-      },
+      weightLogs: { orderBy: { date: 'asc' } },
+      skillRatings: { include: { skill: true }, orderBy: { date: 'desc' } },
     },
   })
 
-  if (!player) {
-    redirect('/login')
-  }
+  if (!player) redirect('/login')
 
   const activeSubscription = player.subscriptions[0]
   const daysLeft = activeSubscription
@@ -63,70 +49,67 @@ export default async function PlayerDashboard() {
   }
   const skillsData = Array.from(latestSkillsMap.values())
 
+  const pageStyle = { maxWidth: 560, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0', minHeight: '100vh' }
+  const cardStyle = { background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 16, padding: 22, marginTop: 20 }
+
   return (
-    <div style={{ maxWidth: 500, margin: '40px auto', fontFamily: 'sans-serif', padding: 20, background: '#fff', color: '#000' }}>
-      <h1>أهلاً، {player.fullName} 👋</h1>
+    <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
+      <div style={pageStyle}>
+        <h1 style={{ color: '#f8fafc' }}>أهلًا بك، {player.fullName} 👋</h1>
 
-      <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
-        <h3>📊 الاشتراك</h3>
-        {activeSubscription ? (
-          <>
-            <p>الحصص المتبقية: <strong>{activeSubscription.remaining}</strong> من {activeSubscription.totalSessions}</p>
-            <p style={{ color: daysLeft !== null && daysLeft <= 7 ? 'red' : 'inherit' }}>
-              باقي على الانتهاء: <strong>{daysLeft} يوم</strong>
-            </p>
-          </>
-        ) : (
-          <p>مفيش اشتراك نشط حالياً</p>
-        )}
-      </div>
-
-      <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
-        <h3>🏋️ التمرين</h3>
-        <p>عدد التمارين اللي حضرتها: <strong>{attendedCount}</strong></p>
-        {trainingSince !== null && (
-          <p>بتتمرن معانا من: <strong>{trainingSince} شهر</strong></p>
-        )}
-      </div>
-
-      {skillsData.length > 0 && (
-        <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
-          <h3>🎯 مستواك في المهارات</h3>
-          <SkillsRadarChart data={skillsData} />
+        <div style={cardStyle}>
+          <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>📊 الاشتراك</h3>
+          {activeSubscription ? (
+            <>
+              <p>الحصص المتبقية: <strong>{activeSubscription.remaining}</strong> من {activeSubscription.totalSessions}</p>
+              <p style={{ color: daysLeft !== null && daysLeft <= 7 ? '#fca5a5' : '#e2e8f0' }}>
+                باقٍ على الانتهاء: <strong>{daysLeft} يوم</strong>
+              </p>
+            </>
+          ) : (
+            <p>لا يوجد اشتراك نشط حاليًا</p>
+          )}
         </div>
-      )}
 
-      <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
-        <h3>⚖️ تطور الوزن</h3>
-        {weightData.length > 0 ? (
-          <WeightChart data={weightData} />
-        ) : (
-          <p>لسه مفيش أوزان مسجلة</p>
-        )}
-      </div>
+        <div style={cardStyle}>
+          <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>🏋️ التمرين</h3>
+          <p>عدد التمارين التي حضرتها: <strong>{attendedCount}</strong></p>
+          {trainingSince !== null && <p>تتمرن معنا منذ: <strong>{trainingSince} شهرًا</strong></p>}
+        </div>
 
-      <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
-        <h3>🏥 الكشف الطبي</h3>
-        {player.medicalCheckExpiry ? (
-          <p>ساري لغاية: {new Date(player.medicalCheckExpiry).toLocaleDateString('ar-EG')}</p>
-        ) : (
-          <p style={{ color: 'orange' }}>لسه معملتش كشف طبي</p>
+        {skillsData.length > 0 && (
+          <div style={cardStyle}>
+            <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>🎯 مستواك في المهارات</h3>
+            <SkillsRadarChart data={skillsData} />
+          </div>
         )}
-      </div>
 
-      <div style={{ background: '#f5f5f5', borderRadius: 12, padding: 20, marginTop: 20 }}>
-        <h3>🏆 البطولات</h3>
-        {player.tournaments.length > 0 ? (
-          <ul>
-            {player.tournaments.map((t) => (
-              <li key={t.id}>
-                {t.name} ({t.year}) {t.result && `- ${t.result}`}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>لسه مفيش بطولات مسجلة</p>
-        )}
+        <div style={cardStyle}>
+          <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>⚖️ تطور الوزن</h3>
+          {weightData.length > 0 ? <WeightChart data={weightData} /> : <p>لا توجد أوزان مسجّلة بعد</p>}
+        </div>
+
+        <div style={cardStyle}>
+          <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>🏥 الكشف الطبي</h3>
+          {player.medicalCheckExpiry ? (
+            <p>ساري حتى: {new Date(player.medicalCheckExpiry).toLocaleDateString('ar-EG')}</p>
+          ) : (
+            <p style={{ color: '#facc15' }}>لم تُجر كشفًا طبيًا بعد</p>
+          )}
+        </div>
+
+        <div style={cardStyle}>
+          <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>🏆 البطولات</h3>
+          {player.tournaments.length > 0 ? (
+            <ul>
+              {player.tournaments.map((t) => (
+                <li key={t.id}>{t.name} ({t.year}) {t.result && `- ${t.result}`}</li>
+              ))}
+            </ul>
+          ) : (
+            <p>لا توجد بطولات مسجّلة بعد</p>
+          )}
+        </div>
       </div>
     </div>
   )

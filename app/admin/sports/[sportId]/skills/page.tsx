@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { adminStyles as s } from '../../../adminStyles'
+import AdminShell from '../../../AdminShell'
 
 interface Skill {
   id: string
@@ -34,7 +35,6 @@ export default function SportSkillsPage() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     if (!newSkill.trim()) return
-
     setSaving(true)
     setMessage('')
 
@@ -44,55 +44,53 @@ export default function SportSkillsPage() {
     })
 
     setSaving(false)
-
     if (!res.ok) {
-      setMessage('حصلت مشكلة، حاول تاني')
+      setMessage('حدثت مشكلة، حاول مرة أخرى')
       return
     }
-
     setNewSkill('')
     loadSkills()
   }
 
   if (loading) {
-    return <div style={s.page}><p>جاري التحميل...</p></div>
+    return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
   }
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>مهارات الرياضة</h1>
-      <p style={s.subtitle}>حددي المهارات اللي هيتقيّم عليها اللاعب في الرياضة دي (زي: بوكس، مصارعة، ضربات رجل)</p>
-
-      {skills.length === 0 ? (
-        <p style={{ color: '#999', marginBottom: 20 }}>لسه مفيش مهارات مضافة لهذه الرياضة</p>
-      ) : (
-        <div style={{ marginBottom: 24 }}>
-          {skills.map((sk) => (
-            <div key={sk.id} style={s.checkboxLabel}>
-              <span>{sk.name}</span>
-            </div>
-          ))}
+    <AdminShell fullName="">
+      <div style={s.page}>
+        <div style={s.headerBar}>
+          <div>
+            <h1 style={s.title}>مهارات الرياضة</h1>
+            <p style={{ color: '#94a3b8', margin: 0 }}>حدّد المهارات التي سيُقيَّم عليها اللاعب في هذه الرياضة</p>
+          </div>
         </div>
-      )}
 
-      <form onSubmit={handleAdd}>
-        <label style={s.label}>
-          إضافة مهارة جديدة
-          <input
-            type="text"
-            value={newSkill}
-            onChange={(e) => setNewSkill(e.target.value)}
-            style={s.input}
-            placeholder="مثال: بوكس"
-          />
-        </label>
+        <div style={s.formCard}>
+          {skills.length === 0 ? (
+            <p style={{ color: '#94a3b8', marginBottom: 20 }}>لا توجد مهارات مضافة لهذه الرياضة بعد</p>
+          ) : (
+            <div style={{ marginBottom: 24 }}>
+              {skills.map((sk) => (
+                <div key={sk.id} style={s.checkboxLabel}><span>{sk.name}</span></div>
+              ))}
+            </div>
+          )}
 
-        <button type="submit" disabled={saving} style={s.button}>
-          {saving ? 'جاري الإضافة...' : '+ إضافة مهارة'}
-        </button>
+          <form onSubmit={handleAdd}>
+            <label style={s.label}>
+              إضافة مهارة جديدة
+              <input type="text" value={newSkill} onChange={(e) => setNewSkill(e.target.value)} style={s.input} placeholder="مثال: الملاكمة" />
+            </label>
 
-        {message && <p style={s.error}>{message}</p>}
-      </form>
-    </div>
+            <button type="submit" disabled={saving} className="btn-primary" style={s.button}>
+              {saving ? 'جارٍ الإضافة...' : '+ إضافة مهارة'}
+            </button>
+
+            {message && <p style={s.error}>{message}</p>}
+          </form>
+        </div>
+      </div>
+    </AdminShell>
   )
 }

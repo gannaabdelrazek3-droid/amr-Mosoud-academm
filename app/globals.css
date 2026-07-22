@@ -53,3 +53,11 @@ body {
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.35);
   background: #1e293b !important;
 }
+.sidebar-link {
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37 !important;
+}

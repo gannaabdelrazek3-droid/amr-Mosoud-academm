@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { adminStyles as s } from '../../../admin/adminStyles'
+
+const cardStyle = { maxWidth: 640, margin: '40px auto', fontFamily: "'Tajawal', sans-serif", padding: 32, background: 'rgba(30,41,59,0.7)', color: '#e2e8f0', borderRadius: 16, border: '1px solid rgba(212,175,55,0.25)' }
+const labelStyle = { display: 'block', marginTop: 20, fontSize: 16, fontWeight: 700, color: '#cbd5e1' }
+const inputStyle = { width: '100%', padding: '14px 16px', marginTop: 8, fontSize: 16, border: '1px solid rgba(148,163,184,0.3)', borderRadius: 10, background: 'rgba(15,23,42,0.5)', color: '#f1f5f9', boxSizing: 'border-box' as const }
+const buttonStyle = { width: '100%', padding: 16, marginTop: 20, fontSize: 17, fontWeight: 700, background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 10, cursor: 'pointer' }
 
 interface PlayerDetails {
   id: string
@@ -49,28 +53,19 @@ export default function CoachPlayerPage() {
       .finally(() => setLoading(false))
   }
 
-  useEffect(() => {
-    if (playerId) loadPlayer()
-  }, [playerId])
+  useEffect(() => { if (playerId) loadPlayer() }, [playerId])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     setMessage('')
-
     const res = await fetch('/api/coach/edit-player', {
       method: 'POST',
       body: JSON.stringify({ playerId, fullName, phone, birthDate, sportsBackground }),
     })
-
     const data = await res.json()
     setSaving(false)
-
-    if (!res.ok) {
-      setMessage(data.error || 'حصلت مشكلة')
-      return
-    }
-
+    if (!res.ok) { setMessage(data.error || 'حدثت مشكلة'); return }
     setMessage('تم الحفظ بنجاح')
   }
 
@@ -78,99 +73,75 @@ export default function CoachPlayerPage() {
     e.preventDefault()
     setRenewing(true)
     setRenewMessage('')
-
     const res = await fetch('/api/coach/renew-subscription', {
       method: 'POST',
       body: JSON.stringify({ playerId, amount, totalSessions: sessions, durationDays: duration }),
     })
-
     setRenewing(false)
-
-    if (!res.ok) {
-      setRenewMessage('حصلت مشكلة في التجديد')
-      return
-    }
-
+    if (!res.ok) { setRenewMessage('حدثت مشكلة في التجديد'); return }
     setRenewMessage('تم التجديد بنجاح')
-    setAmount('')
-    setSessions('')
+    setAmount(''); setSessions('')
     loadPlayer()
   }
 
-  if (loading) {
-    return <div style={s.page}><p>جاري التحميل...</p></div>
-  }
-
-  if (!player) {
-    return <div style={s.page}><p>اللاعب غير موجود أو مش بتاعك</p></div>
-  }
+  if (loading) return <div style={cardStyle}><p>جارٍ التحميل...</p></div>
+  if (!player) return <div style={cardStyle}><p>اللاعب غير موجود أو ليس ضمن فريقك</p></div>
 
   const activeSub = player.subscriptions[0]
 
   return (
-    <div style={s.page}>
-      <h1 style={s.title}>{player.fullName}</h1>
+    <div style={cardStyle}>
+      <h1 style={{ color: '#f8fafc' }}>{player.fullName}</h1>
 
-      <div style={{ background: '#f8f8f8', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-        <p style={{ margin: '4px 0' }}>
-          📅 الاشتراك: {activeSub
-            ? `${activeSub.remaining} من ${activeSub.totalSessions} حصة، بينتهي ${new Date(activeSub.endDate).toLocaleDateString('ar-EG')}`
-            : 'مفيش اشتراك نشط'}
+      <div style={{ background: 'rgba(15,23,42,0.4)', borderRadius: 12, padding: 16, marginBottom: 24 }}>
+        <p style={{ margin: '4px 0', color: '#e2e8f0' }}>
+          📅 الاشتراك: {activeSub ? `${activeSub.remaining} من ${activeSub.totalSessions} حصة، ينتهي ${new Date(activeSub.endDate).toLocaleDateString('ar-EG')}` : 'لا يوجد اشتراك نشط'}
         </p>
       </div>
 
-      <h3 style={{ fontSize: 17, marginBottom: 10 }}>✏️ تعديل بيانات اللاعب</h3>
+      <h3 style={{ color: '#f8fafc', fontSize: 17 }}>✏️ تعديل بيانات اللاعب</h3>
       <form onSubmit={handleSave}>
-        <label style={s.label}>
-          الاسم بالكامل
-          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
+        <label style={labelStyle}>
+          الاسم الكامل
+          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={inputStyle} required />
         </label>
-
-        <label style={s.label}>
-          رقم التليفون
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} />
+        <label style={labelStyle}>
+          رقم الهاتف
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} />
         </label>
-
-        <label style={s.label}>
+        <label style={labelStyle}>
           تاريخ الميلاد
-          <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={s.input} />
+          <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={inputStyle} />
         </label>
-
-        <label style={s.label}>
-          خلفية رياضية
-          <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={s.input} />
+        <label style={labelStyle}>
+          الخلفية الرياضية
+          <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={inputStyle} />
         </label>
-
-        <button type="submit" disabled={saving} style={s.button}>
-          {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+        <button type="submit" disabled={saving} className="btn-primary" style={buttonStyle}>
+          {saving ? 'جارٍ الحفظ...' : 'حفظ التعديلات'}
         </button>
-
-        {message && <p style={s.error}>{message}</p>}
+        {message && <p style={{ color: '#fca5a5', marginTop: 14 }}>{message}</p>}
       </form>
 
-      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #eee' }}>
-        <h3 style={{ fontSize: 17, marginBottom: 10 }}>💰 تجديد الاشتراك</h3>
+      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid rgba(148,163,184,0.2)' }}>
+        <h3 style={{ color: '#f8fafc', fontSize: 17 }}>💰 تجديد الاشتراك</h3>
         <form onSubmit={handleRenew}>
-          <label style={s.label}>
+          <label style={labelStyle}>
             المبلغ (جنيه)
-            <input type="number" step="0.5" value={amount} onChange={(e) => setAmount(e.target.value)} style={s.input} required />
+            <input type="number" step="0.5" value={amount} onChange={(e) => setAmount(e.target.value)} style={inputStyle} required />
           </label>
-
-          <label style={s.label}>
+          <label style={labelStyle}>
             عدد الحصص
-            <input type="number" min="1" value={sessions} onChange={(e) => setSessions(e.target.value)} style={s.input} required />
+            <input type="number" min="1" value={sessions} onChange={(e) => setSessions(e.target.value)} style={inputStyle} required />
           </label>
-
-          <label style={s.label}>
+          <label style={labelStyle}>
             مدة الاشتراك (أيام)
-            <input type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} style={s.input} required />
+            <input type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} style={inputStyle} required />
           </label>
-
-          <button type="submit" disabled={renewing} style={s.button}>
-            {renewing ? 'جاري التجديد...' : 'تجديد الاشتراك'}
+          <button type="submit" disabled={renewing} className="btn-primary" style={buttonStyle}>
+            {renewing ? 'جارٍ التجديد...' : 'تجديد الاشتراك'}
           </button>
-
-          {renewMessage && <p style={s.error}>{renewMessage}</p>}
+          {renewMessage && <p style={{ color: '#fca5a5', marginTop: 14 }}>{renewMessage}</p>}
         </form>
       </div>
     </div>
