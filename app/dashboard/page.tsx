@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { adminStyles as s } from '../adminStyles'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -45,90 +46,74 @@ export default async function DashboardPage() {
       include: { player: true },
     })
 
-    const pageStyle = {
-      maxWidth: 700,
-      margin: '40px auto',
-      fontFamily: "'Tajawal', system-ui, sans-serif",
-      padding: 32,
-      background: '#ffffff',
-      color: '#1a1a2e',
-      borderRadius: 16,
-      boxShadow: '0 2px 16px rgba(30, 58, 138, 0.06)',
-    }
-
-    const cardStyle = {
-      flex: 1,
-      background: '#f3f6fb',
-      borderRadius: 14,
-      padding: 22,
-    }
-
-    const linkStyle = {
-      padding: '12px 22px',
-      background: '#1e3a8a',
-      color: '#fff',
-      borderRadius: 10,
-      textDecoration: 'none',
-      fontWeight: 700,
-      fontSize: 15,
-    }
-
     return (
-      <div style={pageStyle}>
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1e3a8a', marginBottom: 4 }}>
-          مرحبًا، {profile.fullName} 👑
-        </h1>
-        <p style={{ color: '#6b7280', marginBottom: 4 }}>لوحة تحكم المسؤول</p>
-
-        <div style={{ display: 'flex', gap: 16, marginTop: 24 }}>
-          <div className="card-hover" style={cardStyle}>
-            <h3 style={{ color: '#374151' }}>👥 اللاعبون</h3>
-            <p style={{ fontSize: 30, fontWeight: 900, color: '#1e3a8a' }}>{totalPlayers}</p>
-          </div>
-          <div className="card-hover" style={cardStyle}>
-            <h3 style={{ color: '#374151' }}>🏃 المدربون</h3>
-            <p style={{ fontSize: 30, fontWeight: 900, color: '#1e3a8a' }}>{totalCoaches}</p>
-          </div>
-          <div className="card-hover" style={cardStyle}>
-            <h3 style={{ color: '#374151' }}>💰 الإيرادات</h3>
-            <p style={{ fontSize: 30, fontWeight: 900, color: '#1e3a8a' }}>{totalRevenue._sum.amount || 0} جنيه</p>
+      <div style={s.page}>
+        <div style={s.headerBar}>
+          <div>
+            <h1 style={s.title}>مرحبًا، {profile.fullName} 👑</h1>
+            <p style={{ color: '#64748b', margin: 0 }}>لوحة تحكم المسؤول</p>
           </div>
         </div>
 
-        <div style={{ marginTop: 24, background: '#fef8f0', border: '1px solid #fde3c8', borderRadius: 14, padding: 22 }}>
-          <h3 style={{ color: '#92400e' }}>⚠️ اشتراكات على وشك الانتهاء ({expiringSubs.length})</h3>
+        <div style={{ display: 'flex', gap: 16 }}>
+          <div className="card-hover" style={s.statCard}>
+            <p style={s.statLabel}>👥 اللاعبون</p>
+            <p style={s.statValue}>{totalPlayers}</p>
+          </div>
+          <div className="card-hover" style={s.statCard}>
+            <p style={s.statLabel}>🏃 المدربون</p>
+            <p style={s.statValue}>{totalCoaches}</p>
+          </div>
+          <div className="card-hover" style={s.statCard}>
+            <p style={s.statLabel}>💰 الإيرادات</p>
+            <p style={s.statValue}>{totalRevenue._sum.amount || 0} جنيه</p>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 28, background: '#fffbeb', border: '1px solid #d4af37', borderRadius: 16, padding: 24 }}>
+          <h3 style={{ color: '#92400e', margin: '0 0 12px' }}>⚠️ اشتراكات على وشك الانتهاء ({expiringSubs.length})</h3>
           {expiringSubs.length > 0 ? (
-            <ul style={{ marginTop: 10 }}>
-              {expiringSubs.map((s) => (
-                <li key={s.id} style={{ marginBottom: 6 }}>
-                  {s.player.fullName} — ينتهي في {new Date(s.endDate).toLocaleDateString('ar-EG')}
+            <ul style={{ margin: 0, paddingRight: 20 }}>
+              {expiringSubs.map((sub) => (
+                <li key={sub.id} style={{ marginBottom: 6, color: '#78350f' }}>
+                  {sub.player.fullName} — ينتهي في {new Date(sub.endDate).toLocaleDateString('ar-EG')}
                 </li>
               ))}
             </ul>
           ) : (
-            <p style={{ color: '#92400e', marginTop: 10 }}>لا توجد اشتراكات على وشك الانتهاء</p>
+            <p style={{ color: '#78350f', margin: 0 }}>لا توجد اشتراكات على وشك الانتهاء</p>
           )}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 28 }}>
-          
-          <a href="/admin/add-player" className="btn-primary" style={linkStyle}>
-            + إضافة لاعب
+        <h3 style={{ marginTop: 36, marginBottom: 4, color: '#0f172a', fontSize: 20 }}>الإجراءات السريعة</h3>
+        <div style={s.actionGrid}>
+          <a href="/admin/add-payment" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>💵</span>
+            تسجيل دخل جديد
           </a>
-          <a href="/admin/add-coach" className="btn-primary" style={linkStyle}>
-            + إضافة مدرب
+          <a href="/admin/add-player" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>➕</span>
+            إضافة لاعب
           </a>
-          <a href="/admin/sports" className="btn-primary" style={linkStyle}>
-            🏅 الرياضات
+          <a href="/admin/add-coach" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>🏋️</span>
+            إضافة مدرب
           </a>
-          <a href="/admin/inventory" className="btn-primary" style={linkStyle}>
-            📦 المخزون
+          <a href="/admin/sports" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>🏅</span>
+            الرياضات
           </a>
-          <a href="/admin/subscriptions" className="btn-primary" style={linkStyle}>
-            📅 تجديد الاشتراكات
+          <a href="/admin/inventory" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>📦</span>
+            المخزون
           </a>
-          <a href="/admin/search" className="btn-primary" style={linkStyle}>
-            🔍 البحث
+          <a href="/admin/subscriptions" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>📅</span>
+            تجديد الاشتراكات
+          </a>
+          <a href="/admin/search" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>🔍</span>
+            البحث
           </a>
         </div>
       </div>
@@ -150,47 +135,32 @@ export default async function DashboardPage() {
       },
     })
 
-    const pageStyle = {
-      maxWidth: 700,
-      margin: '40px auto',
-      fontFamily: "'Tajawal', system-ui, sans-serif",
-      padding: 32,
-      background: '#ffffff',
-      color: '#1a1a2e',
-      borderRadius: 16,
-      boxShadow: '0 2px 16px rgba(30, 58, 138, 0.06)',
-    }
-
-    const linkStyle = {
-      padding: '12px 22px',
-      background: '#1e3a8a',
-      color: '#fff',
-      borderRadius: 10,
-      textDecoration: 'none',
-      fontWeight: 700,
-      fontSize: 15,
-    }
-
     return (
-      <div style={pageStyle}>
-        <h1 style={{ fontSize: 28, fontWeight: 900, color: '#1e3a8a', marginBottom: 4 }}>
-          مرحبًا أيها المدرب {profile.fullName} 🏃
-        </h1>
-        <p style={{ color: '#6b7280' }}>فريقك ({myPlayers.length} لاعبًا)</p>
+      <div style={s.page}>
+        <div style={s.headerBar}>
+          <div>
+            <h1 style={s.title}>مرحبًا أيها المدرب {profile.fullName} 🏃</h1>
+            <p style={{ color: '#64748b', margin: 0 }}>فريقك ({myPlayers.length} لاعبًا)</p>
+          </div>
+        </div>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-          <a href="/coach/add-player" className="btn-primary" style={linkStyle}>
-            + إضافة لاعب
+        <div style={s.actionGrid}>
+          <a href="/coach/add-player" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>➕</span>
+            إضافة لاعب
           </a>
-          <a href="/coach/search" className="btn-primary" style={linkStyle}>
-            🔍 البحث عن لاعب
+          <a href="/coach/search" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>🔍</span>
+            البحث عن لاعب
           </a>
-          <a href="/coach/subscriptions" className="btn-primary" style={linkStyle}>
-            📅 متابعة الاشتراكات
+          <a href="/coach/subscriptions" className="action-card" style={s.actionCard}>
+            <span style={{ fontSize: 26 }}>📅</span>
+            متابعة الاشتراكات
           </a>
         </div>
 
-        <div style={{ marginTop: 24 }}>
+        <h3 style={{ marginTop: 36, marginBottom: 16, color: '#0f172a', fontSize: 20 }}>لاعبوك</h3>
+        <div>
           {myPlayers.length > 0 ? (
             myPlayers.map((p) => {
               const sub = p.subscriptions[0]
@@ -211,7 +181,7 @@ export default async function DashboardPage() {
                   key={p.id}
                   href={`/coach/update/${p.id}`}
                   className="card-hover"
-                  style={{ display: 'block', background: '#f3f6fb', borderRadius: 14, padding: 18, marginBottom: 12, color: '#1a1a2e', textDecoration: 'none' }}
+                  style={{ display: 'block', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 14, padding: 18, marginBottom: 12, color: '#0f172a', textDecoration: 'none' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 700 }}>{p.fullName}</span>
@@ -244,5 +214,5 @@ export default async function DashboardPage() {
     )
   }
 
-  return <p>لا تملك صلاحية للدخول إلى هذه الصفحة</p>
+  return <p style={{ fontFamily: "'Tajawal', sans-serif", padding: 40 }}>لا تملك صلاحية للدخول إلى هذه الصفحة</p>
 }

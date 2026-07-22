@@ -61,47 +61,53 @@ export default function AddCoachPage() {
 
   return (
     <div style={s.page}>
-      <h1 style={s.title}>إضافة مدرب جديد</h1>
-      <p style={s.subtitle}>سجّل بيانات المدرب وحدّد الرياضات التي سيدرّبها</p>
-
-      <form onSubmit={handleSubmit}>
-        <label style={s.label}>
-          الاسم الكامل
-          <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
-        </label>
-
-        <label style={s.label}>
-          رقم الهاتف
-          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} required />
-        </label>
-
-        <label style={s.label}>
-          البريد الإلكتروني (لتسجيل الدخول)
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} required />
-        </label>
-
-        <label style={s.label}>
-          كلمة المرور (لتسجيل الدخول)
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} required minLength={6} />
-        </label>
-
-        <div style={{ marginTop: 24 }}>
-          <p style={{ ...s.label, marginTop: 0 }}>الرياضات التي سيدرّبها (يمكن اختيار أكثر من واحدة)</p>
-          {sports.length === 0 && <p style={{ color: '#999' }}>لا توجد رياضات مسجّلة بعد</p>}
-          {sports.map((sport) => (
-            <label key={sport.id} style={s.checkboxLabel}>
-              <input type="checkbox" checked={selectedSports.includes(sport.id)} onChange={() => toggleSport(sport.id)} style={s.checkbox} />
-              {sport.name}
-            </label>
-          ))}
+      <div style={s.headerBar}>
+        <div>
+          <h1 style={s.title}>إضافة مدرب جديد</h1>
+          <p style={{ color: '#64748b', margin: 0 }}>سجّل بيانات المدرب وحدّد الرياضات التي سيدرّبها</p>
         </div>
+      </div>
 
-        <button type="submit" disabled={loading} className="btn-primary" style={s.button}>
-          {loading ? 'جارٍ الحفظ...' : 'حفظ المدرب'}
-        </button>
+      <div style={s.formCard}>
+        <form onSubmit={handleSubmit}>
+          <label style={s.label}>
+            الاسم الكامل
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
+          </label>
 
-        {error && <p style={s.error}>{error}</p>}
-      </form>
+          <label style={s.label}>
+            رقم الهاتف
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} required />
+          </label>
+
+          <label style={s.label}>
+            البريد الإلكتروني (لتسجيل الدخول)
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} required />
+          </label>
+
+          <label style={s.label}>
+            كلمة المرور (لتسجيل الدخول)
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} required minLength={6} />
+          </label>
+
+          <div style={{ marginTop: 24 }}>
+            <p style={{ ...s.label, marginTop: 0 }}>الرياضات التي سيدرّبها (يمكن اختيار أكثر من واحدة)</p>
+            {sports.length === 0 && <p style={{ color: '#999' }}>لا توجد رياضات مسجّلة بعد</p>}
+            {sports.map((sport) => (
+              <label key={sport.id} style={s.checkboxLabel}>
+                <input type="checkbox" checked={selectedSports.includes(sport.id)} onChange={() => toggleSport(sport.id)} style={s.checkbox} />
+                {sport.name}
+              </label>
+            ))}
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-primary" style={s.button}>
+            {loading ? 'جارٍ الحفظ...' : 'حفظ المدرب'}
+          </button>
+
+          {error && <p style={s.error}>{error}</p>}
+        </form>
+      </div>
     </div>
   )
 }
