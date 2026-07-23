@@ -150,6 +150,7 @@ export default function HomePage() {
         </div>
         <Link
           href="/login"
+          className="btn-primary"
           style={{
             padding: '10px 28px',
             background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
@@ -232,6 +233,7 @@ export default function HomePage() {
           {captainAchievements.map((a, i) => (
             <div
               key={i}
+              className="card-hover"
               style={{
                 background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)',
                 border: '1px solid rgba(212, 175, 55, 0.3)',
@@ -285,6 +287,7 @@ export default function HomePage() {
           {sports.map((sport) => (
             <div
               key={sport.name}
+              className="card-hover"
               style={{
                 background: 'rgba(30, 41, 59, 0.7)',
                 border: '1px solid rgba(212, 175, 55, 0.3)',
@@ -316,6 +319,7 @@ export default function HomePage() {
           {players.map((player) => (
             <div
               key={player.name}
+              className="card-hover"
               style={{
                 background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%)',
                 border: '1px solid rgba(212, 175, 55, 0.4)',
@@ -369,6 +373,7 @@ export default function HomePage() {
         <p style={{ color: '#94a3b8', marginBottom: 30, fontSize: 17 }}>انضم لأكاديمية الدكتور عمرو مسعود واصنع مجدك الرياضي</p>
         <Link
           href="/login"
+          className="btn-primary"
           style={{
             display: 'inline-block',
             padding: '16px 50px',
