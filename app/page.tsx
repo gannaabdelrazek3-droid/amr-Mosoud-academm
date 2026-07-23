@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -93,42 +95,39 @@ export default function HomePage() {
         position: 'relative',
       }}
     >
-      {/* Floating Glassmorphism Action Button (عائمة وثابتة على الشاشة تماماً) */}
-      <div
+      {/* زر عائم تفاعلي يتحرك ويبرز بسلاسة تامة أول ما تقفي عليه */}
+      <Link
+        href="/login"
+        className="floating-interactive-btn"
         style={{
           position: 'fixed',
           bottom: '35px',
           left: '35px',
-          zIndex: 9999,
-          background: 'rgba(15, 23, 42, 0.9)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(212, 175, 55, 0.5)',
+          zIndex: 99999,
+          padding: '16px 32px',
+          background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
+          color: '#0f172a',
           borderRadius: 50,
-          padding: '10px 22px',
-          boxShadow: '0 15px 35px rgba(0,0,0,0.7), 0 0 25px rgba(212,175,55,0.3)',
+          textDecoration: 'none',
+          fontWeight: 900,
+          fontSize: 16,
+          boxShadow: '0 12px 35px rgba(0,0,0,0.7), 0 0 25px rgba(212, 175, 55, 0.4)',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
+          gap: 10,
+          transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
       >
-        <span style={{ fontSize: 13, color: '#d4af37', fontWeight: 800 }}>⚡ انضم الآن</span>
-        <Link
-          href="/login"
-          style={{
-            padding: '8px 22px',
-            background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
-            color: '#0f172a',
-            borderRadius: 30,
-            textDecoration: 'none',
-            fontWeight: 900,
-            fontSize: 14,
-            boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)',
-          }}
-        >
-          تسجيل الدخول
-        </Link>
-      </div>
+        <span style={{ fontSize: 18 }}>⚡</span> تسجيل الدخول
+      </Link>
+
+      <style jsx global>{`
+        .floating-interactive-btn:hover {
+          transform: translateY(-8px) scale(1.05);
+          box-shadow: 0 20px 45px rgba(0,0,0,0.8), 0 0 35px rgba(212, 175, 55, 0.7);
+        }
+      `}</style>
 
       {/* Navbar */}
       <nav
