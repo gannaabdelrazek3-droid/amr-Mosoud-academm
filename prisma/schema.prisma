@@ -1,0 +1,303 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js" 
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  profiles      Profile[]
+  players       Player[]
+  subscriptions Subscription[]
+  attendances   Attendance[]
+  weightLogs    WeightLog[]
+  progress      PlayerProgress[]
+  payments      Payment[]
+  tournaments   Tournament[]
+  sports        Sport[]
+  products      Product[]
+  productSales    ProductSale[]
+  productRestocks ProductRestock[]
+  skills          Skill[]
+  skillRatings    SkillRating[]
+}
+
+enum Role {
+  ADMIN
+  COACH
+  PLAYER
+}
+
+model Profile {
+  id       String @id @default(uuid())
+  fullName String
+  phone    String @unique
+  role     Role
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  players Player[]
+  coachSports CoachSport[]
+
+  createdAt DateTime @default(now())
+}
+
+model Player {
+  id                 String    @id @default(uuid())
+  fullName           String
+  phone              String?
+  email              String? @unique
+  userId             String? @unique
+  birthDate          DateTime?
+  sportsBackground   String?
+  medicalCheckExpiry DateTime?
+  joinDate           DateTime?
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  coachId String?
+  coach   Profile? @relation(fields: [coachId], references: [id])
+
+  subscriptions Subscription[]
+  attendances   Attendance[]
+  weightLogs    WeightLog[]
+  progress      PlayerProgress[]
+  payments      Payment[]
+  tournaments   Tournament[]
+  sports        PlayerSport[]
+  skillRatings  SkillRating[]
+
+  createdAt DateTime @default(now())
+}
+
+model Sport {
+  id       String @id @default(uuid())
+  name     String
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  players PlayerSport[]
+  coaches CoachSport[]
+
+  attendances Attendance[]
+  weightLogs  WeightLog[]
+  progress    PlayerProgress[]
+  skills      Skill[]
+
+  createdAt DateTime @default(now())
+}
+
+model PlayerSport {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+  sportId  String
+  sport    Sport  @relation(fields: [sportId], references: [id])
+
+  @@unique([playerId, sportId])
+}
+
+model CoachSport {
+  id       String @id @default(uuid())
+  coachId  String
+  coach    Profile @relation(fields: [coachId], references: [id])
+  sportId  String
+  sport    Sport   @relation(fields: [sportId], references: [id])
+
+  @@unique([coachId, sportId])
+}
+
+model Subscription {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  totalSessions Int
+  remaining     Int
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  
+  isFrozen  Boolean   @default(false)
+  frozenAt  DateTime?
+  
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Attendance {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  date    DateTime @default(now())
+  present Boolean
+
+  coachNote String?
+}
+
+model WeightLog {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  weightKg Float
+  date     DateTime @default(now())
+}
+
+model PlayerProgress {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  sportId String
+  sport   Sport  @relation(fields: [sportId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  skillRating Int
+  coachNote   String?
+  date        DateTime @default(now())
+}
+
+model Skill {
+  id       String @id @default(uuid())
+  sportId  String
+  sport    Sport  @relation(fields: [sportId], references: [id])
+  name     String
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  ratings  SkillRating[]
+
+  createdAt DateTime @default(now())
+}
+
+model SkillRating {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  skillId  String
+  skill    Skill  @relation(fields: [skillId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  value    Float
+  date     DateTime @default(now())
+}
+
+enum PaymentSource {
+  SUBSCRIPTION
+  MANUAL
+  PRODUCT_SALE
+}
+
+model Payment {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  playerId String?
+  player   Player? @relation(fields: [playerId], references: [id])
+
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  amount      Float
+  source      PaymentSource
+  description String?
+  date        DateTime @default(now())
+
+  productSale ProductSale?
+}
+
+model Product {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name           String
+  defaultPrice   Float?
+  totalPurchased Int    @default(0)
+  totalSold      Int    @default(0)
+
+  sales    ProductSale[]
+  restocks ProductRestock[]
+
+  createdAt DateTime @default(now())
+}
+
+model ProductRestock {
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  quantity Int
+  date     DateTime @default(now())
+}
+
+model ProductSale {
+  id        String  @id @default(uuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  quantity     Int
+  pricePerUnit Float?
+  totalAmount  Float?
+  date         DateTime @default(now())
+
+  paymentId String? @unique
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+}
+
+model Tournament {
+  id       String @id @default(uuid())
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  name     String
+  year     Int
+  result   String?
+
+  createdAt DateTime @default(now())
+}

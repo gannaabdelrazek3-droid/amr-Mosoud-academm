@@ -1,0 +1,113 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { adminStyles as s } from '../adminStyles'
+
+interface Sport {
+  id: string
+  name: string
+}
+
+export default function AddCoachPage() {
+  const router = useRouter()
+  const [sports, setSports] = useState<Sport[]>([])
+  const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [selectedSports, setSelectedSports] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/sports')
+      .then((res) => res.json())
+      .then((data) => setSports(data.sports || []))
+  }, [])
+
+  function toggleSport(sportId: string) {
+    setSelectedSports((prev) =>
+      prev.includes(sportId) ? prev.filter((id) => id !== sportId) : [...prev, sportId]
+    )
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    const res = await fetch('/api/admin/add-coach', {
+      method: 'POST',
+      body: JSON.stringify({
+        fullName,
+        phone,
+        email,
+        password,
+        sportIds: selectedSports,
+      }),
+    })
+
+    setLoading(false)
+
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
+      return
+    }
+
+    router.push('/dashboard')
+  }
+
+  return (
+    <div style={s.page}>
+      <div style={s.headerBar}>
+        <div>
+          <h1 style={s.title}>إضافة مدرب جديد</h1>
+          <p style={{ color: '#64748b', margin: 0 }}>سجّل بيانات المدرب وحدّد الرياضات التي سيدرّبها</p>
+        </div>
+      </div>
+
+      <div style={s.formCard}>
+        <form onSubmit={handleSubmit}>
+          <label style={s.label}>
+            الاسم الكامل
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
+          </label>
+
+          <label style={s.label}>
+            رقم الهاتف
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} required />
+          </label>
+
+          <label style={s.label}>
+            البريد الإلكتروني (لتسجيل الدخول)
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} required />
+          </label>
+
+          <label style={s.label}>
+            كلمة المرور (لتسجيل الدخول)
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} required minLength={6} />
+          </label>
+
+          <div style={{ marginTop: 24 }}>
+            <p style={{ ...s.label, marginTop: 0 }}>الرياضات التي سيدرّبها (يمكن اختيار أكثر من واحدة)</p>
+            {sports.length === 0 && <p style={{ color: '#999' }}>لا توجد رياضات مسجّلة بعد</p>}
+            {sports.map((sport) => (
+              <label key={sport.id} style={s.checkboxLabel}>
+                <input type="checkbox" checked={selectedSports.includes(sport.id)} onChange={() => toggleSport(sport.id)} style={s.checkbox} />
+                {sport.name}
+              </label>
+            ))}
+          </div>
+
+          <button type="submit" disabled={loading} className="btn-primary" style={s.button}>
+            {loading ? 'جارٍ الحفظ...' : 'حفظ المدرب'}
+          </button>
+
+          {error && <p style={s.error}>{error}</p>}
+        </form>
+      </div>
+    </div>
+  )
+}
