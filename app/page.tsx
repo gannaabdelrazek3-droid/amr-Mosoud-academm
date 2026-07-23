@@ -85,22 +85,59 @@ export default function HomePage() {
   return (
     <div
       style={{
-        background: 'radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 50%, #020617 100%)',
+        background: 'radial-gradient(circle at 50% 0%, #1e293b 0%, #0f172a 45%, #020617 100%)',
         minHeight: '100vh',
         fontFamily: "'Tajawal', sans-serif",
         color: '#e2e8f0',
         overflowX: 'hidden',
+        position: 'relative',
       }}
     >
+      {/* Floating Glassmorphism Action Button (عائم على الشاشة بشكل مذهل) */}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          left: '30px',
+          zIndex: 999,
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(212, 175, 55, 0.4)',
+          borderRadius: 50,
+          padding: '8px 20px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(212,175,55,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}
+      >
+        <span style={{ fontSize: 13, color: '#d4af37', fontWeight: 800 }}>⚡ انضم الآن</span>
+        <Link
+          href="/login"
+          style={{
+            padding: '8px 22px',
+            background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
+            color: '#0f172a',
+            borderRadius: 30,
+            textDecoration: 'none',
+            fontWeight: 900,
+            fontSize: 14,
+            boxShadow: '0 4px 15px rgba(212, 175, 55, 0.4)',
+          }}
+        >
+          تسجيل الدخول
+        </Link>
+      </div>
+
       {/* Navbar */}
       <nav
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '20px 40px',
-          borderBottom: '1px solid rgba(212, 175, 55, 0.25)',
-          background: 'rgba(15, 23, 42, 0.85)',
+          padding: '22px 50px',
+          borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+          background: 'rgba(15, 23, 42, 0.9)',
           backdropFilter: 'blur(10px)',
           position: 'sticky',
           top: 0,
@@ -108,75 +145,78 @@ export default function HomePage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 28, filter: 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.5))' }}>🥇</span>
+          <span style={{ fontSize: 30, filter: 'drop-shadow(0 0 12px rgba(212, 175, 55, 0.6))' }}>🥇</span>
           <strong style={{ color: '#f8fafc', fontSize: 20, letterSpacing: 0.5 }}>أكاديمية الكابتن عمرو مسعود</strong>
         </div>
         <Link
           href="/login"
           style={{
-            padding: '10px 26px',
+            padding: '10px 28px',
             background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
             color: '#0f172a',
             borderRadius: 12,
             textDecoration: 'none',
             fontWeight: 800,
             boxShadow: '0 4px 15px rgba(212, 175, 55, 0.3)',
-            transition: 'transform 0.2s ease',
           }}
         >
           تسجيل الدخول
         </Link>
       </nav>
 
-      {/* Hero Section */}
-      <section style={{ textAlign: 'center', padding: '80px 24px 60px', maxWidth: 950, margin: '0 auto' }}>
+      {/* Hero Section - إبراز الطابع الأكاديمي والرياضي للدكتور */}
+      <section style={{ textAlign: 'center', padding: '90px 24px 70px', maxWidth: 1000, margin: '0 auto' }}>
         <div
           style={{
-            display: 'inline-block',
-            padding: '6px 18px',
-            background: 'rgba(212, 175, 55, 0.1)',
-            border: '1px solid rgba(212, 175, 55, 0.3)',
-            borderRadius: 30,
-            marginBottom: 16,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '8px 22px',
+            background: 'rgba(212, 175, 55, 0.12)',
+            border: '1px solid rgba(212, 175, 55, 0.4)',
+            borderRadius: 35,
+            marginBottom: 20,
+            boxShadow: '0 0 25px rgba(212, 175, 55, 0.2)',
           }}
         >
-          <span style={{ color: '#d4af37', fontWeight: 700, letterSpacing: 1.5, fontSize: 14 }}>
-            🌟 دكتور في كلية علوم الرياضة
+          <span style={{ fontSize: 16 }}>🎓</span>
+          <span style={{ color: '#d4af37', fontWeight: 800, letterSpacing: 1, fontSize: 15 }}>
+            دكتور في كلية علوم الرياضة • خبير التدريب الاحترافي
           </span>
         </div>
 
-        <h1 style={{ fontSize: 48, fontWeight: 900, color: '#f8fafc', margin: '0 0 20px', lineHeight: 1.2 }}>
-          الكابتن <span style={{ color: '#d4af37', textShadow: '0 0 25px rgba(212, 175, 55, 0.4)' }}>عمرو مسعود</span>
+        <h1 style={{ fontSize: 52, fontWeight: 900, color: '#f8fafc', margin: '0 0 20px', lineHeight: 1.2 }}>
+          الكابتن <span style={{ color: '#d4af37', textShadow: '0 0 30px rgba(212, 175, 55, 0.5)' }}>عمرو مسعود</span>
         </h1>
         
-        <p style={{ fontSize: 18, color: '#94a3b8', maxWidth: 700, margin: '0 auto 35px', lineHeight: 1.7 }}>
+        <p style={{ fontSize: 19, color: '#94a3b8', maxWidth: 750, margin: '0 auto 40px', lineHeight: 1.8 }}>
           لاعب منتخب مصر للساندا (2012–2016) وبطل جمهورية متعدد الألقاب في الساندا وكيك بوكسينج ومواي تاي،
-          على مدار أكثر من عشرين عامًا من الإنجاز والتدريب الاحترافي
+          نضع بين أيديكم خبرة أكاديمية وعملية تمتد لأكثر من عشرين عامًا من البطولات والإنجازات المطلقة.
         </p>
 
-        {/* Hero Image with Glowing Aura */}
-        <div style={{ position: 'relative', width: 180, height: 180, margin: '0 auto 20px' }}>
+        {/* Hero Image with Elite Golden Aura */}
+        <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto 30px' }}>
           <div
             style={{
               position: 'absolute',
-              inset: -6,
-              background: 'linear-gradient(135deg, #d4af37, transparent, #d4af37)',
+              inset: -8,
+              background: 'linear-gradient(135deg, #d4af37, #1e293b, #d4af37)',
               borderRadius: '50%',
               zIndex: 0,
-              filter: 'blur(10px)',
-              opacity: 0.7,
+              filter: 'blur(15px)',
+              opacity: 0.8,
             }}
           />
           <div
             style={{
-              width: 180,
-              height: 180,
+              width: 200,
+              height: 200,
               borderRadius: '50%',
               position: 'relative',
               zIndex: 1,
-              border: '4px solid #d4af37',
+              border: '5px solid #d4af37',
               overflow: 'hidden',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+              boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
             }}
           >
             <Image src="/images/amr-masoud.jpeg" alt="الكابتن عمرو مسعود" fill style={{ objectFit: 'cover' }} />
@@ -184,23 +224,23 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Captain Achievements */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px 70px' }}>
-        <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 30, fontWeight: 900, marginBottom: 35 }}>
-          🏆 إنجازات <span style={{ color: '#d4af37' }}>التاريخية</span>
+      {/* Captain Achievements - تاريخ حافل */}
+      <section style={{ maxWidth: 1150, margin: '0 auto', padding: '20px 24px 80px' }}>
+        <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 32, fontWeight: 900, marginBottom: 40 }}>
+          🏆 سجل إنجازات <span style={{ color: '#d4af37' }}>الكابتن التاريخية</span>
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 22 }}>
           {captainAchievements.map((a, i) => (
             <div
               key={i}
               style={{
-                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)',
                 border: '1px solid rgba(212, 175, 55, 0.3)',
-                borderRadius: 16,
-                padding: 24,
+                borderRadius: 18,
+                padding: 26,
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
               }}
             >
               <div
@@ -208,25 +248,25 @@ export default function HomePage() {
                   position: 'absolute',
                   top: 0,
                   right: 0,
-                  width: 4,
+                  width: 5,
                   height: '100%',
-                  background: '#d4af37',
+                  background: 'linear-gradient(to bottom, #d4af37, #aa7c11)',
                 }}
               />
-              <span style={{ color: '#d4af37', fontWeight: 900, fontSize: 24, display: 'block', marginBottom: 4 }}>
+              <span style={{ color: '#d4af37', fontWeight: 900, fontSize: 26, display: 'block', marginBottom: 6 }}>
                 {a.year}
               </span>
-              <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 17, margin: '0 0 6px' }}>{a.title}</p>
+              <p style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 18, margin: '0 0 8px' }}>{a.title}</p>
               {a.place && (
                 <span
                   style={{
                     display: 'inline-block',
                     background: 'rgba(212, 175, 55, 0.15)',
-                    color: '#e2e8f0',
-                    padding: '2px 10px',
-                    borderRadius: 6,
-                    fontSize: 13,
-                    fontWeight: 600,
+                    color: '#f8fafc',
+                    padding: '3px 12px',
+                    borderRadius: 8,
+                    fontSize: 13.5,
+                    fontWeight: 700,
                   }}
                 >
                   📍 {a.place}
@@ -238,80 +278,84 @@ export default function HomePage() {
       </section>
 
       {/* Sports */}
-      <section style={{ maxWidth: 1000, margin: '0 auto', padding: '20px 24px 70px' }}>
-        <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 30, fontWeight: 900, marginBottom: 35 }}>
-          🔥 الرياضات المتاحة بالأكاديمية
+      <section style={{ maxWidth: 1050, margin: '0 auto', padding: '20px 24px 80px' }}>
+        <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 32, fontWeight: 900, marginBottom: 40 }}>
+          🔥 الرياضات الاحترافية بالأكاديمية
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 22 }}>
           {sports.map((sport) => (
             <div
               key={sport.name}
               style={{
-                background: 'rgba(30, 41, 59, 0.6)',
-                border: '1px solid rgba(212, 175, 55, 0.25)',
-                borderRadius: 16,
-                padding: 30,
+                background: 'rgba(30, 41, 59, 0.7)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
+                borderRadius: 18,
+                padding: 35,
                 textAlign: 'center',
-                boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
               }}
             >
-              <div style={{ fontSize: 45, marginBottom: 12, filter: 'drop-shadow(0 0 10px rgba(212,175,55,0.3))' }}>
+              <div style={{ fontSize: 50, marginBottom: 15, filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.4))' }}>
                 {sport.icon}
               </div>
-              <p style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 18, margin: 0 }}>{sport.name}</p>
+              <p style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 20, margin: 0 }}>{sport.name}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Players - Heroes Spotlight */}
-      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px 90px' }}>
-        <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 32, fontWeight: 900, marginBottom: 40 }}>
-          ⭐ أبطال <span style={{ color: '#d4af37' }}>الأكاديمية</span> المذهلون
+      {/* Players - مساحة مضاعفة ومذهلة للأبطال */}
+      <section style={{ maxWidth: 1300, margin: '0 auto', padding: '20px 24px 100px' }}>
+        <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 36, fontWeight: 900, marginBottom: 16 }}>
+          ⭐ نجوم وأبطال <span style={{ color: '#d4af37' }}>الأكاديمية</span> الأساطير
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 16, marginBottom: 50 }}>
+          نفتخر بصناعة الأبطال ومنصات التتويج المحلية والعالمية
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 28 }}>
           {players.map((player) => (
             <div
               key={player.name}
               style={{
-                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)',
-                border: '1px solid rgba(212, 175, 55, 0.35)',
-                borderRadius: 20,
-                padding: 26,
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.4)',
+                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%)',
+                border: '1px solid rgba(212, 175, 55, 0.4)',
+                borderRadius: 22,
+                padding: 30,
+                boxShadow: '0 15px 35px rgba(0, 0, 0, 0.5)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 20 }}>
                 <div
                   style={{
-                    width: 75,
-                    height: 75,
+                    width: 85,
+                    height: 85,
                     borderRadius: '50%',
                     overflow: 'hidden',
                     position: 'relative',
                     flexShrink: 0,
                     border: '3px solid #d4af37',
-                    boxShadow: '0 0 15px rgba(212, 175, 55, 0.4)',
+                    boxShadow: '0 0 20px rgba(212, 175, 55, 0.5)',
                   }}
                 >
                   <Image src={player.image} alt={player.name} fill style={{ objectFit: 'cover' }} />
                 </div>
                 <div>
-                  <h3 style={{ color: '#f8fafc', fontWeight: 800, fontSize: 18, margin: '0 0 6px' }}>{player.name}</h3>
-                  <span style={{ color: '#d4af37', fontSize: 12, fontWeight: 700, background: 'rgba(212,175,55,0.1)', padding: '3px 8px', borderRadius: 4 }}>
-                    بطل معتمد
+                  <h3 style={{ color: '#f8fafc', fontWeight: 900, fontSize: 20, margin: '0 0 6px' }}>{player.name}</h3>
+                  <span style={{ color: '#0f172a', background: '#d4af37', fontSize: 12.5, fontWeight: 800, padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
+                    بطل معتمد 🏆
                   </span>
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: 12, padding: 14, border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ color: '#d4af37', fontSize: 13, fontWeight: 700, margin: '0 0 8px' }}>✨ أبرز الإنجازات:</p>
-                <ul style={{ margin: 0, paddingRight: 16, color: '#e2e8f0', fontSize: 14, lineHeight: 1.8 }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.75)', borderRadius: 14, padding: 18, border: '1px solid rgba(212, 175, 55, 0.15)' }}>
+                <p style={{ color: '#d4af37', fontSize: 14, fontWeight: 800, margin: '0 0 10px' }}>🎖️ إنجازات البطل:</p>
+                <ul style={{ margin: 0, paddingRight: 18, color: '#e2e8f0', fontSize: 14.5, lineHeight: 1.9 }}>
                   {player.achievements.map((ach, i) => (
-                    <li key={i} style={{ marginBottom: 4, fontWeight: 500 }}>{ach}</li>
+                    <li key={i} style={{ marginBottom: 6, fontWeight: 600 }}>{ach}</li>
                   ))}
                 </ul>
               </div>
@@ -321,25 +365,24 @@ export default function HomePage() {
       </section>
 
       {/* Footer CTA */}
-      <section style={{ textAlign: 'center', padding: '50px 24px 80px', background: 'rgba(15, 23, 42, 0.7)', borderTop: '1px solid rgba(212, 175, 55, 0.2)' }}>
-        <h3 style={{ color: '#f8fafc', fontSize: 26, fontWeight: 900, marginBottom: 16 }}>انضم لأكاديمية الأبطال وصنع مستقبلك</h3>
-        <p style={{ color: '#94a3b8', marginBottom: 25, fontSize: 16 }}>سجل الآن وكن جزءاً من قائمة أبطال المستقبل</p>
+      <section style={{ textAlign: 'center', padding: '60px 24px 90px', background: 'rgba(15, 23, 42, 0.85)', borderTop: '1px solid rgba(212, 175, 55, 0.3)' }}>
+        <h3 style={{ color: '#f8fafc', fontSize: 28, fontWeight: 900, marginBottom: 16 }}>ابدأ رحلتك نحو البطولات الآن</h3>
+        <p style={{ color: '#94a3b8', marginBottom: 30, fontSize: 17 }}>انضم لأكاديمية الدكتور عمرو مسعود واصنع مجدك الرياضي</p>
         <Link
           href="/login"
           style={{
             display: 'inline-block',
-            padding: '16px 45px',
+            padding: '16px 50px',
             background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
             color: '#0f172a',
             borderRadius: 14,
             textDecoration: 'none',
             fontWeight: 900,
             fontSize: 18,
-            boxShadow: '0 6px 25px rgba(212, 175, 55, 0.4)',
-            transition: 'transform 0.2s ease',
+            boxShadow: '0 8px 30px rgba(212, 175, 55, 0.5)',
           }}
         >
-          سجّل الآن
+          سجّل الآن في الأكاديمية
         </Link>
       </section>
     </div>
