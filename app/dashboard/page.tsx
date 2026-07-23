@@ -177,62 +177,65 @@ export default async function DashboardPage() {
     })
 
     return (
-      <div style={{ maxWidth: 700, margin: '40px auto', fontFamily: "'Tajawal', sans-serif", padding: 20, background: '#fff', color: '#000', borderRadius: 16 }}>
-        <h1>مرحبًا أيها المدرب {profile.fullName} 🏃</h1>
-        <p style={{ color: '#666' }}>فريقك ({myPlayers.length} لاعبًا)</p>
+      <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
+        <div style={{ maxWidth: 700, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
+          <h1 style={{ color: '#f8fafc' }}>مرحبًا أيها المدرب {profile.fullName} 🏃</h1>
+          <p style={{ color: '#94a3b8' }}>فريقك ({myPlayers.length} لاعبًا)</p>
 
-        <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-          <a href="/coach/add-player" className="btn-primary" style={{ padding: '12px 22px', background: '#0f172a', color: '#d4af37', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
-            + إضافة لاعب
-          </a>
-          <a href="/coach/search" className="btn-primary" style={{ padding: '12px 22px', background: '#0f172a', color: '#d4af37', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
-            🔍 البحث عن لاعب
-          </a>
-          <a href="/coach/subscriptions" className="btn-primary" style={{ padding: '12px 22px', background: '#0f172a', color: '#d4af37', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
-            📅 متابعة الاشتراكات
-          </a>
-        </div>
+          <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 20, flexWrap: 'wrap' }}>
+            <a href="/coach/add-player" className="btn-primary" style={{ padding: '12px 22px', background: '#d4af37', color: '#0f172a', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
+              + إضافة لاعب
+            </a>
+            <a href="/coach/search" className="btn-primary" style={{ padding: '12px 22px', background: '#d4af37', color: '#0f172a', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
+              🔍 البحث عن لاعب
+            </a>
+            <a href="/coach/subscriptions" className="btn-primary" style={{ padding: '12px 22px', background: '#d4af37', color: '#0f172a', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
+              📅 متابعة الاشتراكات
+            </a>
+          </div>
 
-        <div style={{ marginTop: 24 }}>
-          {myPlayers.length > 0 ? (
-            myPlayers.map((p) => {
-              const sub = p.subscriptions[0]
-              const daysLeft = sub
-                ? Math.ceil((new Date(sub.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-                : null
+          <div style={{ marginTop: 24 }}>
+            {myPlayers.length > 0 ? (
+              myPlayers.map((p) => {
+                const sub = p.subscriptions[0]
+                const daysLeft = sub
+                  ? Math.ceil((new Date(sub.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                  : null
 
-              const subWarning = sub && (sub.remaining <= 2 || (daysLeft !== null && daysLeft <= 7))
+                const subWarning = sub && (sub.remaining <= 2 || (daysLeft !== null && daysLeft <= 7))
 
-              const medicalWarning = p.medicalCheckExpiry
-                ? Math.ceil((new Date(p.medicalCheckExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) <= 30
-                : false
+                const medicalWarning = p.medicalCheckExpiry
+                  ? Math.ceil((new Date(p.medicalCheckExpiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) <= 30
+                  : false
 
-              const last3Absent = p.attendances.length === 3 && p.attendances.every((a) => !a.present)
+                const last3Absent = p.attendances.length === 3 && p.attendances.every((a) => !a.present)
 
-              return (
-                <a
-                  key={p.id}
-                  href={`/coach/update/${p.id}`}
-                  style={{ display: 'block', background: '#f5f5f5', borderRadius: 12, padding: 16, marginBottom: 10, color: '#000', textDecoration: 'none' }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{p.fullName}</span>
-                    <span>←</span>
-                  </div>
+                return (
+                  <a
+                    key={p.id}
+                    href={`/coach/update/${p.id}`}
+                    className="card-hover"
+                    style={{ display: 'block', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 14, padding: 18, marginBottom: 12, color: '#e2e8f0', textDecoration: 'none' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 700 }}>{p.fullName}</span>
+                      <span>←</span>
+                    </div>
 
-                  {subWarning && <p style={{ color: 'red', margin: '4px 0 0', fontSize: 14 }}>🔴 الاشتراك على وشك الانتهاء</p>}
-                  {medicalWarning && <p style={{ color: 'orange', margin: '4px 0 0', fontSize: 14 }}>🟠 الكشف الطبي على وشك الانتهاء</p>}
-                  {last3Absent && <p style={{ color: 'red', margin: '4px 0 0', fontSize: 14 }}>🔴 تغيّب عن آخر ثلاث حصص متتالية</p>}
-                </a>
-              )
-            })
-          ) : (
-            <p>لا يوجد لاعبون مسجّلون في فريقك حتى الآن</p>
-          )}
+                    {subWarning && <p style={{ color: '#fca5a5', margin: '4px 0 0', fontSize: 14 }}>🔴 الاشتراك على وشك الانتهاء</p>}
+                    {medicalWarning && <p style={{ color: '#facc15', margin: '4px 0 0', fontSize: 14 }}>🟠 الكشف الطبي على وشك الانتهاء</p>}
+                    {last3Absent && <p style={{ color: '#fca5a5', margin: '4px 0 0', fontSize: 14 }}>🔴 تغيّب عن آخر ثلاث حصص متتالية</p>}
+                  </a>
+                )
+              })
+            ) : (
+              <p>لا يوجد لاعبون مسجّلون في فريقك حتى الآن</p>
+            )}
+          </div>
         </div>
       </div>
     )
   }
 
-  return <p style={{ fontFamily: "'Tajawal', sans-serif", padding: 40 }}>لا تملك صلاحية للدخول إلى هذه الصفحة</p>
+  return <p style={{ fontFamily: "'Tajawal', sans-serif", padding: 40, background: '#0f172a', color: '#e2e8f0', minHeight: '100vh' }}>لا تملك صلاحية للدخول إلى هذه الصفحة</p>
 }

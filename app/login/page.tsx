@@ -4,6 +4,32 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+const inputStyle = {
+  width: '100%',
+  padding: '14px 16px',
+  marginBottom: 14,
+  fontSize: 16,
+  fontFamily: "'Tajawal', sans-serif",
+  border: '1px solid rgba(148, 163, 184, 0.3)',
+  borderRadius: 10,
+  background: 'rgba(15, 23, 42, 0.5)',
+  color: '#f1f5f9',
+  boxSizing: 'border-box' as const,
+}
+
+const buttonStyle = {
+  width: '100%',
+  padding: 14,
+  fontSize: 16,
+  fontWeight: 700,
+  fontFamily: "'Tajawal', sans-serif",
+  background: '#d4af37',
+  color: '#0f172a',
+  border: 'none',
+  borderRadius: 10,
+  cursor: 'pointer',
+}
+
 export default function LoginPage() {
   const [mode, setMode] = useState<'staff' | 'player'>('staff')
   const [playerSubMode, setPlayerSubMode] = useState<'login' | 'signup'>('login')
@@ -25,7 +51,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) {
-      setError('الإيميل أو الباسورد غلط')
+      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
       return
     }
     router.push('/dashboard')
@@ -39,7 +65,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) {
-      setError('الإيميل أو الباسورد غلط')
+      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
       return
     }
     router.push('/player')
@@ -59,7 +85,7 @@ export default function LoginPage() {
 
     if (!res.ok) {
       const data = await res.json()
-      setError(data.error || 'حصلت مشكلة، حاول تاني')
+      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
       return
     }
 
@@ -67,74 +93,141 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '80px auto', fontFamily: 'sans-serif', background: '#fff', color: '#000', padding: 20, borderRadius: 12 }}>
-      <h1 style={{ textAlign: 'center' }}>تسجيل الدخول</h1>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'radial-gradient(circle at 30% 20%, #1e293b 0%, #0f172a 60%, #020617 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        fontFamily: "'Tajawal', sans-serif",
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 420,
+          background: 'rgba(30, 41, 59, 0.65)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid rgba(212, 175, 55, 0.4)',
+          borderRadius: 20,
+          padding: '40px 32px',
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.15)',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{ fontSize: 40, marginBottom: 8 }}>👑</div>
+          <h1 style={{ color: '#f8fafc', fontSize: 24, fontWeight: 900, margin: 0 }}>تسجيل الدخول</h1>
+          <p style={{ color: '#94a3b8', fontSize: 14, marginTop: 6 }}>أدخل بياناتك للوصول إلى النظام</p>
+        </div>
 
-      <div style={{ display: 'flex', marginBottom: 20 }}>
-        <button
-          onClick={() => { setMode('staff'); setError('') }}
-          style={{ flex: 1, padding: 10, background: mode === 'staff' ? '#333' : '#eee', color: mode === 'staff' ? '#fff' : '#000' }}
-        >
-          إدارة / مدرب
-        </button>
-        <button
-          onClick={() => { setMode('player'); setError('') }}
-          style={{ flex: 1, padding: 10, background: mode === 'player' ? '#333' : '#eee', color: mode === 'player' ? '#fff' : '#000' }}
-        >
-          لاعب
-        </button>
-      </div>
-
-      {mode === 'staff' && (
-        <form onSubmit={handleStaffLogin}>
-          <input type="email" placeholder="الإيميل" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required />
-          <input type="password" placeholder="الباسورد" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required />
-          <button type="submit" disabled={loading} style={{ width: '100%', padding: 10, background: '#111', color: '#fff' }}>
-            {loading ? 'جاري الدخول...' : 'دخول'}
+        <div style={{ display: 'flex', marginBottom: 24, background: 'rgba(15, 23, 42, 0.5)', borderRadius: 10, padding: 4 }}>
+          <button
+            onClick={() => { setMode('staff'); setError('') }}
+            className="btn-primary"
+            style={{
+              flex: 1,
+              padding: 10,
+              borderRadius: 8,
+              border: 'none',
+              fontFamily: "'Tajawal', sans-serif",
+              fontWeight: 700,
+              background: mode === 'staff' ? '#d4af37' : 'transparent',
+              color: mode === 'staff' ? '#0f172a' : '#94a3b8',
+              cursor: 'pointer',
+            }}
+          >
+            إدارة / مدرب
           </button>
-        </form>
-      )}
+          <button
+            onClick={() => { setMode('player'); setError('') }}
+            className="btn-primary"
+            style={{
+              flex: 1,
+              padding: 10,
+              borderRadius: 8,
+              border: 'none',
+              fontFamily: "'Tajawal', sans-serif",
+              fontWeight: 700,
+              background: mode === 'player' ? '#d4af37' : 'transparent',
+              color: mode === 'player' ? '#0f172a' : '#94a3b8',
+              cursor: 'pointer',
+            }}
+          >
+            لاعب
+          </button>
+        </div>
 
-      {mode === 'player' && (
-        <>
-          <div style={{ display: 'flex', marginBottom: 16, gap: 8 }}>
-            <button
-              onClick={() => { setPlayerSubMode('login'); setError('') }}
-              style={{ flex: 1, padding: 8, background: playerSubMode === 'login' ? '#111' : '#eee', color: playerSubMode === 'login' ? '#fff' : '#000', borderRadius: 6 }}
-            >
-              عندي حساب
+        {mode === 'staff' && (
+          <form onSubmit={handleStaffLogin}>
+            <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+            <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+            <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
+              {loading ? 'جارٍ الدخول...' : 'دخول'}
             </button>
-            <button
-              onClick={() => { setPlayerSubMode('signup'); setError('') }}
-              style={{ flex: 1, padding: 8, background: playerSubMode === 'signup' ? '#111' : '#eee', color: playerSubMode === 'signup' ? '#fff' : '#000', borderRadius: 6 }}
-            >
-              حساب جديد
-            </button>
-          </div>
+          </form>
+        )}
 
-          {playerSubMode === 'login' ? (
-            <form onSubmit={handlePlayerLogin}>
-              <input type="email" placeholder="الإيميل" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required />
-              <input type="password" placeholder="الباسورد" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required />
-              <button type="submit" disabled={loading} style={{ width: '100%', padding: 10, background: '#111', color: '#fff' }}>
-                {loading ? 'جاري الدخول...' : 'دخول'}
+        {mode === 'player' && (
+          <>
+            <div style={{ display: 'flex', marginBottom: 16, gap: 8 }}>
+              <button
+                onClick={() => { setPlayerSubMode('login'); setError('') }}
+                style={{
+                  flex: 1,
+                  padding: 8,
+                  borderRadius: 6,
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  fontFamily: "'Tajawal', sans-serif",
+                  background: playerSubMode === 'login' ? '#d4af37' : 'transparent',
+                  color: playerSubMode === 'login' ? '#0f172a' : '#94a3b8',
+                  cursor: 'pointer',
+                }}
+              >
+                عندي حساب
               </button>
-            </form>
-          ) : (
-            <form onSubmit={handlePlayerSignup}>
-              <input type="text" placeholder="الاسم بالكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required />
-              <input type="email" placeholder="الإيميل" value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required />
-              <input type="tel" placeholder="رقم التليفون (اختياري)" value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} />
-              <input type="password" placeholder="الباسورد" value={password} onChange={(e) => setPassword(e.target.value)} style={{ width: '100%', padding: 10, marginBottom: 10 }} required minLength={6} />
-              <button type="submit" disabled={loading} style={{ width: '100%', padding: 10, background: '#111', color: '#fff' }}>
-                {loading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب'}
+              <button
+                onClick={() => { setPlayerSubMode('signup'); setError('') }}
+                style={{
+                  flex: 1,
+                  padding: 8,
+                  borderRadius: 6,
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  fontFamily: "'Tajawal', sans-serif",
+                  background: playerSubMode === 'signup' ? '#d4af37' : 'transparent',
+                  color: playerSubMode === 'signup' ? '#0f172a' : '#94a3b8',
+                  cursor: 'pointer',
+                }}
+              >
+                حساب جديد
               </button>
-            </form>
-          )}
-        </>
-      )}
+            </div>
 
-      {error && <p style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>{error}</p>}
+            {playerSubMode === 'login' ? (
+              <form onSubmit={handlePlayerLogin}>
+                <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+                <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+                <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
+                  {loading ? 'جارٍ الدخول...' : 'دخول'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handlePlayerSignup}>
+                <input type="text" placeholder="الاسم بالكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} style={inputStyle} required />
+                <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+                <input type="tel" placeholder="رقم الهاتف (اختياري)" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} />
+                <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required minLength={6} />
+                <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
+                  {loading ? 'جارٍ إنشاء الحساب...' : 'إنشاء حساب'}
+                </button>
+              </form>
+            )}
+          </>
+        )}
+
+        {error && <p style={{ color: '#fca5a5', textAlign: 'center', marginTop: 14, fontSize: 14 }}>{error}</p>}
+      </div>
     </div>
   )
 }
