@@ -93,19 +93,20 @@ export default function HomePage() {
         position: 'relative',
       }}
     >
-      {/* Floating Glassmorphism Action Button (عائم على الشاشة بشكل مذهل) */}
+      {/* Floating Glassmorphism Action Button (عائمة وثابتة على الشاشة تماماً) */}
       <div
         style={{
           position: 'fixed',
-          bottom: '30px',
-          left: '30px',
-          zIndex: 999,
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(212, 175, 55, 0.4)',
+          bottom: '35px',
+          left: '35px',
+          zIndex: 9999,
+          background: 'rgba(15, 23, 42, 0.9)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(212, 175, 55, 0.5)',
           borderRadius: 50,
-          padding: '8px 20px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(212,175,55,0.2)',
+          padding: '10px 22px',
+          boxShadow: '0 15px 35px rgba(0,0,0,0.7), 0 0 25px rgba(212,175,55,0.3)',
           display: 'flex',
           alignItems: 'center',
           gap: 12,
@@ -164,7 +165,7 @@ export default function HomePage() {
         </Link>
       </nav>
 
-      {/* Hero Section - إبراز الطابع الأكاديمي والرياضي للدكتور */}
+      {/* Hero Section */}
       <section style={{ textAlign: 'center', padding: '90px 24px 70px', maxWidth: 1000, margin: '0 auto' }}>
         <div
           style={{
@@ -194,7 +195,6 @@ export default function HomePage() {
           نضع بين أيديكم خبرة أكاديمية وعملية تمتد لأكثر من عشرين عامًا من البطولات والإنجازات المطلقة.
         </p>
 
-        {/* Hero Image with Elite Golden Aura */}
         <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto 30px' }}>
           <div
             style={{
@@ -224,7 +224,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Captain Achievements - تاريخ حافل */}
+      {/* Captain Achievements */}
       <section style={{ maxWidth: 1150, margin: '0 auto', padding: '20px 24px 80px' }}>
         <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 32, fontWeight: 900, marginBottom: 40 }}>
           🏆 سجل إنجازات <span style={{ color: '#d4af37' }}>الكابتن التاريخية</span>
@@ -304,7 +304,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Players - مساحة مضاعفة ومذهلة للأبطال */}
+      {/* Players */}
       <section style={{ maxWidth: 1300, margin: '0 auto', padding: '20px 24px 100px' }}>
         <h2 style={{ textAlign: 'center', color: '#f8fafc', fontSize: 36, fontWeight: 900, marginBottom: 16 }}>
           ⭐ نجوم وأبطال <span style={{ color: '#d4af37' }}>الأكاديمية</span> الأساطير
