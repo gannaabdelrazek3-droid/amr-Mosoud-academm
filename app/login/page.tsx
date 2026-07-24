@@ -102,18 +102,75 @@ export default function LoginPage() {
         justifyContent: 'center',
         padding: 20,
         fontFamily: "'Tajawal', sans-serif",
+        position: 'relative',
       }}
     >
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        .loading-spinner {
+          animation: spin 0.8s linear infinite;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .loading-banner {
+          animation: fadeIn 0.3s ease;
+        }
+      `}</style>
+
+      {loading && (
+        <div
+          className="loading-banner"
+          style={{
+            position: 'fixed',
+            top: 20,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            background: 'rgba(212, 175, 55, 0.95)',
+            color: '#0f172a',
+            padding: '12px 24px',
+            borderRadius: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            fontWeight: 700,
+            fontSize: 14,
+            boxShadow: '0 8px 25px rgba(0,0,0,0.4)',
+            maxWidth: '90vw',
+            textAlign: 'center',
+          }}
+        >
+          <span
+            className="loading-spinner"
+            style={{
+              display: 'inline-block',
+              width: 16,
+              height: 16,
+              border: '2px solid rgba(15, 23, 42, 0.3)',
+              borderTopColor: '#0f172a',
+              borderRadius: '50%',
+            }}
+          />
+          جارٍ التحقق من بياناتك، برجاء الانتظار قليلًا...
+        </div>
+      )}
+
       <div
         style={{
           width: '100%',
           maxWidth: 420,
-          background: 'rgba(30, 41, 59, 0.65)',
-          backdropFilter: 'blur(16px)',
+          background: 'rgba(30, 41, 59, 0.9)',
           border: '1px solid rgba(212, 175, 55, 0.4)',
           borderRadius: 20,
           padding: '40px 32px',
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(212, 175, 55, 0.15)',
+          opacity: loading ? 0.6 : 1,
+          pointerEvents: loading ? 'none' : 'auto',
+          transition: 'opacity 0.2s',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
