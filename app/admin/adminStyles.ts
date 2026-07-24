@@ -25,11 +25,10 @@ export const adminStyles = {
     marginBottom: 24,
   },
   formCard: {
-    background: 'rgba(30, 41, 59, 0.6)',
+    background: 'rgba(30, 41, 59, 0.9)',
     border: '1px solid rgba(212, 175, 55, 0.25)',
     borderRadius: 16,
     padding: 32,
-    backdropFilter: 'blur(10px)',
     maxWidth: 640,
   },
   label: {
@@ -89,12 +88,12 @@ export const adminStyles = {
     borderRadius: 8,
   },
   statCard: {
-    flex: 1,
-    background: 'rgba(30, 41, 59, 0.6)',
+    flex: '1 1 200px',
+    background: 'rgba(30, 41, 59, 0.9)',
     borderRadius: 16,
     padding: 24,
     border: '1px solid rgba(212, 175, 55, 0.25)',
-    backdropFilter: 'blur(10px)',
+    minWidth: 0,
   },
   statLabel: {
     color: '#94a3b8',
@@ -120,7 +119,7 @@ export const adminStyles = {
     justifyContent: 'center',
     gap: 8,
     padding: '22px 16px',
-    background: 'rgba(30, 41, 59, 0.6)',
+    background: 'rgba(30, 41, 59, 0.9)',
     color: '#f1f5f9',
     borderRadius: 14,
     textDecoration: 'none',
@@ -130,10 +129,9 @@ export const adminStyles = {
     textAlign: 'center' as const,
   },
   chartCard: {
-    background: 'rgba(30, 41, 59, 0.6)',
+    background: 'rgba(30, 41, 59, 0.9)',
     border: '1px solid rgba(212, 175, 55, 0.25)',
     borderRadius: 16,
     padding: 24,
-    backdropFilter: 'blur(10px)',
   },
 }
