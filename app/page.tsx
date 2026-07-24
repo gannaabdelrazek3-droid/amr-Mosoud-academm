@@ -133,86 +133,116 @@ export default function HomePage() {
 
         @media (max-width: 768px) {
           .home-navbar {
-            padding: 14px 18px;
+            padding: 10px 14px;
           }
           .home-navbar strong {
-            font-size: 15px !important;
+            font-size: 12px !important;
+          }
+          .home-navbar span:first-child {
+            font-size: 18px !important;
           }
           .home-navbar .login-top-btn {
-            padding: 8px 16px !important;
-            font-size: 13px !important;
+            padding: 6px 12px !important;
+            font-size: 11px !important;
           }
           .home-hero {
-            padding: 50px 18px 40px;
+            padding: 34px 14px 26px;
           }
           .home-hero h1 {
-            font-size: 30px !important;
+            font-size: 22px !important;
+            margin-bottom: 12px !important;
           }
           .home-hero p {
-            font-size: 15px !important;
-            line-height: 1.7 !important;
+            font-size: 12.5px !important;
+            line-height: 1.6 !important;
+            margin-bottom: 22px !important;
           }
           .home-badge {
-            font-size: 12px !important;
-            padding: 6px 14px !important;
+            font-size: 10px !important;
+            padding: 4px 10px !important;
+          }
+          .home-badge span:last-child {
+            font-size: 10px !important;
           }
           .home-photo-wrap {
-            width: 130px !important;
-            height: 130px !important;
+            width: 90px !important;
+            height: 90px !important;
           }
           .home-section-title {
-            font-size: 22px !important;
-            margin-bottom: 24px !important;
+            font-size: 16px !important;
+            margin-bottom: 16px !important;
           }
           .home-players-title {
-            font-size: 24px !important;
+            font-size: 17px !important;
           }
           .home-section {
-            padding: 40px 16px !important;
+            padding: 26px 12px !important;
           }
           .achievement-card {
-            padding: 18px !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
           }
           .achievement-year {
-            font-size: 20px !important;
+            font-size: 15px !important;
+            margin-bottom: 2px !important;
           }
           .achievement-title {
-            font-size: 15px !important;
+            font-size: 12px !important;
+            margin-bottom: 4px !important;
           }
           .sport-card {
-            padding: 22px !important;
+            padding: 14px !important;
+            border-radius: 12px !important;
           }
           .sport-icon {
-            font-size: 36px !important;
+            font-size: 24px !important;
+            margin-bottom: 6px !important;
           }
           .sport-name {
-            font-size: 16px !important;
+            font-size: 12px !important;
           }
           .player-card {
-            padding: 20px !important;
+            padding: 14px !important;
+            border-radius: 14px !important;
           }
           .player-avatar {
-            width: 60px !important;
-            height: 60px !important;
+            width: 44px !important;
+            height: 44px !important;
           }
           .player-name {
-            font-size: 16px !important;
+            font-size: 12.5px !important;
+            margin-bottom: 3px !important;
+          }
+          .player-badge {
+            font-size: 9.5px !important;
+            padding: 2px 7px !important;
+          }
+          .player-achv-list {
+            font-size: 11px !important;
+            line-height: 1.6 !important;
+          }
+          .player-achv-list li {
+            margin-bottom: 3px !important;
           }
           .floating-interactive-btn {
-            bottom: 18px !important;
-            left: 18px !important;
-            padding: 12px 22px !important;
+            bottom: 12px !important;
+            left: 12px !important;
+            padding: 8px 16px !important;
+            font-size: 11px !important;
+          }
+          .floating-interactive-btn span {
             font-size: 13px !important;
           }
           .footer-title {
-            font-size: 20px !important;
+            font-size: 15px !important;
           }
           .footer-sub {
-            font-size: 14px !important;
+            font-size: 11px !important;
+            margin-bottom: 18px !important;
           }
           .footer-btn {
-            padding: 12px 30px !important;
-            font-size: 15px !important;
+            padding: 8px 20px !important;
+            font-size: 12px !important;
           }
         }
       `}</style>
@@ -461,7 +491,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="player-name" style={{ color: '#f8fafc', fontWeight: 900, fontSize: 20, margin: '0 0 6px' }}>{player.name}</h3>
-                  <span style={{ color: '#0f172a', background: '#d4af37', fontSize: 12.5, fontWeight: 800, padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
+                  <span className="player-badge" style={{ color: '#0f172a', background: '#d4af37', fontSize: 12.5, fontWeight: 800, padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
                     بطل معتمد 🏆
                   </span>
                 </div>
@@ -469,7 +499,7 @@ export default function HomePage() {
 
               <div style={{ background: 'rgba(15, 23, 42, 0.75)', borderRadius: 14, padding: 18, border: '1px solid rgba(212, 175, 55, 0.15)' }}>
                 <p style={{ color: '#d4af37', fontSize: 14, fontWeight: 800, margin: '0 0 10px' }}>🎖️ إنجازات البطل:</p>
-                <ul style={{ margin: 0, paddingRight: 18, color: '#e2e8f0', fontSize: 14.5, lineHeight: 1.9 }}>
+                <ul className="player-achv-list" style={{ margin: 0, paddingRight: 18, color: '#e2e8f0', fontSize: 14.5, lineHeight: 1.9 }}>
                   {player.achievements.map((ach, i) => (
                     <li key={i} style={{ marginBottom: 6, fontWeight: 600 }}>{ach}</li>
                   ))}
