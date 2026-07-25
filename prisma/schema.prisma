@@ -30,6 +30,7 @@ model Tenant {
   productRestocks ProductRestock[]
   skills          Skill[]
   skillRatings    SkillRating[]
+  registrationRequests RegistrationRequest[]
 }
 
 enum Role {
@@ -300,4 +301,19 @@ model Tournament {
   result   String?
 
   createdAt DateTime @default(now())
+}
+model RegistrationRequest {
+  id          String   @id @default(cuid())
+  tenantId    String
+  fullName    String
+  age         Int
+  phone       String
+  governorate String
+  sport       String
+  level       String
+  hasCompeted Boolean  @default(false)
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
 }

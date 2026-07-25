@@ -1,24 +1,26 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
 const captainAchievements = [
-  { title: 'بطولة العالم للساندا', year: '2012', place: 'الصين' },
-  { title: 'بطولة العرب للساندا', year: '2014', place: 'تونس' },
-  { title: 'بطولة اليورو للساندا', year: '2015', place: 'موسكو' },
-  { title: 'بطولة إفريقيا للساندا', year: '2016', place: 'مصر' },
-  { title: 'بطل مصر للمحترفين - كيك بوكسينج', year: '2012', place: '' },
-  { title: 'بطل ISKA وحامل حزام اللقب - كيك بوكسينج', year: '2013', place: '' },
-  { title: 'بطل العرب - كيك بوكسينج', year: '2014', place: '' },
-  { title: 'بطل العرب - مواي تاي', year: '2012', place: '' },
-  { title: 'بطل إفريقيا - مواي تاي', year: '2016', place: '' },
+  { title: 'بطولة العالم للساندا', year: '2012', place: 'الصين', sport: 'كونغ فو ساندا' },
+  { title: 'بطولة العرب للساندا', year: '2014', place: 'تونس', sport: 'كونغ فو ساندا' },
+  { title: 'بطولة اليورو للساندا', year: '2015', place: 'موسكو', sport: 'كونغ فو ساندا' },
+  { title: 'بطولة إفريقيا للساندا', year: '2016', place: 'مصر', sport: 'كونغ فو ساندا' },
+  { title: 'بطل مصر للمحترفين - كيك بوكسينج', year: '2012', place: '', sport: 'كيك بوكسينج' },
+  { title: 'بطل ISKA وحامل حزام اللقب - كيك بوكسينج', year: '2013', place: '', sport: 'كيك بوكسينج' },
+  { title: 'بطل العرب - كيك بوكسينج', year: '2014', place: '', sport: 'كيك بوكسينج' },
+  { title: 'بطل العرب - مواي تاي', year: '2012', place: '', sport: 'مواي تاي' },
+  { title: 'بطل إفريقيا - مواي تاي', year: '2016', place: '', sport: 'مواي تاي' },
 ]
 
 const players = [
   {
     name: 'عبدالله محمد صالح',
     image: '/images/abdullah-saleh.jpeg',
+    sport: 'مواي تاي',
     achievements: [
       'المركز الأول - بطولة إفريقيا للأندية',
       'المركز الأول - بطولة السفير التايلاندي للمواي تاي',
@@ -28,11 +30,13 @@ const players = [
   {
     name: 'محمود محمد عبدالرؤوف',
     image: '/images/mahmoud-abdelraouf.jpeg',
+    sport: 'MMA',
     achievements: ['فوز على لاعب روسي - منظمة EMA للـ MMA'],
   },
   {
     name: 'محمد أشرف مرسال',
     image: '/images/mohamed-ashraf.jpeg',
+    sport: 'كيك بوكسينج',
     achievements: [
       'المركز الأول عالميًا - منتخبات كيك بوكسينج (مصر)',
       'المركز الأول أفريقيًا - منتخبات كيك بوكسينج (مصر)',
@@ -42,16 +46,19 @@ const players = [
   {
     name: 'إسلام محمد محمد الشيت',
     image: '/images/eslam-elshet.jpeg',
+    sport: 'كونغ فو ساندا',
     achievements: ['المركز الثاني - تصفيات منتخب مصر ساندا'],
   },
   {
     name: 'سلمى أمير محمد السعيد',
     image: '/images/salma-amer.jpeg',
+    sport: 'كونغ فو ساندا',
     achievements: ['المركز الثالث - تصفيات منتخب مصر ساندا'],
   },
   {
     name: 'محمود شمس الدين فرحات',
     image: '/images/mahmoud-shams.jpeg',
+    sport: 'كونغ فو ساندا',
     achievements: [
       'لاعب منتخب مصر ساندا',
       'بطل جمهورية ساندا',
@@ -62,6 +69,7 @@ const players = [
   {
     name: 'أحمد حسني زكي',
     image: '/images/ahmad-hosny.jpeg',
+    sport: 'كونغ فو ساندا',
     achievements: [
       'لاعب منتخب مصر',
       'بطل جمهورية ساندا',
@@ -72,6 +80,7 @@ const players = [
   {
     name: 'أحمد محمد عبدالرؤوف',
     image: '/images/ahmad-abdelraouf.jpeg',
+    sport: 'MMA',
     achievements: ['بطل MMA - منظمة Warrior (الإمارات)'],
   },
 ]
@@ -83,7 +92,40 @@ const sports = [
   { name: 'MMA', icon: '🤼' },
 ]
 
+const navLinks = [
+  { href: '#home', label: 'الرئيسية' },
+  { href: '#about', label: 'عن الأكاديمية' },
+  { href: '#sports', label: 'الرياضات' },
+  { href: '#players', label: 'الأبطال' },
+  { href: '#achievements', label: 'الإنجازات' },
+  { href: '/register', label: 'التسجيل' },
+]
+
+const filterOptions = ['الكل', 'كونغ فو ساندا', 'كيك بوكسينج', 'مواي تاي', 'MMA']
+
 export default function HomePage() {
+  const [openYear, setOpenYear] = useState<number | null>(null)
+  const [playerFilter, setPlayerFilter] = useState('الكل')
+
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal')
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-visible')
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12 }
+    )
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  const filteredPlayers = playerFilter === 'الكل' ? players : players.filter((p) => p.sport === playerFilter)
+
   return (
     <div
       className="home-page"
@@ -102,21 +144,89 @@ export default function HomePage() {
           box-shadow: 0 20px 45px rgba(0,0,0,0.8), 0 0 35px rgba(212, 175, 55, 0.7);
         }
 
-        .home-navbar {
-          padding: 22px 50px;
+        .reveal {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
         }
+        .reveal-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .home-navbar {
+          padding: 18px 50px;
+        }
+        .nav-links-desktop {
+          display: flex;
+          gap: 30px;
+        }
+        .nav-links-desktop a {
+          color: #e2e8f0;
+          text-decoration: none;
+          font-weight: 700;
+          font-size: 15px;
+          transition: color 0.2s;
+        }
+        .nav-links-desktop a:hover {
+          color: #d4af37;
+        }
+        .nav-toggle-btn {
+          display: none;
+        }
+
         .home-hero {
           padding: 90px 24px 70px;
         }
         .home-hero h1 {
-          font-size: 52px;
+          font-size: 54px;
         }
         .home-hero p {
           font-size: 19px;
         }
+        .hero-btns {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          margin-top: 30px;
+          flex-wrap: wrap;
+        }
+        .hero-btn-primary {
+          padding: 16px 38px;
+          background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+          color: #0f172a;
+          border-radius: 14px;
+          text-decoration: none;
+          font-weight: 900;
+          font-size: 16px;
+          box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+          border: none;
+          cursor: pointer;
+          transition: transform 0.25s ease;
+        }
+        .hero-btn-primary:hover {
+          transform: translateY(-4px);
+        }
+        .hero-btn-secondary {
+          padding: 16px 38px;
+          background: transparent;
+          color: #f8fafc;
+          border-radius: 14px;
+          text-decoration: none;
+          font-weight: 900;
+          font-size: 16px;
+          border: 2px solid rgba(212, 175, 55, 0.5);
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+        .hero-btn-secondary:hover {
+          background: rgba(212, 175, 55, 0.12);
+          transform: translateY(-4px);
+        }
+
         .home-photo-wrap {
-          width: 200px;
-          height: 200px;
+          width: 220px;
+          height: 220px;
         }
         .home-section-title {
           font-size: 32px;
@@ -131,6 +241,54 @@ export default function HomePage() {
           font-size: 16px;
         }
 
+        .timeline-item {
+          cursor: pointer;
+        }
+        .timeline-details {
+          overflow: hidden;
+          max-height: 0;
+          transition: max-height 0.35s ease;
+        }
+        .timeline-details.open {
+          max-height: 200px;
+        }
+
+        .filter-btn {
+          padding: 10px 20px;
+          border-radius: 30px;
+          border: 1px solid rgba(212, 175, 55, 0.35);
+          background: transparent;
+          color: #94a3b8;
+          font-family: 'Tajawal', sans-serif;
+          font-weight: 700;
+          font-size: 13.5px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .filter-btn.active {
+          background: #d4af37;
+          color: #0f172a;
+          border-color: #d4af37;
+        }
+
+        @media (max-width: 900px) {
+          .nav-links-desktop {
+            display: none;
+          }
+          .nav-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: #d4af37;
+            padding: 8px 14px;
+            font-size: 20px;
+            cursor: pointer;
+          }
+        }
+
         @media (max-width: 768px) {
           .home-navbar {
             padding: 10px 14px;
@@ -141,21 +299,17 @@ export default function HomePage() {
           .home-navbar span:first-child {
             font-size: 18px !important;
           }
-          .home-navbar .login-top-btn {
-            padding: 6px 12px !important;
-            font-size: 11px !important;
-          }
           .home-hero {
             padding: 34px 14px 26px;
           }
           .home-hero h1 {
-            font-size: 22px !important;
+            font-size: 24px !important;
             margin-bottom: 12px !important;
           }
           .home-hero p {
             font-size: 12.5px !important;
             line-height: 1.6 !important;
-            margin-bottom: 22px !important;
+            margin-bottom: 20px !important;
           }
           .home-badge {
             font-size: 10px !important;
@@ -164,9 +318,14 @@ export default function HomePage() {
           .home-badge span:last-child {
             font-size: 10px !important;
           }
+          .hero-btn-primary,
+          .hero-btn-secondary {
+            padding: 11px 22px !important;
+            font-size: 12.5px !important;
+          }
           .home-photo-wrap {
-            width: 90px !important;
-            height: 90px !important;
+            width: 100px !important;
+            height: 100px !important;
           }
           .home-section-title {
             font-size: 16px !important;
@@ -178,17 +337,8 @@ export default function HomePage() {
           .home-section {
             padding: 26px 12px !important;
           }
-          .achievement-card {
-            padding: 12px !important;
-            border-radius: 12px !important;
-          }
-          .achievement-year {
-            font-size: 15px !important;
-            margin-bottom: 2px !important;
-          }
           .achievement-title {
             font-size: 12px !important;
-            margin-bottom: 4px !important;
           }
           .sport-card {
             padding: 14px !important;
@@ -244,12 +394,16 @@ export default function HomePage() {
             padding: 8px 20px !important;
             font-size: 12px !important;
           }
+          .filter-btn {
+            padding: 7px 14px !important;
+            font-size: 11.5px !important;
+          }
         }
       `}</style>
 
       {/* زر عائم */}
       <Link
-        href="/login"
+        href="/register"
         className="floating-interactive-btn"
         style={{
           position: 'fixed',
@@ -267,11 +421,12 @@ export default function HomePage() {
           transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
       >
-        <span style={{ fontSize: 18 }}>⚡</span> تسجيل الدخول
+        <span style={{ fontSize: 18 }}>⚡</span> سجّل الآن
       </Link>
 
       {/* Navbar */}
       <nav
+        id="home"
         className="home-navbar"
         style={{
           display: 'flex',
@@ -288,28 +443,64 @@ export default function HomePage() {
           <span style={{ fontSize: 26, filter: 'drop-shadow(0 0 12px rgba(212, 175, 55, 0.6))' }}>🥇</span>
           <strong style={{ color: '#f8fafc', fontSize: 20, letterSpacing: 0.5 }}>أكاديمية الكابتن عمرو مسعود</strong>
         </div>
-        <Link
-          href="/login"
-          className="btn-primary login-top-btn"
-          style={{
-            padding: '10px 28px',
-            background: 'linear-gradient(135deg, #d4af37 0%, #aa7c11 100%)',
-            color: '#0f172a',
-            borderRadius: 12,
-            textDecoration: 'none',
-            fontWeight: 800,
-            boxShadow: '0 4px 15px rgba(212, 175, 55, 0.3)',
-            whiteSpace: 'nowrap',
+
+        <div className="nav-links-desktop">
+          {navLinks.map((link) => (
+            <a key={link.href} href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        </div>
+
+        <button
+          className="nav-toggle-btn"
+          onClick={() => {
+            const panel = document.getElementById('mobile-nav-panel')
+            if (panel) panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex'
           }}
         >
-          تسجيل الدخول
-        </Link>
+          ☰
+        </button>
       </nav>
+
+      <div
+        id="mobile-nav-panel"
+        style={{
+          display: 'none',
+          flexDirection: 'column',
+          background: 'rgba(15, 23, 42, 0.98)',
+          borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 99,
+        }}
+      >
+        {navLinks.map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            onClick={() => {
+              const panel = document.getElementById('mobile-nav-panel')
+              if (panel) panel.style.display = 'none'
+            }}
+            style={{
+              color: '#e2e8f0',
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: 15,
+              padding: '14px 20px',
+              borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+            }}
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
 
       {/* Hero Section */}
       <section className="home-hero" style={{ textAlign: 'center', maxWidth: 1000, margin: '0 auto' }}>
         <div
-          className="home-badge"
+          className="home-badge reveal"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -328,16 +519,25 @@ export default function HomePage() {
           </span>
         </div>
 
-        <h1 style={{ fontWeight: 900, color: '#f8fafc', margin: '0 0 20px', lineHeight: 1.2 }}>
+        <h1 className="reveal" style={{ fontWeight: 900, color: '#f8fafc', margin: '0 0 20px', lineHeight: 1.2 }}>
           الكابتن <span style={{ color: '#d4af37', textShadow: '0 0 30px rgba(212, 175, 55, 0.5)' }}>عمرو مسعود</span>
         </h1>
 
-        <p style={{ color: '#94a3b8', maxWidth: 750, margin: '0 auto 40px', lineHeight: 1.8 }}>
+        <p className="reveal" style={{ color: '#94a3b8', maxWidth: 750, margin: '0 auto 10px', lineHeight: 1.8 }}>
           لاعب منتخب مصر للساندا (2012–2016) وبطل جمهورية متعدد الألقاب في الساندا وكيك بوكسينج ومواي تاي،
           نضع بين أيديكم خبرة أكاديمية وعملية تمتد لأكثر من عشرين عامًا من البطولات والإنجازات المطلقة.
         </p>
 
-        <div className="home-photo-wrap" style={{ position: 'relative', margin: '0 auto 30px' }}>
+        <div className="hero-btns reveal">
+          <a href="/register" className="hero-btn-primary">
+            احجز مكانك الآن
+          </a>
+          <a href="#about" className="hero-btn-secondary">
+            اكتشف الأكاديمية
+          </a>
+        </div>
+
+        <div className="home-photo-wrap reveal" style={{ position: 'relative', margin: '40px auto 0' }}>
           <div
             style={{
               position: 'absolute',
@@ -366,62 +566,86 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Captain Achievements */}
-      <section className="home-section" style={{ maxWidth: 1150, margin: '0 auto', padding: '20px 24px 80px' }}>
-        <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 40 }}>
+      {/* About */}
+      <section id="about" className="home-section reveal" style={{ maxWidth: 800, margin: '0 auto', padding: '20px 24px 60px', textAlign: 'center' }}>
+        <h2 className="home-section-title" style={{ color: '#f8fafc', fontWeight: 900, marginBottom: 16 }}>
+          عن <span style={{ color: '#d4af37' }}>الأكاديمية</span>
+        </h2>
+        <p style={{ color: '#94a3b8', lineHeight: 1.9, fontSize: 16 }}>
+          أكاديمية الكابتن عمرو مسعود هي بيت خبرة رياضية متكاملة، تجمع بين التدريب الأكاديمي والعملي في رياضات
+          القتال والجمباز، بإشراف مباشر من دكتور متخصص في علوم الرياضة وبطل عالمي سابق، لصناعة أبطال المستقبل
+          بأعلى معايير الاحتراف.
+        </p>
+      </section>
+
+      {/* Captain Achievements — Interactive Timeline */}
+      <section id="achievements" className="home-section reveal" style={{ maxWidth: 850, margin: '0 auto', padding: '20px 24px 80px' }}>
+        <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 16 }}>
           🏆 سجل إنجازات <span style={{ color: '#d4af37' }}>الكابتن التاريخية</span>
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
+        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 14, marginBottom: 40 }}>اضغط على أي إنجاز لعرض التفاصيل</p>
+
+        <div style={{ position: 'relative', paddingRight: 30 }}>
+          <div
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: 0,
+              bottom: 0,
+              width: 2,
+              background: 'linear-gradient(to bottom, #d4af37, rgba(212,175,55,0.1))',
+            }}
+          />
           {captainAchievements.map((a, i) => (
-            <div
-              key={i}
-              className="card-hover achievement-card"
-              style={{
-                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)',
-                border: '1px solid rgba(212, 175, 55, 0.3)',
-                borderRadius: 18,
-                padding: 26,
-                position: 'relative',
-                overflow: 'hidden',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.4)',
-              }}
-            >
+            <div key={i} style={{ position: 'relative', marginBottom: 18 }}>
               <div
                 style={{
                   position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: 5,
-                  height: '100%',
-                  background: 'linear-gradient(to bottom, #d4af37, #aa7c11)',
+                  right: -30 + 8,
+                  top: 20,
+                  width: 14,
+                  height: 14,
+                  borderRadius: '50%',
+                  background: '#d4af37',
+                  border: '3px solid #0f172a',
+                  boxShadow: '0 0 10px rgba(212,175,55,0.6)',
                 }}
               />
-              <span className="achievement-year" style={{ color: '#d4af37', fontWeight: 900, fontSize: 26, display: 'block', marginBottom: 6 }}>
-                {a.year}
-              </span>
-              <p className="achievement-title" style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 18, margin: '0 0 8px' }}>{a.title}</p>
-              {a.place && (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    background: 'rgba(212, 175, 55, 0.15)',
-                    color: '#f8fafc',
-                    padding: '3px 12px',
-                    borderRadius: 8,
-                    fontSize: 13.5,
-                    fontWeight: 700,
-                  }}
-                >
-                  📍 {a.place}
-                </span>
-              )}
+              <div
+                className="timeline-item"
+                onClick={() => setOpenYear(openYear === i ? null : i)}
+                style={{
+                  background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  borderRadius: 16,
+                  padding: '18px 22px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ color: '#d4af37', fontWeight: 900, fontSize: 20 }}>{a.year}</span>
+                    <p className="achievement-title" style={{ color: '#f1f5f9', fontWeight: 700, fontSize: 16, margin: '4px 0 0' }}>
+                      {a.title}
+                    </p>
+                  </div>
+                  <span style={{ color: '#d4af37', fontSize: 18, transform: openYear === i ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }}>
+                    ⌄
+                  </span>
+                </div>
+                <div className={`timeline-details ${openYear === i ? 'open' : ''}`}>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(212, 175, 55, 0.15)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <span style={{ color: '#e2e8f0', fontSize: 14 }}>🥋 الرياضة: <strong style={{ color: '#d4af37' }}>{a.sport}</strong></span>
+                    {a.place && <span style={{ color: '#e2e8f0', fontSize: 14 }}>📍 الدولة: <strong style={{ color: '#d4af37' }}>{a.place}</strong></span>}
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* Sports */}
-      <section className="home-section" style={{ maxWidth: 1050, margin: '0 auto', padding: '20px 24px 80px' }}>
+      <section id="sports" className="home-section reveal" style={{ maxWidth: 1050, margin: '0 auto', padding: '20px 24px 80px' }}>
         <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 40 }}>
           🔥 الرياضات الاحترافية بالأكاديمية
         </h2>
@@ -448,17 +672,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Players */}
-      <section className="home-section" style={{ maxWidth: 1300, margin: '0 auto', padding: '20px 24px 100px' }}>
+      {/* Players with filtering */}
+      <section id="players" className="home-section reveal" style={{ maxWidth: 1300, margin: '0 auto', padding: '20px 24px 100px' }}>
         <h2 className="home-players-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 16 }}>
           ⭐ نجوم وأبطال <span style={{ color: '#d4af37' }}>الأكاديمية</span> الأساطير
         </h2>
-        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 16, marginBottom: 50 }}>
+        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 16, marginBottom: 30 }}>
           نفتخر بصناعة الأبطال ومنصات التتويج المحلية والعالمية
         </p>
 
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 40 }}>
+          {filterOptions.map((f) => (
+            <button
+              key={f}
+              className={`filter-btn ${playerFilter === f ? 'active' : ''}`}
+              onClick={() => setPlayerFilter(f)}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {players.map((player) => (
+          {filteredPlayers.map((player) => (
             <div
               key={player.name}
               className="card-hover player-card"
@@ -492,7 +728,7 @@ export default function HomePage() {
                 <div>
                   <h3 className="player-name" style={{ color: '#f8fafc', fontWeight: 900, fontSize: 20, margin: '0 0 6px' }}>{player.name}</h3>
                   <span className="player-badge" style={{ color: '#0f172a', background: '#d4af37', fontSize: 12.5, fontWeight: 800, padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
-                    بطل معتمد 🏆
+                    {player.sport} 🏆
                   </span>
                 </div>
               </div>
@@ -511,12 +747,15 @@ export default function HomePage() {
       </section>
 
       {/* Footer CTA */}
-      <section style={{ textAlign: 'center', padding: '60px 24px 90px', background: 'rgba(15, 23, 42, 0.95)', borderTop: '1px solid rgba(212, 175, 55, 0.3)' }}>
+      <section
+        className="reveal"
+        style={{ textAlign: 'center', padding: '60px 24px 90px', background: 'rgba(15, 23, 42, 0.95)', borderTop: '1px solid rgba(212, 175, 55, 0.3)' }}
+      >
         <h3 className="footer-title" style={{ color: '#f8fafc', fontSize: 28, fontWeight: 900, marginBottom: 16 }}>ابدأ رحلتك نحو البطولات الآن</h3>
         <p className="footer-sub" style={{ color: '#94a3b8', marginBottom: 30, fontSize: 17 }}>انضم لأكاديمية الدكتور عمرو مسعود واصنع مجدك الرياضي</p>
         <Link
-          href="/login"
-          className="btn-primary footer-btn"
+          href="/register"
+          className="footer-btn"
           style={{
             display: 'inline-block',
             padding: '16px 50px',
