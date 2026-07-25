@@ -6,6 +6,7 @@ import SignOutButton from './SignOutButton'
 
 const navLinks = [
   { href: '/dashboard', label: 'الرئيسية', icon: '🏠' },
+  { href: '/admin/calendar', label: 'التقويم', icon: '📅' },
   { href: '/admin/add-player', label: 'إضافة لاعب', icon: '➕' },
   { href: '/admin/add-coach', label: 'إضافة مدرب', icon: '🏋️' },
   { href: '/admin/sports', label: 'الرياضات', icon: '🏅' },

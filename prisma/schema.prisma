@@ -31,6 +31,7 @@ model Tenant {
   skills          Skill[]
   skillRatings    SkillRating[]
   registrationRequests RegistrationRequest[]
+  events Event[]
 }
 
 enum Role {
@@ -96,6 +97,7 @@ model Sport {
   weightLogs  WeightLog[]
   progress    PlayerProgress[]
   skills      Skill[]
+  events Event[]
 
   createdAt DateTime @default(now())
 }
@@ -316,4 +318,29 @@ model RegistrationRequest {
   createdAt   DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
+}
+enum EventType {
+  TRAINING
+  TOURNAMENT
+  TEST
+  ACTIVITY
+}
+
+model Event {
+  id       String    @id @default(uuid())
+  tenantId String
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+
+  title    String
+  type     EventType
+  date     DateTime
+  time     String?
+  location String?
+  category String?
+  notes    String?
+
+  sportId String?
+  sport   Sport?  @relation(fields: [sportId], references: [id])
+
+  createdAt DateTime @default(now())
 }

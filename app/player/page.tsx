@@ -57,6 +57,26 @@ export default async function PlayerDashboard() {
       <div style={pageStyle}>
         <h1 style={{ color: '#f8fafc' }}>أهلًا بك، {player.fullName} 👋</h1>
 
+        <a
+          href="/player/calendar"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            marginTop: 16,
+            padding: '14px 20px',
+            background: 'rgba(212, 175, 55, 0.12)',
+            border: '1px solid rgba(212, 175, 55, 0.4)',
+            borderRadius: 12,
+            color: '#d4af37',
+            textDecoration: 'none',
+            fontWeight: 700,
+          }}
+        >
+          <span style={{ fontSize: 20 }}>📅</span>
+          عرض التقويم ومواعيد الأكاديمية
+        </a>
+
         <div style={cardStyle}>
           <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>📊 الاشتراك</h3>
           {activeSubscription ? (
