@@ -32,12 +32,9 @@ const buttonStyle = {
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'staff' | 'player'>('staff')
-  const [playerSubMode, setPlayerSubMode] = useState<'login' | 'signup'>('login')
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [phone, setPhone] = useState('')
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -68,27 +65,6 @@ export default function LoginPage() {
       setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
       return
     }
-    router.push('/player')
-  }
-
-  async function handlePlayerSignup(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    const res = await fetch('/api/player-signup', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, fullName, phone }),
-    })
-
-    setLoading(false)
-
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
-      return
-    }
-
     router.push('/player')
   }
 
@@ -227,60 +203,20 @@ export default function LoginPage() {
         )}
 
         {mode === 'player' && (
-          <>
-            <div style={{ display: 'flex', marginBottom: 16, gap: 8 }}>
-              <button
-                onClick={() => { setPlayerSubMode('login'); setError('') }}
-                style={{
-                  flex: 1,
-                  padding: 8,
-                  borderRadius: 6,
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
-                  fontFamily: "'Tajawal', sans-serif",
-                  background: playerSubMode === 'login' ? '#d4af37' : 'transparent',
-                  color: playerSubMode === 'login' ? '#0f172a' : '#94a3b8',
-                  cursor: 'pointer',
-                }}
-              >
-                عندي حساب
-              </button>
-              <button
-                onClick={() => { setPlayerSubMode('signup'); setError('') }}
-                style={{
-                  flex: 1,
-                  padding: 8,
-                  borderRadius: 6,
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
-                  fontFamily: "'Tajawal', sans-serif",
-                  background: playerSubMode === 'signup' ? '#d4af37' : 'transparent',
-                  color: playerSubMode === 'signup' ? '#0f172a' : '#94a3b8',
-                  cursor: 'pointer',
-                }}
-              >
-                حساب جديد
-              </button>
-            </div>
-
-            {playerSubMode === 'login' ? (
-              <form onSubmit={handlePlayerLogin}>
-                <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
-                <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
-                <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
-                  {loading ? 'جارٍ الدخول...' : 'دخول'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handlePlayerSignup}>
-                <input type="text" placeholder="الاسم بالكامل" value={fullName} onChange={(e) => setFullName(e.target.value)} style={inputStyle} required />
-                <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
-                <input type="tel" placeholder="رقم الهاتف (اختياري)" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} />
-                <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required minLength={6} />
-                <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
-                  {loading ? 'جارٍ إنشاء الحساب...' : 'إنشاء حساب'}
-                </button>
-              </form>
-            )}
-          </>
+          <form onSubmit={handlePlayerLogin}>
+            <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
+            <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
+            <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
+              {loading ? 'جارٍ الدخول...' : 'دخول'}
+            </button>
+            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, marginTop: 16 }}>
+              لسه معملتش حساب؟ سجّل بياناتك من صفحة{' '}
+              <a href="/register" style={{ color: '#d4af37', fontWeight: 700, textDecoration: 'none' }}>
+                التسجيل
+              </a>{' '}
+              وسيتواصل معك فريق الأكاديمية.
+            </p>
+          </form>
         )}
 
         {error && <p style={{ color: '#fca5a5', textAlign: 'center', marginTop: 14, fontSize: 14 }}>{error}</p>}
