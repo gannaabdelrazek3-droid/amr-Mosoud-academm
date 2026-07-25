@@ -37,6 +37,10 @@ export default async function DashboardPage() {
       _sum: { amount: true },
     })
 
+    const pendingRequestsCount = await prisma.registrationRequest.count({
+      where: { tenantId: profile.tenantId, status: 'pending' },
+    })
+
     const nextWeek = new Date()
     nextWeek.setDate(nextWeek.getDate() + 7)
 
@@ -139,6 +143,31 @@ export default async function DashboardPage() {
 
           <h3 style={{ marginTop: 36, marginBottom: 4, color: '#f8fafc', fontSize: 20 }}>الإجراءات السريعة</h3>
           <div style={s.actionGrid}>
+            <a href="/admin/registration-requests" className="action-card" style={{ ...s.actionCard, position: 'relative' }}>
+              {pendingRequestsCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    background: '#ef4444',
+                    color: '#fff',
+                    borderRadius: '50%',
+                    width: 22,
+                    height: 22,
+                    fontSize: 12,
+                    fontWeight: 900,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {pendingRequestsCount}
+                </span>
+              )}
+              <span style={{ fontSize: 24 }}>📋</span>
+              طلبات التسجيل
+            </a>
             <a href="/admin/add-payment" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>💵</span>
               تسجيل دخل
