@@ -99,6 +99,7 @@ const navLinks = [
   { href: '#players', label: 'الأبطال' },
   { href: '#achievements', label: 'الإنجازات' },
   { href: '/register', label: 'التسجيل' },
+  { href: '/login', label: 'تسجيل الدخول' },
 ]
 
 const filterOptions = ['الكل', 'كونغ فو ساندا', 'كيك بوكسينج', 'مواي تاي', 'MMA']
@@ -159,7 +160,8 @@ export default function HomePage() {
         }
         .nav-links-desktop {
           display: flex;
-          gap: 30px;
+          gap: 26px;
+          align-items: center;
         }
         .nav-links-desktop a {
           color: #e2e8f0;
@@ -170,6 +172,13 @@ export default function HomePage() {
         }
         .nav-links-desktop a:hover {
           color: #d4af37;
+        }
+        .nav-login-link {
+          padding: 8px 20px !important;
+          background: rgba(212, 175, 55, 0.15);
+          border: 1px solid rgba(212, 175, 55, 0.4);
+          border-radius: 8px;
+          color: #d4af37 !important;
         }
         .nav-toggle-btn {
           display: none;
@@ -401,9 +410,9 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* زر عائم */}
+      {/* زر عائم - تسجيل الدخول */}
       <Link
-        href="/register"
+        href="/login"
         className="floating-interactive-btn"
         style={{
           position: 'fixed',
@@ -421,7 +430,7 @@ export default function HomePage() {
           transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
       >
-        <span style={{ fontSize: 18 }}>⚡</span> سجّل الآن
+        <span style={{ fontSize: 18 }}>⚡</span> تسجيل الدخول
       </Link>
 
       {/* Navbar */}
@@ -446,7 +455,7 @@ export default function HomePage() {
 
         <div className="nav-links-desktop">
           {navLinks.map((link) => (
-            <a key={link.href} href={link.href}>
+            <a key={link.href} href={link.href} className={link.href === '/login' ? 'nav-login-link' : ''}>
               {link.label}
             </a>
           ))}
@@ -484,7 +493,7 @@ export default function HomePage() {
               if (panel) panel.style.display = 'none'
             }}
             style={{
-              color: '#e2e8f0',
+              color: link.href === '/login' ? '#d4af37' : '#e2e8f0',
               textDecoration: 'none',
               fontWeight: 700,
               fontSize: 15,
