@@ -1,13 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { adminStyles as s } from '../../adminStyles'
 import AdminShell from '../../AdminShell'
 
 interface Sport {
   id: string
   name: string
+}
+
+interface Coach {
+  id: string
+  fullName: string
 }
 
 interface Skill {
@@ -23,16 +28,21 @@ interface PlayerDetails {
   birthDate: string | null
   sportsBackground: string | null
   email: string | null
+  medicalCheckExpiry: string | null
+  joinDate: string | null
+  coachId: string | null
   subscriptions: { id: string; remaining: number; totalSessions: number; endDate: string }[]
   sports: { sport: { name: string } }[]
 }
 
 export default function EditPlayerPage() {
   const params = useParams()
+  const router = useRouter()
   const playerId = params.playerId as string
 
   const [player, setPlayer] = useState<PlayerDetails | null>(null)
   const [allSports, setAllSports] = useState<Sport[]>([])
+  const [coaches, setCoaches] = useState<Coach[]>([])
   const [playerSportIds, setPlayerSportIds] = useState<string[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
   const [skillRatingsInitial, setSkillRatingsInitial] = useState<Record<string, number>>({})
@@ -42,6 +52,9 @@ export default function EditPlayerPage() {
   const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [sportsBackground, setSportsBackground] = useState('')
+  const [medicalCheckExpiry, setMedicalCheckExpiry] = useState('')
+  const [joinDate, setJoinDate] = useState('')
+  const [coachId, setCoachId] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
@@ -50,6 +63,7 @@ export default function EditPlayerPage() {
   const [subEndDate, setSubEndDate] = useState('')
 
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
 
   function loadData() {
@@ -62,7 +76,11 @@ export default function EditPlayerPage() {
           setPhone(data.player.phone || '')
           setBirthDate(data.player.birthDate ? data.player.birthDate.split('T')[0] : '')
           setSportsBackground(data.player.sportsBackground || '')
+          setMedicalCheckExpiry(data.player.medicalCheckExpiry ? data.player.medicalCheckExpiry.split('T')[0] : '')
+          setJoinDate(data.player.joinDate ? data.player.joinDate.split('T')[0] : '')
+          setCoachId(data.player.coachId || '')
           setAllSports(data.allSports || [])
+          setCoaches(data.coaches || [])
           setPlayerSportIds(data.playerSportIds || [])
           setSelectedSportIds(data.playerSportIds || [])
           setSkills(data.skills || [])
@@ -100,6 +118,9 @@ export default function EditPlayerPage() {
         phone,
         birthDate,
         sportsBackground,
+        medicalCheckExpiry,
+        joinDate,
+        coachId,
         newPassword,
         sportIds: selectedSportIds,
         newSubscription,
@@ -118,6 +139,22 @@ export default function EditPlayerPage() {
     setSubEndDate('')
     setSkillRatings({})
     loadData()
+  }
+
+  async function handleDelete() {
+    if (!confirm('هل أنت متأكد من حذف هذا اللاعب نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.')) return
+    setDeleting(true)
+    const res = await fetch('/api/admin/edit-player', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId }),
+    })
+    setDeleting(false)
+    if (res.ok) {
+      router.push('/dashboard')
+    } else {
+      alert('حدثت مشكلة أثناء الحذف')
+    }
   }
 
   if (loading) {
@@ -193,6 +230,14 @@ export default function EditPlayerPage() {
               الخلفية الرياضية
               <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={s.input} />
             </label>
+            <label style={s.label}>
+              تاريخ الانضمام للأكاديمية
+              <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              تاريخ انتهاء الكشف الطبي
+              <input type="date" value={medicalCheckExpiry} onChange={(e) => setMedicalCheckExpiry(e.target.value)} style={s.input} />
+            </label>
 
             {player.email && (
               <label style={s.label}>
@@ -200,6 +245,20 @@ export default function EditPlayerPage() {
                 <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={s.input} minLength={6} />
               </label>
             )}
+          </div>
+
+          {/* المدرب */}
+          <div style={{ ...s.formCard, marginBottom: 20 }}>
+            <h3 style={sectionTitle}>🏋️ المدرب المسؤول</h3>
+            <label style={s.label}>
+              نقل اللاعب لمدرب آخر
+              <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={s.input}>
+                <option value="">بدون مدرب</option>
+                {coaches.map((c) => (
+                  <option key={c.id} value={c.id}>{c.fullName}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {/* الرياضات */}
@@ -293,6 +352,26 @@ export default function EditPlayerPage() {
 
           {message && <p style={s.error}>{message}</p>}
         </form>
+
+        <div style={{ marginTop: 30, borderTop: '1px solid rgba(239, 68, 68, 0.2)', paddingTop: 20 }}>
+          <h3 style={{ color: '#fca5a5', fontSize: 15, fontWeight: 800, marginBottom: 10 }}>⚠️ منطقة الخطر</h3>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            style={{
+              padding: '12px 24px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              color: '#fca5a5',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderRadius: 10,
+              fontWeight: 700,
+              fontFamily: "'Tajawal', sans-serif",
+              cursor: 'pointer',
+            }}
+          >
+            {deleting ? 'جارٍ الحذف...' : 'حذف اللاعب نهائيًا'}
+          </button>
+        </div>
       </div>
     </AdminShell>
   )

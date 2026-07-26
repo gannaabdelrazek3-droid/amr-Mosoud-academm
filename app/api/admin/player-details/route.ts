@@ -31,6 +31,11 @@ export async function GET(req: NextRequest) {
     orderBy: { name: 'asc' },
   })
 
+  const coaches = await prisma.profile.findMany({
+    where: { tenantId: profile.tenantId, role: 'COACH' },
+    select: { id: true, fullName: true },
+  })
+
   const playerSportIds = player.sports.map((ps) => ps.sportId)
 
   const skills = await prisma.skill.findMany({
@@ -51,10 +56,14 @@ export async function GET(req: NextRequest) {
       birthDate: player.birthDate,
       sportsBackground: player.sportsBackground,
       email: player.email,
+      medicalCheckExpiry: player.medicalCheckExpiry,
+      joinDate: player.joinDate,
+      coachId: player.coachId,
       subscriptions: player.subscriptions,
       sports: player.sports,
     },
     allSports,
+    coaches,
     playerSportIds,
     skills: skills.map((sk) => ({ id: sk.id, name: sk.name, sportName: sk.sport.name })),
     skillRatings: Object.fromEntries(latestRatings),
