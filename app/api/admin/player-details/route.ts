@@ -18,8 +18,10 @@ export async function GET(req: NextRequest) {
     include: {
       subscriptions: { orderBy: { endDate: 'desc' } },
       sports: { include: { sport: true } },
-      skillRatings: { include: { skill: true }, orderBy: { date: 'desc' } },
+      skillRatings: { include: { skill: true }, orderBy: { date: 'desc' }, take: 20 },
       tournaments: { orderBy: { year: 'desc' } },
+      attendances: { include: { sport: true }, orderBy: { date: 'desc' }, take: 20 },
+      weightLogs: { include: { sport: true }, orderBy: { date: 'desc' }, take: 20 },
     },
   })
 
@@ -63,6 +65,25 @@ export async function GET(req: NextRequest) {
       subscriptions: player.subscriptions,
       sports: player.sports,
       tournaments: player.tournaments,
+      recentSkillRatings: player.skillRatings.map((r) => ({
+        id: r.id,
+        skillName: r.skill.name,
+        value: r.value,
+        date: r.date,
+      })),
+      attendances: player.attendances.map((a) => ({
+        id: a.id,
+        sportName: a.sport.name,
+        date: a.date,
+        present: a.present,
+        coachNote: a.coachNote,
+      })),
+      weightLogs: player.weightLogs.map((w) => ({
+        id: w.id,
+        sportName: w.sport.name,
+        weightKg: w.weightKg,
+        date: w.date,
+      })),
     },
     allSports,
     coaches,

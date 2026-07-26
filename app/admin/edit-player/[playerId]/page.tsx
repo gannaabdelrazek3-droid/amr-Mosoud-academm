@@ -36,6 +36,28 @@ interface TournamentItem {
   result: string | null
 }
 
+interface SkillRatingItem {
+  id: string
+  skillName: string
+  value: number
+  date: string
+}
+
+interface AttendanceItem {
+  id: string
+  sportName: string
+  date: string
+  present: boolean
+  coachNote: string | null
+}
+
+interface WeightItem {
+  id: string
+  sportName: string
+  weightKg: number
+  date: string
+}
+
 interface PlayerDetails {
   id: string
   fullName: string
@@ -49,6 +71,9 @@ interface PlayerDetails {
   subscriptions: SubscriptionItem[]
   sports: { sport: { name: string } }[]
   tournaments: TournamentItem[]
+  recentSkillRatings: SkillRatingItem[]
+  attendances: AttendanceItem[]
+  weightLogs: WeightItem[]
 }
 
 export default function EditPlayerPage() {
@@ -82,6 +107,17 @@ export default function EditPlayerPage() {
   const [tournamentYear, setTournamentYear] = useState('')
   const [tournamentResult, setTournamentResult] = useState('')
   const [addingTournament, setAddingTournament] = useState(false)
+
+  const [attSportId, setAttSportId] = useState('')
+  const [attDate, setAttDate] = useState('')
+  const [attPresent, setAttPresent] = useState(true)
+  const [attNote, setAttNote] = useState('')
+  const [addingAttendance, setAddingAttendance] = useState(false)
+
+  const [weightSportId, setWeightSportId] = useState('')
+  const [weightValue, setWeightValue] = useState('')
+  const [weightDate, setWeightDate] = useState('')
+  const [addingWeight, setAddingWeight] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -211,6 +247,77 @@ export default function EditPlayerPage() {
     loadData()
   }
 
+  async function handleDeleteSkillRating(ratingId: string) {
+    if (!confirm('هل أنت متأكد من حذف هذا التقييم؟')) return
+    await fetch('/api/admin/manage-skill-rating', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ratingId }),
+    })
+    loadData()
+  }
+
+  async function handleAddAttendance(e: React.FormEvent) {
+    e.preventDefault()
+    if (!attSportId || !attDate) return
+    setAddingAttendance(true)
+    const res = await fetch('/api/admin/manage-attendance', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId, sportId: attSportId, date: attDate, present: attPresent, coachNote: attNote }),
+    })
+    setAddingAttendance(false)
+    if (res.ok) {
+      setAttSportId('')
+      setAttDate('')
+      setAttPresent(true)
+      setAttNote('')
+      loadData()
+    } else {
+      alert('حدثت مشكلة، حاول مرة أخرى')
+    }
+  }
+
+  async function handleDeleteAttendance(attendanceId: string) {
+    if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return
+    await fetch('/api/admin/manage-attendance', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ attendanceId }),
+    })
+    loadData()
+  }
+
+  async function handleAddWeight(e: React.FormEvent) {
+    e.preventDefault()
+    if (!weightSportId || !weightValue) return
+    setAddingWeight(true)
+    const res = await fetch('/api/admin/manage-weight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId, sportId: weightSportId, weightKg: weightValue, date: weightDate }),
+    })
+    setAddingWeight(false)
+    if (res.ok) {
+      setWeightSportId('')
+      setWeightValue('')
+      setWeightDate('')
+      loadData()
+    } else {
+      alert('حدثت مشكلة، حاول مرة أخرى')
+    }
+  }
+
+  async function handleDeleteWeight(weightId: string) {
+    if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return
+    await fetch('/api/admin/manage-weight', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weightId }),
+    })
+    loadData()
+  }
+
   async function handleDelete() {
     if (!confirm('هل أنت متأكد من حذف هذا اللاعب نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.')) return
     setDeleting(true)
@@ -246,8 +353,6 @@ export default function EditPlayerPage() {
     )
   }
 
-  const activeSub = player.subscriptions[0]
-
   const sectionTitle = {
     color: '#d4af37',
     fontSize: 17,
@@ -265,6 +370,18 @@ export default function EditPlayerPage() {
     fontSize: 12.5,
     cursor: 'pointer',
     border: 'none',
+  }
+
+  const rowStyle = {
+    display: 'flex' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    flexWrap: 'wrap' as const,
+    gap: 10,
+    background: 'rgba(15, 23, 42, 0.5)',
+    borderRadius: 10,
+    padding: '10px 16px',
+    marginBottom: 8,
   }
 
   return (
@@ -364,7 +481,7 @@ export default function EditPlayerPage() {
             )}
           </div>
 
-          {/* المهارات */}
+          {/* المهارات - إضافة تقييم جديد */}
           {skills.length > 0 && (
             <div style={{ ...s.formCard, marginBottom: 20 }}>
               <h3 style={sectionTitle}>🎯 تقييم المهارات</h3>
@@ -398,22 +515,11 @@ export default function EditPlayerPage() {
             <h3 style={sectionTitle}>📅 إضافة اشتراك جديد</h3>
             <label style={s.label}>
               عدد الحصص
-              <input
-                type="number"
-                min={1}
-                value={subSessions}
-                onChange={(e) => setSubSessions(e.target.value)}
-                style={s.input}
-              />
+              <input type="number" min={1} value={subSessions} onChange={(e) => setSubSessions(e.target.value)} style={s.input} />
             </label>
             <label style={s.label}>
               تاريخ انتهاء الاشتراك
-              <input
-                type="date"
-                value={subEndDate}
-                onChange={(e) => setSubEndDate(e.target.value)}
-                style={s.input}
-              />
+              <input type="date" value={subEndDate} onChange={(e) => setSubEndDate(e.target.value)} style={s.input} />
             </label>
           </div>
 
@@ -424,53 +530,63 @@ export default function EditPlayerPage() {
           {message && <p style={s.error}>{message}</p>}
         </form>
 
-        {/* إدارة الاشتراكات القديمة */}
-        <div style={{ ...s.formCard, marginTop: 24, marginBottom: 20 }}>
+        {/* سجل تقييمات المهارات - حذف */}
+        {player.recentSkillRatings.length > 0 && (
+          <div style={{ ...s.formCard, marginTop: 24, marginBottom: 20 }}>
+            <h3 style={sectionTitle}>📊 سجل تقييمات المهارات</h3>
+            {player.recentSkillRatings.map((r) => (
+              <div key={r.id} style={rowStyle}>
+                <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
+                  {r.skillName}: <strong style={{ color: '#d4af37' }}>{r.value}</strong> — {new Date(r.date).toLocaleDateString('ar-EG')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteSkillRating(r.id)}
+                  style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                >
+                  حذف
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* الاشتراكات */}
+        <div style={{ ...s.formCard, marginBottom: 20 }}>
           <h3 style={sectionTitle}>📋 كل الاشتراكات</h3>
           {player.subscriptions.length === 0 ? (
             <p style={{ color: '#94a3b8' }}>لا توجد اشتراكات مسجّلة</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {player.subscriptions.map((sub) => (
-                <div
-                  key={sub.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 10,
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    borderRadius: 10,
-                    padding: '12px 16px',
-                    border: sub.isFrozen ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(148, 163, 184, 0.15)',
-                  }}
-                >
-                  <div>
-                    <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
-                      {sub.remaining} من {sub.totalSessions} حصة — ينتهي {new Date(sub.endDate).toLocaleDateString('ar-EG')}
-                      {sub.isFrozen && <span style={{ color: '#60a5fa', marginRight: 8 }}>❄️ مجمّد</span>}
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleFreeze(sub.id)}
-                      style={{ ...smallBtn, background: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd' }}
-                    >
-                      {sub.isFrozen ? 'إلغاء التجميد' : 'تجميد'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteSubscription(sub.id)}
-                      style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
-                    >
-                      حذف
-                    </button>
-                  </div>
+            player.subscriptions.map((sub) => (
+              <div
+                key={sub.id}
+                style={{
+                  ...rowStyle,
+                  border: sub.isFrozen ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(148, 163, 184, 0.15)',
+                }}
+              >
+                <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
+                  {sub.remaining} من {sub.totalSessions} حصة — ينتهي {new Date(sub.endDate).toLocaleDateString('ar-EG')}
+                  {sub.isFrozen && <span style={{ color: '#60a5fa', marginRight: 8 }}>❄️ مجمّد</span>}
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFreeze(sub.id)}
+                    style={{ ...smallBtn, background: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd' }}
+                  >
+                    {sub.isFrozen ? 'إلغاء التجميد' : 'تجميد'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSubscription(sub.id)}
+                    style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                  >
+                    حذف
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
 
@@ -479,19 +595,9 @@ export default function EditPlayerPage() {
           <h3 style={sectionTitle}>🏆 بطولات اللاعب</h3>
 
           {player.tournaments.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+            <div style={{ marginBottom: 18 }}>
               {player.tournaments.map((t) => (
-                <div
-                  key={t.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    borderRadius: 10,
-                    padding: '10px 16px',
-                  }}
-                >
+                <div key={t.id} style={rowStyle}>
                   <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
                     {t.name} ({t.year}) {t.result && `— ${t.result}`}
                   </p>
@@ -520,13 +626,114 @@ export default function EditPlayerPage() {
               النتيجة (اختياري)
               <input type="text" placeholder="مثال: المركز الأول" value={tournamentResult} onChange={(e) => setTournamentResult(e.target.value)} style={s.input} />
             </label>
-            <button
-              type="submit"
-              disabled={addingTournament}
-              className="btn-primary"
-              style={{ ...s.button, marginTop: 12 }}
-            >
+            <button type="submit" disabled={addingTournament} className="btn-primary" style={{ ...s.button, marginTop: 12 }}>
               {addingTournament ? 'جارٍ الإضافة...' : '+ إضافة بطولة'}
+            </button>
+          </form>
+        </div>
+
+        {/* الحضور */}
+        <div style={{ ...s.formCard, marginBottom: 20 }}>
+          <h3 style={sectionTitle}>✅ سجل الحضور</h3>
+
+          {player.attendances.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              {player.attendances.map((a) => (
+                <div key={a.id} style={rowStyle}>
+                  <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
+                    {a.sportName} — {new Date(a.date).toLocaleDateString('ar-EG')} —{' '}
+                    {a.present ? <span style={{ color: '#22c55e' }}>حضر</span> : <span style={{ color: '#fca5a5' }}>غاب</span>}
+                    {a.coachNote && <span style={{ color: '#94a3b8' }}> — {a.coachNote}</span>}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteAttendance(a.id)}
+                    style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                  >
+                    حذف
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleAddAttendance}>
+            <label style={s.label}>
+              الرياضة
+              <select value={attSportId} onChange={(e) => setAttSportId(e.target.value)} style={s.input}>
+                <option value="">اختر الرياضة</option>
+                {player.sports.map((ps, i) => {
+                  const matched = allSports.find((sp) => sp.name === ps.sport.name)
+                  return matched ? (
+                    <option key={i} value={matched.id}>{matched.name}</option>
+                  ) : null
+                })}
+              </select>
+            </label>
+            <label style={s.label}>
+              التاريخ
+              <input type="date" value={attDate} onChange={(e) => setAttDate(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.checkboxLabel}>
+              <input type="checkbox" checked={attPresent} onChange={(e) => setAttPresent(e.target.checked)} style={s.checkbox} />
+              حضر الحصة
+            </label>
+            <label style={s.label}>
+              ملاحظة (اختياري)
+              <input type="text" value={attNote} onChange={(e) => setAttNote(e.target.value)} style={s.input} />
+            </label>
+            <button type="submit" disabled={addingAttendance} className="btn-primary" style={{ ...s.button, marginTop: 12 }}>
+              {addingAttendance ? 'جارٍ الإضافة...' : '+ إضافة سجل حضور'}
+            </button>
+          </form>
+        </div>
+
+        {/* الوزن */}
+        <div style={{ ...s.formCard, marginBottom: 20 }}>
+          <h3 style={sectionTitle}>⚖️ تطور الوزن</h3>
+
+          {player.weightLogs.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              {player.weightLogs.map((w) => (
+                <div key={w.id} style={rowStyle}>
+                  <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
+                    {w.sportName} — {w.weightKg} كجم — {new Date(w.date).toLocaleDateString('ar-EG')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteWeight(w.id)}
+                    style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                  >
+                    حذف
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleAddWeight}>
+            <label style={s.label}>
+              الرياضة
+              <select value={weightSportId} onChange={(e) => setWeightSportId(e.target.value)} style={s.input}>
+                <option value="">اختر الرياضة</option>
+                {player.sports.map((ps, i) => {
+                  const matched = allSports.find((sp) => sp.name === ps.sport.name)
+                  return matched ? (
+                    <option key={i} value={matched.id}>{matched.name}</option>
+                  ) : null
+                })}
+              </select>
+            </label>
+            <label style={s.label}>
+              الوزن (كجم)
+              <input type="number" step="0.1" value={weightValue} onChange={(e) => setWeightValue(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              التاريخ (اختياري، الافتراضي اليوم)
+              <input type="date" value={weightDate} onChange={(e) => setWeightDate(e.target.value)} style={s.input} />
+            </label>
+            <button type="submit" disabled={addingWeight} className="btn-primary" style={{ ...s.button, marginTop: 12 }}>
+              {addingWeight ? 'جارٍ الإضافة...' : '+ إضافة وزن'}
             </button>
           </form>
         </div>

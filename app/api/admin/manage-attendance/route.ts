@@ -1,0 +1,56 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
+
+export async function POST(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+
+  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
+  if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+
+  const { playerId, sportId, date, present, coachNote } = await req.json()
+
+  if (!playerId || !sportId || !date) {
+    return NextResponse.json({ error: 'برجاء ملء البيانات المطلوبة' }, { status: 400 })
+  }
+
+  const player = await prisma.player.findUnique({ where: { id: playerId } })
+  if (!player || player.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
+  }
+
+  await prisma.attendance.create({
+    data: {
+      playerId,
+      sportId,
+      tenantId: profile.tenantId,
+      date: new Date(date),
+      present: Boolean(present),
+      coachNote: coachNote || null,
+    },
+  })
+
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(req: NextRequest) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+
+  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
+  if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+
+  const { attendanceId } = await req.json()
+
+  const attendance = await prisma.attendance.findUnique({ where: { id: attendanceId } })
+  if (!attendance || attendance.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'السجل غير موجود' }, { status: 404 })
+  }
+
+  await prisma.attendance.delete({ where: { id: attendanceId } })
+
+  return NextResponse.json({ success: true })
+}
