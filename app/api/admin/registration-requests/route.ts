@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
@@ -40,11 +41,28 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+      email: request.email,
+      password: request.password,
+      email_confirm: true,
+    })
+
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: authError?.message || 'حدث خطأ في إنشاء الحساب، قد يكون البريد مستخدمًا بالفعل' }, { status: 500 })
+    }
+
     const player = await prisma.player.create({
       data: {
         tenantId: profile.tenantId,
         fullName: request.fullName,
         phone: request.phone,
+        email: request.email,
+        userId: authData.user.id,
         joinDate: new Date(),
         coachId: coach.id,
       },
@@ -58,12 +76,13 @@ export async function POST(req: NextRequest) {
       where: { id: requestId },
       data: { status: 'approved' },
     })
+
+    return NextResponse.json({ success: true })
   } else {
     await prisma.registrationRequest.update({
       where: { id: requestId },
       data: { status: 'rejected' },
     })
+    return NextResponse.json({ success: true })
   }
-
-  return NextResponse.json({ success: true })
 }

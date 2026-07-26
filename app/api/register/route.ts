@@ -4,10 +4,14 @@ import { prisma } from '@/lib/prisma'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { fullName, age, phone, governorate, sport, level, hasCompeted } = body
+    const { fullName, age, phone, governorate, sport, level, hasCompeted, email, password } = body
 
-    if (!fullName || !age || !phone || !governorate || !sport || !level) {
+    if (!fullName || !age || !phone || !governorate || !sport || !level || !email || !password) {
       return NextResponse.json({ error: 'برجاء ملء جميع الحقول المطلوبة' }, { status: 400 })
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 })
     }
 
     const tenant = await prisma.tenant.findFirst()
@@ -25,6 +29,8 @@ export async function POST(req: NextRequest) {
         sport,
         level,
         hasCompeted: Boolean(hasCompeted),
+        email,
+        password,
       },
     })
 

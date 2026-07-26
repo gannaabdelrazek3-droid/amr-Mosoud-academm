@@ -316,6 +316,8 @@ model RegistrationRequest {
   hasCompeted Boolean  @default(false)
   status      String   @default("pending")
   createdAt   DateTime @default(now())
+  email       String
+  password    String
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 }

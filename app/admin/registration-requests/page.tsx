@@ -76,6 +76,10 @@ export default async function RegistrationRequestsPage() {
                     <p style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 3px' }}>سبق المشاركة؟</p>
                     <p style={{ color: '#f8fafc', fontWeight: 700, margin: 0 }}>{r.hasCompeted ? 'نعم' : 'لا'}</p>
                   </div>
+                  <div>
+                    <p style={{ color: '#94a3b8', fontSize: 12, margin: '0 0 3px' }}>البريد الإلكتروني</p>
+                    <p style={{ color: '#f8fafc', fontWeight: 700, margin: 0 }}>{r.email}</p>
+                  </div>
                 </div>
 
                 <ApproveButton requestId={r.id} coaches={coaches} />

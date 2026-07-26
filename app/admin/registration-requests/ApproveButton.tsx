@@ -8,6 +8,7 @@ type Coach = { id: string; fullName: string }
 export default function ApproveButton({ requestId, coaches }: { requestId: string; coaches: Coach[] }) {
   const [loading, setLoading] = useState(false)
   const [coachId, setCoachId] = useState('')
+  const [done, setDone] = useState(false)
   const router = useRouter()
 
   async function handleApprove() {
@@ -21,11 +22,12 @@ export default function ApproveButton({ requestId, coaches }: { requestId: strin
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requestId, action: 'approve', coachId }),
     })
+    const data = await res.json()
     setLoading(false)
     if (res.ok) {
-      router.refresh()
+      setDone(true)
     } else {
-      alert('حدثت مشكلة، حاول مرة أخرى')
+      alert(data.error || 'حدثت مشكلة، حاول مرة أخرى')
     }
   }
 
@@ -42,6 +44,36 @@ export default function ApproveButton({ requestId, coaches }: { requestId: strin
     } else {
       alert('حدثت مشكلة، حاول مرة أخرى')
     }
+  }
+
+  if (done) {
+    return (
+      <div
+        style={{
+          background: 'rgba(34, 197, 94, 0.1)',
+          border: '1px solid rgba(34, 197, 94, 0.4)',
+          borderRadius: 10,
+          padding: 14,
+        }}
+      >
+        <p style={{ color: '#22c55e', fontWeight: 700, margin: '0 0 8px' }}>✓ تم قبول اللاعب وإنشاء حسابه بنجاح</p>
+        <button
+          onClick={() => router.refresh()}
+          style={{
+            padding: '8px 18px',
+            background: '#d4af37',
+            color: '#0f172a',
+            border: 'none',
+            borderRadius: 8,
+            fontWeight: 700,
+            fontFamily: "'Tajawal', sans-serif",
+            cursor: 'pointer',
+          }}
+        >
+          تم
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -79,7 +111,7 @@ export default function ApproveButton({ requestId, coaches }: { requestId: strin
           cursor: 'pointer',
         }}
       >
-        {loading ? '...' : '✓ قبول وإضافة كلاعب'}
+        {loading ? '...' : '✓ قبول وإنشاء حساب'}
       </button>
       <button
         onClick={handleReject}
