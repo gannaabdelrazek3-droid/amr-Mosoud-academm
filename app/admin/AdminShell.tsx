@@ -13,6 +13,8 @@ const navLinks = [
   { href: '/admin/inventory', label: 'المخزون', icon: '📦' },
   { href: '/admin/subscriptions', label: 'الاشتراكات', icon: '📅' },
   { href: '/admin/search', label: 'البحث', icon: '🔍' },
+  { href: '/admin/registration-requests', label: 'طلبات التسجيل', icon: '📋' },
+  { href: '/admin/payments', label: 'المدفوعات', icon: '💰' },
 ]
 
 export default function AdminShell({

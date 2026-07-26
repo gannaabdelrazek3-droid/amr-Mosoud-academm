@@ -245,7 +245,7 @@ export default async function DashboardPage() {
                 return (
                   <a
                     key={p.id}
-                    href={`/coach/update/${p.id}`}
+                    href={`/coach/player/${p.id}`}
                     className="card-hover"
                     style={{ display: 'block', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 14, padding: 18, marginBottom: 12, color: '#e2e8f0', textDecoration: 'none' }}
                   >
