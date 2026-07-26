@@ -21,6 +21,21 @@ interface Skill {
   sportName: string
 }
 
+interface SubscriptionItem {
+  id: string
+  remaining: number
+  totalSessions: number
+  endDate: string
+  isFrozen: boolean
+}
+
+interface TournamentItem {
+  id: string
+  name: string
+  year: number
+  result: string | null
+}
+
 interface PlayerDetails {
   id: string
   fullName: string
@@ -31,8 +46,9 @@ interface PlayerDetails {
   medicalCheckExpiry: string | null
   joinDate: string | null
   coachId: string | null
-  subscriptions: { id: string; remaining: number; totalSessions: number; endDate: string }[]
+  subscriptions: SubscriptionItem[]
   sports: { sport: { name: string } }[]
+  tournaments: TournamentItem[]
 }
 
 export default function EditPlayerPage() {
@@ -61,6 +77,11 @@ export default function EditPlayerPage() {
 
   const [subSessions, setSubSessions] = useState('')
   const [subEndDate, setSubEndDate] = useState('')
+
+  const [tournamentName, setTournamentName] = useState('')
+  const [tournamentYear, setTournamentYear] = useState('')
+  const [tournamentResult, setTournamentResult] = useState('')
+  const [addingTournament, setAddingTournament] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -141,6 +162,55 @@ export default function EditPlayerPage() {
     loadData()
   }
 
+  async function handleToggleFreeze(subscriptionId: string) {
+    await fetch('/api/admin/manage-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscriptionId, action: 'toggle-freeze' }),
+    })
+    loadData()
+  }
+
+  async function handleDeleteSubscription(subscriptionId: string) {
+    if (!confirm('هل أنت متأكد من حذف هذا الاشتراك؟')) return
+    await fetch('/api/admin/manage-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscriptionId, action: 'delete' }),
+    })
+    loadData()
+  }
+
+  async function handleAddTournament(e: React.FormEvent) {
+    e.preventDefault()
+    if (!tournamentName || !tournamentYear) return
+    setAddingTournament(true)
+    const res = await fetch('/api/admin/manage-tournament', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId, name: tournamentName, year: tournamentYear, result: tournamentResult }),
+    })
+    setAddingTournament(false)
+    if (res.ok) {
+      setTournamentName('')
+      setTournamentYear('')
+      setTournamentResult('')
+      loadData()
+    } else {
+      alert('حدثت مشكلة، حاول مرة أخرى')
+    }
+  }
+
+  async function handleDeleteTournament(tournamentId: string) {
+    if (!confirm('هل أنت متأكد من حذف هذه البطولة؟')) return
+    await fetch('/api/admin/manage-tournament', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tournamentId }),
+    })
+    loadData()
+  }
+
   async function handleDelete() {
     if (!confirm('هل أنت متأكد من حذف هذا اللاعب نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.')) return
     setDeleting(true)
@@ -187,6 +257,16 @@ export default function EditPlayerPage() {
     borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
   }
 
+  const smallBtn = {
+    padding: '7px 14px',
+    borderRadius: 7,
+    fontWeight: 700,
+    fontFamily: "'Tajawal', sans-serif",
+    fontSize: 12.5,
+    cursor: 'pointer',
+    border: 'none',
+  }
+
   return (
     <AdminShell fullName="">
       <div style={s.page}>
@@ -201,12 +281,6 @@ export default function EditPlayerPage() {
           <p style={{ margin: '4px 0', color: '#e2e8f0' }}>📧 {player.email || 'لا يوجد حساب دخول'}</p>
           <p style={{ margin: '4px 0', color: '#e2e8f0' }}>
             🏅 الرياضات: {player.sports.map((sp) => sp.sport.name).join('، ') || 'لا توجد'}
-          </p>
-          <p style={{ margin: '4px 0', color: '#e2e8f0' }}>
-            📅 الاشتراك:{' '}
-            {activeSub
-              ? `${activeSub.remaining} من ${activeSub.totalSessions} حصة، ينتهي ${new Date(activeSub.endDate).toLocaleDateString('ar-EG')}`
-              : 'لا يوجد اشتراك نشط'}
           </p>
         </div>
 
@@ -319,12 +393,9 @@ export default function EditPlayerPage() {
             </div>
           )}
 
-          {/* الاشتراك */}
+          {/* إضافة اشتراك جديد */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>📅 إضافة اشتراك جديد</h3>
-            <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
-              إضافة اشتراك جديد لا تلغي الاشتراك الحالي، وستُحسب كأحدث اشتراك للاعب
-            </p>
             <label style={s.label}>
               عدد الحصص
               <input
@@ -352,6 +423,113 @@ export default function EditPlayerPage() {
 
           {message && <p style={s.error}>{message}</p>}
         </form>
+
+        {/* إدارة الاشتراكات القديمة */}
+        <div style={{ ...s.formCard, marginTop: 24, marginBottom: 20 }}>
+          <h3 style={sectionTitle}>📋 كل الاشتراكات</h3>
+          {player.subscriptions.length === 0 ? (
+            <p style={{ color: '#94a3b8' }}>لا توجد اشتراكات مسجّلة</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {player.subscriptions.map((sub) => (
+                <div
+                  key={sub.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 10,
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    borderRadius: 10,
+                    padding: '12px 16px',
+                    border: sub.isFrozen ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(148, 163, 184, 0.15)',
+                  }}
+                >
+                  <div>
+                    <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
+                      {sub.remaining} من {sub.totalSessions} حصة — ينتهي {new Date(sub.endDate).toLocaleDateString('ar-EG')}
+                      {sub.isFrozen && <span style={{ color: '#60a5fa', marginRight: 8 }}>❄️ مجمّد</span>}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFreeze(sub.id)}
+                      style={{ ...smallBtn, background: 'rgba(59, 130, 246, 0.15)', color: '#93c5fd' }}
+                    >
+                      {sub.isFrozen ? 'إلغاء التجميد' : 'تجميد'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteSubscription(sub.id)}
+                      style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                    >
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* البطولات */}
+        <div style={{ ...s.formCard, marginBottom: 20 }}>
+          <h3 style={sectionTitle}>🏆 بطولات اللاعب</h3>
+
+          {player.tournaments.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+              {player.tournaments.map((t) => (
+                <div
+                  key={t.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    borderRadius: 10,
+                    padding: '10px 16px',
+                  }}
+                >
+                  <p style={{ color: '#e2e8f0', margin: 0, fontSize: 14 }}>
+                    {t.name} ({t.year}) {t.result && `— ${t.result}`}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTournament(t.id)}
+                    style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}
+                  >
+                    حذف
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form onSubmit={handleAddTournament}>
+            <label style={s.label}>
+              اسم البطولة
+              <input type="text" value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              السنة
+              <input type="number" min={2000} max={2100} value={tournamentYear} onChange={(e) => setTournamentYear(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              النتيجة (اختياري)
+              <input type="text" placeholder="مثال: المركز الأول" value={tournamentResult} onChange={(e) => setTournamentResult(e.target.value)} style={s.input} />
+            </label>
+            <button
+              type="submit"
+              disabled={addingTournament}
+              className="btn-primary"
+              style={{ ...s.button, marginTop: 12 }}
+            >
+              {addingTournament ? 'جارٍ الإضافة...' : '+ إضافة بطولة'}
+            </button>
+          </form>
+        </div>
 
         <div style={{ marginTop: 30, borderTop: '1px solid rgba(239, 68, 68, 0.2)', paddingTop: 20 }}>
           <h3 style={{ color: '#fca5a5', fontSize: 15, fontWeight: 800, marginBottom: 10 }}>⚠️ منطقة الخطر</h3>

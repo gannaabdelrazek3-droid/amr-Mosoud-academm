@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
       subscriptions: { orderBy: { endDate: 'desc' } },
       sports: { include: { sport: true } },
       skillRatings: { include: { skill: true }, orderBy: { date: 'desc' } },
+      tournaments: { orderBy: { year: 'desc' } },
     },
   })
 
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest) {
       coachId: player.coachId,
       subscriptions: player.subscriptions,
       sports: player.sports,
+      tournaments: player.tournaments,
     },
     allSports,
     coaches,
