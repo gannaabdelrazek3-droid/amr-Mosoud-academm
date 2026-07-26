@@ -1,41 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
-  if (!user) {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 401 })
-  }
-
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-  })
-
-  if (!profile || profile.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
-  }
+  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
+  if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
 
   const playerId = req.nextUrl.searchParams.get('playerId')
-
-  if (!playerId) {
-    return NextResponse.json({ error: 'playerId مطلوب' }, { status: 400 })
-  }
+  if (!playerId) return NextResponse.json({ error: 'معرّف اللاعب مفقود' }, { status: 400 })
 
   const player = await prisma.player.findUnique({
     where: { id: playerId },
     include: {
-      subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
+      subscriptions: { orderBy: { endDate: 'desc' } },
       sports: { include: { sport: true } },
-      payments: { orderBy: { date: 'desc' }, take: 5 },
+      skillRatings: { include: { skill: true }, orderBy: { date: 'desc' } },
     },
   })
 
-  if (!player) {
+  if (!player || player.tenantId !== profile.tenantId) {
     return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
   }
 
-  return NextResponse.json({ player })
+  const allSports = await prisma.sport.findMany({
+    where: { tenantId: profile.tenantId },
+    orderBy: { name: 'asc' },
+  })
+
+  const playerSportIds = player.sports.map((ps) => ps.sportId)
+
+  const skills = await prisma.skill.findMany({
+    where: { tenantId: profile.tenantId, sportId: { in: playerSportIds } },
+    include: { sport: true },
+  })
+
+  const latestRatings = new Map<string, number>()
+  for (const r of player.skillRatings) {
+    if (!latestRatings.has(r.skillId)) latestRatings.set(r.skillId, r.value)
+  }
+
+  return NextResponse.json({
+    player: {
+      id: player.id,
+      fullName: player.fullName,
+      phone: player.phone,
+      birthDate: player.birthDate,
+      sportsBackground: player.sportsBackground,
+      email: player.email,
+      subscriptions: player.subscriptions,
+      sports: player.sports,
+    },
+    allSports,
+    playerSportIds,
+    skills: skills.map((sk) => ({ id: sk.id, name: sk.name, sportName: sk.sport.name })),
+    skillRatings: Object.fromEntries(latestRatings),
+  })
 }
