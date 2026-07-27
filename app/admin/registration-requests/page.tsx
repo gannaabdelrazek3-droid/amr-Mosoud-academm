@@ -19,7 +19,7 @@ export default async function RegistrationRequestsPage() {
   })
 
   const coaches = await prisma.profile.findMany({
-    where: { tenantId: profile.tenantId, role: 'COACH' },
+    where: { tenantId: profile.tenantId, role: { in: ['COACH', 'ADMIN'] } },
     select: { id: true, fullName: true },
   })
 

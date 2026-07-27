@@ -15,8 +15,10 @@ export async function GET() {
     where: { tenantId: profile.tenantId },
     orderBy: { name: 'asc' },
   })
+
+  
   const coaches = await prisma.profile.findMany({
-    where: { tenantId: profile.tenantId, role: 'COACH' },
+    where: { tenantId: profile.tenantId, role: { in: ['COACH', 'ADMIN'] } },
     select: { id: true, fullName: true },
   })
 
@@ -49,9 +51,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'برجاء ملء البيانات الأساسية واختيار المدرب' }, { status: 400 })
   }
 
+  
   const coach = await prisma.profile.findUnique({ where: { id: coachId } })
-  if (!coach || coach.tenantId !== profile.tenantId || coach.role !== 'COACH') {
-    return NextResponse.json({ error: 'المدرب غير صالح' }, { status: 400 })
+  if (!coach || coach.tenantId !== profile.tenantId || !['COACH', 'ADMIN'].includes(coach.role)) {
+    return NextResponse.json({ error: 'المسؤول أو المدرب غير صالح' }, { status: 400 })
   }
 
   let userId: string | undefined

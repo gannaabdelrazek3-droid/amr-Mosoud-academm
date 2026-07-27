@@ -41,6 +41,13 @@ export default async function DashboardPage() {
       where: { tenantId: profile.tenantId, status: 'pending' },
     })
 
+    const myPlayers = await prisma.player.findMany({
+      where: { coachId: profile.id },
+      include: {
+        subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
+      },
+    })
+
     const nextWeek = new Date()
     nextWeek.setDate(nextWeek.getDate() + 7)
 
@@ -141,8 +148,50 @@ export default async function DashboardPage() {
             )}
           </div>
 
+          {myPlayers.length > 0 && (
+            <div style={{ marginTop: 36 }}>
+              <h3 style={{ marginBottom: 14, color: '#f8fafc', fontSize: 20 }}>👑 فريقي ({myPlayers.length} لاعبًا)</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {myPlayers.map((p) => {
+                  const sub = p.subscriptions[0]
+                  const daysLeft = sub
+                    ? Math.ceil((new Date(sub.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                    : null
+                  const subWarning = sub && (sub.remaining <= 2 || (daysLeft !== null && daysLeft <= 7))
+
+                  return (
+                    <a
+                      key={p.id}
+                      href={`/admin/edit-player/${p.id}`}
+                      className="card-hover"
+                      style={{
+                        display: 'block',
+                        background: 'rgba(30,41,59,0.6)',
+                        border: '1px solid rgba(212,175,55,0.2)',
+                        borderRadius: 14,
+                        padding: 16,
+                        color: '#e2e8f0',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 700 }}>{p.fullName}</span>
+                        <span>←</span>
+                      </div>
+                      {subWarning && <p style={{ color: '#fca5a5', margin: '4px 0 0', fontSize: 13 }}>🔴 الاشتراك على وشك الانتهاء</p>}
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <h3 style={{ marginTop: 36, marginBottom: 4, color: '#f8fafc', fontSize: 20 }}>الإجراءات السريعة</h3>
           <div style={s.actionGrid}>
+            <a href="/admin/calendar" className="action-card" style={s.actionCard}>
+              <span style={{ fontSize: 24 }}>📅</span>
+              التقويم
+            </a>
             <a href="/admin/registration-requests" className="action-card" style={{ ...s.actionCard, position: 'relative' }}>
               {pendingRequestsCount > 0 && (
                 <span
@@ -171,6 +220,10 @@ export default async function DashboardPage() {
             <a href="/admin/add-payment" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>💵</span>
               تسجيل دخل
+            </a>
+            <a href="/admin/payments" className="action-card" style={s.actionCard}>
+              <span style={{ fontSize: 24 }}>💰</span>
+              المدفوعات
             </a>
             <a href="/admin/add-player" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>➕</span>
