@@ -224,6 +224,9 @@ export default async function DashboardPage() {
             <a href="/coach/calendar" className="btn-primary" style={{ padding: '12px 22px', background: '#d4af37', color: '#0f172a', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
               📅 التقويم
             </a>
+            <a href="/coach/skills" className="btn-primary" style={{ padding: '12px 22px', background: '#d4af37', color: '#0f172a', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>
+              🎯 المهارات
+            </a>
           </div>
 
           <div style={{ marginTop: 24 }}>

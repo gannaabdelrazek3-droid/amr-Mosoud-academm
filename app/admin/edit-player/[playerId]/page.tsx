@@ -140,7 +140,6 @@ export default function EditPlayerPage() {
           setCoaches(data.coaches || [])
           setPlayerSportIds(data.playerSportIds || [])
           setSelectedSportIds(data.playerSportIds || [])
-          setSkills(data.skills || [])
           setSkillRatingsInitial(data.skillRatings || {})
         }
       })
@@ -152,6 +151,32 @@ export default function EditPlayerPage() {
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerId])
+
+  // يحدّث قائمة المهارات المعروضة فورًا حسب الرياضات المحددة حاليًا في الفورم
+  useEffect(() => {
+    if (selectedSportIds.length === 0) {
+      setSkills([])
+      return
+    }
+    Promise.all(
+      selectedSportIds.map((sportId) =>
+        fetch(`/api/admin/skills?sportId=${sportId}`).then((res) => res.json())
+      )
+    ).then((results) => {
+      const merged: Skill[] = []
+      results.forEach((res, i) => {
+        const sportName = allSports.find((sp) => sp.id === selectedSportIds[i])?.name || ''
+        const sportSkills = (res.skills || []).map((sk: { id: string; name: string }) => ({
+          id: sk.id,
+          name: sk.name,
+          sportName,
+        }))
+        merged.push(...sportSkills)
+      })
+      setSkills(merged)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSportIds, allSports])
 
   function toggleSport(sportId: string) {
     setSelectedSportIds((prev) =>
@@ -481,7 +506,7 @@ export default function EditPlayerPage() {
             )}
           </div>
 
-          {/* المهارات - إضافة تقييم جديد */}
+          {/* المهارات - بتتحدّث فورًا حسب الرياضات المحددة أعلاه */}
           {skills.length > 0 && (
             <div style={{ ...s.formCard, marginBottom: 20 }}>
               <h3 style={sectionTitle}>🎯 تقييم المهارات</h3>
@@ -662,12 +687,11 @@ export default function EditPlayerPage() {
               الرياضة
               <select value={attSportId} onChange={(e) => setAttSportId(e.target.value)} style={s.input}>
                 <option value="">اختر الرياضة</option>
-                {player.sports.map((ps, i) => {
-                  const matched = allSports.find((sp) => sp.name === ps.sport.name)
-                  return matched ? (
-                    <option key={i} value={matched.id}>{matched.name}</option>
-                  ) : null
-                })}
+                {allSports
+                  .filter((sp) => selectedSportIds.includes(sp.id))
+                  .map((sp) => (
+                    <option key={sp.id} value={sp.id}>{sp.name}</option>
+                  ))}
               </select>
             </label>
             <label style={s.label}>
@@ -716,12 +740,11 @@ export default function EditPlayerPage() {
               الرياضة
               <select value={weightSportId} onChange={(e) => setWeightSportId(e.target.value)} style={s.input}>
                 <option value="">اختر الرياضة</option>
-                {player.sports.map((ps, i) => {
-                  const matched = allSports.find((sp) => sp.name === ps.sport.name)
-                  return matched ? (
-                    <option key={i} value={matched.id}>{matched.name}</option>
-                  ) : null
-                })}
+                {allSports
+                  .filter((sp) => selectedSportIds.includes(sp.id))
+                  .map((sp) => (
+                    <option key={sp.id} value={sp.id}>{sp.name}</option>
+                  ))}
               </select>
             </label>
             <label style={s.label}>
