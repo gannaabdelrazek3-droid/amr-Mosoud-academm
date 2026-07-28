@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' }, { status: 400 })
     }
 
-    const tenant = await prisma.tenant.findFirst()
+   const tenant = await prisma.tenant.findFirst({
+      where: { name: 'أكاديمية الكابتن عمرو مسعود' },
+    })
     if (!tenant) {
       return NextResponse.json({ error: 'حدث خطأ في النظام' }, { status: 500 })
     }

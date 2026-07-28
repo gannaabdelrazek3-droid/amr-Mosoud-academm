@@ -171,7 +171,7 @@ export default function LoginPage() {
               cursor: 'pointer',
             }}
           >
-            إدارة / مدرب
+          إدارة / مدرب / سكرتيرة
           </button>
           <button
             onClick={() => { setMode('player'); setError('') }}
@@ -199,6 +199,11 @@ export default function LoginPage() {
             <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
               {loading ? 'جارٍ الدخول...' : 'دخول'}
             </button>
+            <p style={{ textAlign: 'center', marginTop: 16 }}>
+              <a href="/forgot-password" style={{ color: '#94a3b8', fontSize: 13, textDecoration: 'none' }}>
+                نسيت كلمة المرور؟
+              </a>
+            </p>
           </form>
         )}
 
@@ -209,7 +214,12 @@ export default function LoginPage() {
             <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
               {loading ? 'جارٍ الدخول...' : 'دخول'}
             </button>
-            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, marginTop: 16 }}>
+            <p style={{ textAlign: 'center', marginTop: 16 }}>
+              <a href="/forgot-password" style={{ color: '#94a3b8', fontSize: 13, textDecoration: 'none' }}>
+                نسيت كلمة المرور؟
+              </a>
+            </p>
+            <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, marginTop: 12 }}>
               لسه معملتش حساب؟ سجّل بياناتك من صفحة{' '}
               <a href="/register" style={{ color: '#d4af37', fontWeight: 700, textDecoration: 'none' }}>
                 التسجيل

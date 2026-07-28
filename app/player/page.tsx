@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PrismaClient } from '@prisma/client'
 import WeightChart from './WeightChart'
 import SkillsRadarChart from './SkillsRadarChart'
+import SignOutButtonGeneric from '../SignOutButtonGeneric'
 
 const prisma = new PrismaClient()
 
@@ -55,7 +56,12 @@ export default async function PlayerDashboard() {
   return (
     <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
       <div style={pageStyle}>
-        <h1 style={{ color: '#f8fafc' }}>أهلًا بك، {player.fullName} 👋</h1>
+        
+       
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h1 style={{ color: '#f8fafc', margin: 0 }}>أهلًا بك، {player.fullName} 👋</h1>
+          <SignOutButtonGeneric />
+        </div>
 
         <a
           href="/player/calendar"

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { adminStyles as s } from '../admin/adminStyles'
 import AdminShell from '../admin/AdminShell'
 import DashboardCharts from './DashboardCharts'
+import SignOutButtonGeneric from '../SignOutButtonGeneric'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -263,6 +264,9 @@ export default async function DashboardPage() {
         <div style={{ maxWidth: 700, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
           <h1 style={{ color: '#f8fafc' }}>مرحبًا أيها المدرب {profile.fullName} 🏃</h1>
           <p style={{ color: '#94a3b8' }}>فريقك ({myPlayers.length} لاعبًا)</p>
+          <div style={{ marginTop: 10, marginBottom: 10 }}>
+            <SignOutButtonGeneric />
+          </div>
 
           <div style={{ display: 'flex', gap: 12, marginTop: 16, marginBottom: 20, flexWrap: 'wrap' }}>
             <a href="/coach/add-player" className="btn-primary" style={{ padding: '12px 22px', background: '#d4af37', color: '#0f172a', borderRadius: 10, textDecoration: 'none', fontWeight: 700 }}>

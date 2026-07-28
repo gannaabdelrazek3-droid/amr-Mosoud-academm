@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import SignOutButtonGeneric from '../SignOutButtonGeneric'
 
 export default async function SecretaryHomePage() {
   const supabase = await createClient()
@@ -16,6 +17,9 @@ export default async function SecretaryHomePage() {
         <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
         <h1 style={{ color: '#f8fafc' }}>أهلًا بك، {profile.fullName}</h1>
         <p style={{ color: '#94a3b8', marginBottom: 30 }}>اختر ما تريد القيام به</p>
+        <div style={{ marginBottom: 20 }}>
+          <SignOutButtonGeneric />
+        </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <a
