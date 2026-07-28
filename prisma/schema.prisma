@@ -38,6 +38,7 @@ enum Role {
   ADMIN
   COACH
   PLAYER
+  SECRETARY
 }
 
 model Profile {

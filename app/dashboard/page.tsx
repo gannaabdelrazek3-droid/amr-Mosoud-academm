@@ -16,6 +16,9 @@ export default async function DashboardPage() {
   const profile = await prisma.profile.findUnique({
     where: { id: user.id },
   })
+  if (profile?.role === 'SECRETARY') {
+    redirect('/secretary')
+  }
 
   if (!profile) {
     const player = await prisma.player.findUnique({ where: { userId: user.id } })
