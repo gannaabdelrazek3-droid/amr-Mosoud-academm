@@ -217,10 +217,7 @@ export default async function DashboardPage() {
               <span style={{ fontSize: 24 }}>📋</span>
               طلبات التسجيل
             </a>
-            <a href="/admin/add-payment" className="action-card" style={s.actionCard}>
-              <span style={{ fontSize: 24 }}>💵</span>
-              تسجيل دخل
-            </a>
+           
             <a href="/admin/payments" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>💰</span>
               المدفوعات
