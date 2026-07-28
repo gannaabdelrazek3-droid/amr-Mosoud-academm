@@ -32,25 +32,18 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  return NextResponse.json({ success: true })
-}
-
-export async function DELETE(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
-
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
-
-  const { attendanceId } = await req.json()
-
-  const attendance = await prisma.attendance.findUnique({ where: { id: attendanceId } })
-  if (!attendance || attendance.tenantId !== profile.tenantId) {
-    return NextResponse.json({ error: 'السجل غير موجود' }, { status: 404 })
+  if (present) {
+    const activeSub = await prisma.subscription.findFirst({
+      where: { playerId, isFrozen: false, remaining: { gt: 0 } },
+      orderBy: { endDate: 'desc' },
+    })
+    if (activeSub) {
+      await prisma.subscription.update({
+        where: { id: activeSub.id },
+        data: { remaining: { decrement: 1 } },
+      })
+    }
   }
-
-  await prisma.attendance.delete({ where: { id: attendanceId } })
 
   return NextResponse.json({ success: true })
 }

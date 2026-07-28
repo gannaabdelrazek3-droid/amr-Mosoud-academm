@@ -28,5 +28,18 @@ export async function POST(req: NextRequest) {
     },
   })
 
+  if (present) {
+    const activeSub = await prisma.subscription.findFirst({
+      where: { playerId, isFrozen: false, remaining: { gt: 0 } },
+      orderBy: { endDate: 'desc' },
+    })
+    if (activeSub) {
+      await prisma.subscription.update({
+        where: { id: activeSub.id },
+        data: { remaining: { decrement: 1 } },
+      })
+    }
+  }
+
   return NextResponse.json({ success: true })
 }
