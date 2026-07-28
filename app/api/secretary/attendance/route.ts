@@ -14,6 +14,7 @@ export async function GET() {
     where: { tenantId: profile.tenantId },
     include: {
       sports: { include: { sport: true } },
+      coach: true,
       attendances: { orderBy: { date: 'desc' }, take: 1 },
     },
     orderBy: { fullName: 'asc' },
@@ -29,48 +30,21 @@ export async function GET() {
       id: p.id,
       fullName: p.fullName,
       sports: p.sports.map((ps) => ({ id: ps.sport.id, name: ps.sport.name })),
+      coachName: p.coach?.fullName || 'بدون مدرب',
       markedToday: !!markedToday,
     }
   })
 
-  return NextResponse.json({ players: result })
-}
-
-export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
-
-  const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile || profile.role !== 'SECRETARY') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
-
-  const { playerId, sportId } = await req.json()
-
-  const player = await prisma.player.findUnique({ where: { id: playerId } })
-  if (!player || player.tenantId !== profile.tenantId) {
-    return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
-  }
-
-  await prisma.attendance.create({
-    data: {
-      playerId,
-      sportId,
-      tenantId: profile.tenantId,
-      date: new Date(),
-      present: true,
-    },
+  const allSports = await prisma.sport.findMany({
+    where: { tenantId: profile.tenantId },
+    orderBy: { name: 'asc' },
   })
 
-  const activeSub = await prisma.subscription.findFirst({
-    where: { playerId, isFrozen: false, remaining: { gt: 0 } },
-    orderBy: { endDate: 'desc' },
+  const allCoaches = await prisma.profile.findMany({
+    where: { tenantId: profile.tenantId, role: { in: ['COACH', 'ADMIN'] } },
+    select: { id: true, fullName: true },
+    orderBy: { fullName: 'asc' },
   })
-  if (activeSub) {
-    await prisma.subscription.update({
-      where: { id: activeSub.id },
-      data: { remaining: { decrement: 1 } },
-    })
-  }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ players: result, allSports, allCoaches })
 }

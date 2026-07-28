@@ -25,7 +25,6 @@ export async function GET() {
 
   return NextResponse.json({ products: result })
 }
-
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -47,14 +46,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'الكمية المطلوبة أكبر من المتاح' }, { status: 400 })
   }
 
+  const totalAmount = product.defaultPrice ? product.defaultPrice * qty : 0
+
+  const payment = await prisma.payment.create({
+    data: {
+      tenantId: profile.tenantId,
+      amount: totalAmount,
+      source: 'PRODUCT_SALE',
+      description: `بيع ${qty} × ${product.name}`,
+      date: new Date(),
+    },
+  })
+
   await prisma.productSale.create({
     data: {
       productId,
       tenantId: profile.tenantId,
       quantity: qty,
       pricePerUnit: product.defaultPrice,
-      totalAmount: product.defaultPrice ? product.defaultPrice * qty : null,
+      totalAmount,
       date: new Date(),
+      paymentId: payment.id,
     },
   })
 
