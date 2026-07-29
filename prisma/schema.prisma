@@ -159,6 +159,8 @@ model Attendance {
   present Boolean
 
   coachNote String?
+
+  @@unique([playerId, sportId, date])
 }
 
 model WeightLog {

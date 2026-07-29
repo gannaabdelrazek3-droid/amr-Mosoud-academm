@@ -44,8 +44,6 @@ export default function RegisterPage() {
   const [level, setLevel] = useState('')
   const [hasCompeted, setHasCompeted] = useState(false)
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -55,22 +53,13 @@ export default function RegisterPage() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
-      return
-    }
-    if (password !== confirmPassword) {
-      setError('كلمتا المرور غير متطابقتين')
-      return
-    }
-
     setLoading(true)
 
     try {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, age, phone, governorate, sport, level, hasCompeted, email, password }),
+        body: JSON.stringify({ fullName, age, phone, governorate, sport, level, hasCompeted, email }),
       })
 
       const data = await res.json()
@@ -108,7 +97,7 @@ export default function RegisterPage() {
             تم استلام طلبك بنجاح
           </h1>
           <p style={{ color: '#94a3b8', fontSize: 16, lineHeight: 1.8, marginBottom: 30 }}>
-            سيراجع فريق الأكاديمية طلبك، وبمجرد الموافقة ستتمكن من تسجيل الدخول بالبريد الإلكتروني وكلمة المرور التي أدخلتهما.
+            سيراجع فريق الأكاديمية طلبك، وبمجرد الموافقة ستتمكن من تسجيل الدخول.
           </p>
           <Link
             href="/"
@@ -204,18 +193,12 @@ export default function RegisterPage() {
 
           <div style={{ borderTop: '1px solid rgba(212, 175, 55, 0.2)', paddingTop: 16, marginBottom: 4 }}>
             <p style={{ color: '#d4af37', fontWeight: 700, fontSize: 14, marginBottom: 12 }}>
-              🔐 بيانات حسابك (ستستخدمها لتسجيل الدخول بعد الموافقة)
+              🔐 بيانات التواصل
             </p>
           </div>
 
           <label style={labelStyle}>البريد الإلكتروني</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
-
-          <label style={labelStyle}>كلمة المرور</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required minLength={6} />
-
-          <label style={labelStyle}>تأكيد كلمة المرور</label>
-          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} required minLength={6} />
 
           <button
             type="submit"
@@ -231,6 +214,7 @@ export default function RegisterPage() {
               border: 'none',
               borderRadius: 10,
               cursor: 'pointer',
+              marginTop: 10,
             }}
           >
             {loading ? 'جارٍ الإرسال...' : 'إرسال الطلب'}

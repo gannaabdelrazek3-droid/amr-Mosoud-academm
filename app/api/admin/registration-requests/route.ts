@@ -41,6 +41,15 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    function generateTempPassword() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+      let pw = ''
+      for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)]
+      return pw
+    }
+
+    const tempPassword = generateTempPassword()
+
     const adminSupabase = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -48,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
       email: request.email,
-      password: request.password,
+      password: tempPassword,
       email_confirm: true,
     })
 
@@ -77,7 +86,7 @@ export async function POST(req: NextRequest) {
       data: { status: 'approved' },
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, tempPassword })
   } else {
     await prisma.registrationRequest.update({
       where: { id: requestId },

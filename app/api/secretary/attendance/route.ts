@@ -2,49 +2,69 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile || profile.role !== 'SECRETARY') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+  if (!profile || (profile.role !== 'SECRETARY' && profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
+    return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+  }
 
-  const players = await prisma.player.findMany({
-    where: { tenantId: profile.tenantId },
-    include: {
-      sports: { include: { sport: true } },
-      coach: true,
-      attendances: { orderBy: { date: 'desc' }, take: 1 },
+  const { playerId, sportId, date, present } = await req.json()
+
+  if (!playerId || !sportId || !date) {
+    return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
+
+  const dateObj = new Date(date)
+  const startOfDay = new Date(dateObj)
+  startOfDay.setHours(0, 0, 0, 0)
+  const endOfDay = new Date(dateObj)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  const existing = await prisma.attendance.findFirst({
+    where: {
+      playerId,
+      sportId,
+      date: { gte: startOfDay, lte: endOfDay },
     },
-    orderBy: { fullName: 'asc' },
   })
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  if (existing) {
+    return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب في هذه الرياضة اليوم بالفعل' }, { status: 400 })
+  }
 
-  const result = players.map((p) => {
-    const lastAttendance = p.attendances[0]
-    const markedToday = lastAttendance && new Date(lastAttendance.date).setHours(0, 0, 0, 0) === today.getTime()
-    return {
-      id: p.id,
-      fullName: p.fullName,
-      sports: p.sports.map((ps) => ({ id: ps.sport.id, name: ps.sport.name })),
-      coachName: p.coach?.fullName || 'بدون مدرب',
-      markedToday: !!markedToday,
+  const now = new Date()
+
+  // تنفيذ عملية تسجيل الحضور وخصم الاشتراك بشكل آمن
+  const attendance = await prisma.$transaction(async (tx) => {
+    // إذا كان اللاعب حاضرًا، نقوم بخصم حصة من الاشتراك النشط
+    if (present) {
+      const activeSub = await tx.subscription.findFirst({
+        where: { playerId, isFrozen: false, remaining: { gt: 0 }, endDate: { gte: now } },
+        orderBy: { endDate: 'desc' },
+      })
+      if (activeSub) {
+        await tx.subscription.updateMany({
+          where: { id: activeSub.id, remaining: { gt: 0 } },
+          data: { remaining: { decrement: 1 } },
+        })
+      }
     }
+
+    return await tx.attendance.create({
+      data: {
+        tenantId: profile.tenantId,
+        playerId,
+        sportId,
+        date: dateObj,
+        present: Boolean(present),
+        recordedById: user.id,
+      },
+    })
   })
 
-  const allSports = await prisma.sport.findMany({
-    where: { tenantId: profile.tenantId },
-    orderBy: { name: 'asc' },
-  })
-
-  const allCoaches = await prisma.profile.findMany({
-    where: { tenantId: profile.tenantId, role: { in: ['COACH', 'ADMIN'] } },
-    select: { id: true, fullName: true },
-    orderBy: { fullName: 'asc' },
-  })
-
-  return NextResponse.json({ players: result, allSports, allCoaches })
+  return NextResponse.json({ success: true, attendance })
 }

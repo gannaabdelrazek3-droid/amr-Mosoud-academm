@@ -16,6 +16,23 @@ export async function POST(req: NextRequest) {
   if (!player || player.coachId !== profile.id) {
     return NextResponse.json({ error: 'اللاعب غير موجود أو ليس ضمن فريقك' }, { status: 404 })
   }
+  const dateObj = new Date(date)
+  const startOfDay = new Date(dateObj)
+  startOfDay.setHours(0, 0, 0, 0)
+  const endOfDay = new Date(dateObj)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  const existing = await prisma.attendance.findFirst({
+    where: {
+      playerId,
+      sportId,
+      date: { gte: startOfDay, lte: endOfDay },
+    },
+  })
+
+  if (existing) {
+    return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب في هذه الرياضة اليوم بالفعل' }, { status: 400 })
+  }
 
   await prisma.attendance.create({
     data: {
@@ -29,16 +46,19 @@ export async function POST(req: NextRequest) {
   })
 
   if (present) {
-    const activeSub = await prisma.subscription.findFirst({
-      where: { playerId, isFrozen: false, remaining: { gt: 0 } },
-      orderBy: { endDate: 'desc' },
-    })
-    if (activeSub) {
-      await prisma.subscription.update({
-        where: { id: activeSub.id },
-        data: { remaining: { decrement: 1 } },
+    const now = new Date()
+    await prisma.$transaction(async (tx) => {
+      const activeSub = await tx.subscription.findFirst({
+        where: { playerId, isFrozen: false, remaining: { gt: 0 }, endDate: { gte: now } },
+        orderBy: { endDate: 'desc' },
       })
-    }
+      if (activeSub) {
+        await tx.subscription.updateMany({
+          where: { id: activeSub.id, remaining: { gt: 0 } },
+          data: { remaining: { decrement: 1 } },
+        })
+      }
+    })
   }
 
   return NextResponse.json({ success: true })
