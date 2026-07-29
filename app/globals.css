@@ -1,16 +1,8 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap');
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {
@@ -53,6 +45,7 @@ body {
   box-shadow: 0 10px 26px rgba(15, 23, 42, 0.35);
   background: #1e293b !important;
 }
+
 .sidebar-link {
   transition: background 0.15s ease, color 0.15s ease;
 }
