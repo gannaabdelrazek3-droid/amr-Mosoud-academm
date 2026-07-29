@@ -155,9 +155,9 @@ model Attendance {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  date    DateTime @default(now())
-  present Boolean
-  recordedById String
+  date         DateTime @default(now())
+  present      Boolean
+  recordedById String?   // <-- أصبح اختيارياً بالكامل الآن
 
   coachNote String?
 
@@ -308,6 +308,7 @@ model Tournament {
 
   createdAt DateTime @default(now())
 }
+
 model RegistrationRequest {
   id          String   @id @default(cuid())
   tenantId    String
@@ -325,6 +326,7 @@ model RegistrationRequest {
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 }
+
 enum EventType {
   TRAINING
   TOURNAMENT
