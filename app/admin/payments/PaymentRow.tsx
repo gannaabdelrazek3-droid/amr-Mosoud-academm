@@ -16,6 +16,7 @@ export default function PaymentRow({
   date,
   source,
   playerName,
+  status,
 }: {
   id: string
   amount: number
@@ -23,6 +24,7 @@ export default function PaymentRow({
   date: string
   source: string
   playerName: string | null
+  status: string
 }) {
   const [editing, setEditing] = useState(false)
   const [newAmount, setNewAmount] = useState(String(amount))
@@ -47,7 +49,7 @@ export default function PaymentRow({
   }
 
   async function handleDelete() {
-    if (!confirm('هل أنت متأكد من حذف هذه الدفعة؟')) return
+    if (!confirm('هل أنت متأكد من إلغاء هذه الدفعة؟')) return
     const res = await fetch('/api/admin/manage-payment', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -106,23 +108,29 @@ export default function PaymentRow({
     )
   }
 
+  const isCancelled = status === 'CANCELLED'
+
   return (
-    <div style={{ ...rowStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+    <div style={{ ...rowStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, opacity: isCancelled ? 0.5 : 1 }}>
       <div>
-        <p style={{ color: '#d4af37', fontWeight: 900, fontSize: 16, margin: '0 0 4px' }}>{amount} جنيه</p>
+        <p style={{ color: '#d4af37', fontWeight: 900, fontSize: 16, margin: '0 0 4px' }}>
+          {amount} جنيه {isCancelled && <span style={{ color: '#fca5a5', fontSize: 12, fontWeight: 700 }}> (ملغية)</span>}
+        </p>
         <p style={{ color: '#e2e8f0', fontSize: 13, margin: 0 }}>
           {sourceLabels[source] || source} {playerName && `— ${playerName}`} {description && `— ${description}`}
         </p>
         <p style={{ color: '#94a3b8', fontSize: 12, margin: '4px 0 0' }}>{new Date(date).toLocaleDateString('ar-EG')}</p>
       </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => setEditing(true)} style={{ ...smallBtn, background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
-          تعديل
-        </button>
-        <button onClick={handleDelete} style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}>
-          حذف
-        </button>
-      </div>
+      {!isCancelled && (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => setEditing(true)} style={{ ...smallBtn, background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
+            تعديل
+          </button>
+          <button onClick={handleDelete} style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}>
+            إلغاء
+          </button>
+        </div>
+      )}
     </div>
   )
 }

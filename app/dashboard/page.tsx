@@ -17,6 +17,7 @@ export default async function DashboardPage() {
   const profile = await prisma.profile.findUnique({
     where: { id: user.id },
   })
+
   if (profile?.role === 'SECRETARY') {
     redirect('/secretary')
   }
@@ -37,7 +38,7 @@ export default async function DashboardPage() {
       where: { tenantId: profile.tenantId, role: 'COACH' },
     })
     const totalRevenue = await prisma.payment.aggregate({
-      where: { tenantId: profile.tenantId },
+      where: { tenantId: profile.tenantId, status: 'ACTIVE' },
       _sum: { amount: true },
     })
 
@@ -68,7 +69,7 @@ export default async function DashboardPage() {
     sixMonthsAgo.setDate(1)
 
     const recentPayments = await prisma.payment.findMany({
-      where: { tenantId: profile.tenantId, date: { gte: sixMonthsAgo } },
+      where: { tenantId: profile.tenantId, date: { gte: sixMonthsAgo }, status: 'ACTIVE' },
       select: { amount: true, date: true },
     })
 
@@ -221,7 +222,10 @@ export default async function DashboardPage() {
               <span style={{ fontSize: 24 }}>📋</span>
               طلبات التسجيل
             </a>
-           
+            <a href="/admin/add-payment" className="action-card" style={s.actionCard}>
+              <span style={{ fontSize: 24 }}>💵</span>
+              تسجيل دخل
+            </a>
             <a href="/admin/payments" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>💰</span>
               المدفوعات
@@ -230,9 +234,9 @@ export default async function DashboardPage() {
               <span style={{ fontSize: 24 }}>➕</span>
               إضافة لاعب
             </a>
-            <a href="/admin/add-coach" className="action-card" style={s.actionCard}>
+            <a href="/admin/add-staff" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>🏋️</span>
-              إضافة مدرب
+              إضافة موظف
             </a>
             <a href="/admin/sports" className="action-card" style={s.actionCard}>
               <span style={{ fontSize: 24 }}>🏅</span>
@@ -264,6 +268,7 @@ export default async function DashboardPage() {
         <div style={{ maxWidth: 700, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
           <h1 style={{ color: '#f8fafc' }}>مرحبًا أيها المدرب {profile.fullName} 🏃</h1>
           <p style={{ color: '#94a3b8' }}>فريقك ({myPlayers.length} لاعبًا)</p>
+
           <div style={{ marginTop: 10, marginBottom: 10 }}>
             <SignOutButtonGeneric />
           </div>

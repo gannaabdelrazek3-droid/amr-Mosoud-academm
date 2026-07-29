@@ -157,7 +157,7 @@ model Attendance {
 
   date         DateTime @default(now())
   present      Boolean
-  recordedById String?   // <-- أصبح اختيارياً بالكامل الآن
+  recordedById String?   
 
   coachNote String?
 
@@ -230,6 +230,11 @@ enum PaymentSource {
   PRODUCT_SALE
 }
 
+enum PaymentStatus {
+  ACTIVE
+  CANCELLED
+}
+
 model Payment {
   id       String @id @default(uuid())
   tenantId String
@@ -245,6 +250,7 @@ model Payment {
   source      PaymentSource
   description String?
   date        DateTime @default(now())
+  status      PaymentStatus @default(ACTIVE)
 
   productSale ProductSale?
 }

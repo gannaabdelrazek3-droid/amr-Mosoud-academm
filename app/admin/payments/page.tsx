@@ -40,6 +40,7 @@ export default async function PaymentsPage() {
               date={p.date.toISOString()}
               source={p.source}
               playerName={p.player?.fullName || null}
+              status={p.status}
             />
           ))}
         </div>

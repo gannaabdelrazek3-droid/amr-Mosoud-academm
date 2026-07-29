@@ -44,7 +44,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'الدفعة غير موجودة' }, { status: 404 })
   }
 
-  await prisma.payment.delete({ where: { id: paymentId } })
+  await prisma.payment.update({
+    where: { id: paymentId },
+    data: { status: 'CANCELLED' },
+  })
 
   return NextResponse.json({ success: true })
 }
