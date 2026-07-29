@@ -8,14 +8,16 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile || profile.role !== 'COACH') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+  if (!profile || (profile.role !== 'SECRETARY' && profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
+    return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+  }
 
   const { playerId, sportId, date, present, coachNote } = await req.json()
 
-  const player = await prisma.player.findUnique({ where: { id: playerId } })
-  if (!player || player.coachId !== profile.id) {
-    return NextResponse.json({ error: 'اللاعب غير موجود أو ليس ضمن فريقك' }, { status: 404 })
+  if (!playerId || !sportId || !date) {
+    return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
   }
+
   const dateObj = new Date(date)
   const startOfDay = new Date(dateObj)
   startOfDay.setHours(0, 0, 0, 0)
@@ -34,21 +36,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب في هذه الرياضة اليوم بالفعل' }, { status: 400 })
   }
 
-  await prisma.attendance.create({
-    data: {
-      playerId,
-      sportId,
-      tenantId: profile.tenantId,
-      date: new Date(date),
-      present: Boolean(present),
-      coachNote: coachNote || null,
-      recordedById: user.id,
-    },
-  })
+  const now = new Date()
 
-  if (present) {
-    const now = new Date()
-    await prisma.$transaction(async (tx) => {
+  const attendance = await prisma.$transaction(async (tx) => {
+    if (present) {
       const activeSub = await tx.subscription.findFirst({
         where: { playerId, isFrozen: false, remaining: { gt: 0 }, endDate: { gte: now } },
         orderBy: { endDate: 'desc' },
@@ -59,8 +50,20 @@ export async function POST(req: NextRequest) {
           data: { remaining: { decrement: 1 } },
         })
       }
-    })
-  }
+    }
 
-  return NextResponse.json({ success: true })
+    return await tx.attendance.create({
+      data: {
+        tenantId: profile.tenantId,
+        playerId,
+        sportId,
+        date: dateObj,
+        present: Boolean(present),
+        coachNote: coachNote || null,
+        recordedById: user.id,
+      },
+    })
+  })
+
+  return NextResponse.json({ success: true, attendance })
 }
