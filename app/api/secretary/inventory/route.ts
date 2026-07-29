@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         throw new Error('INSUFFICIENT_STOCK')
       }
 
-      const totalAmount = product.defaultPrice ? product.defaultPrice * qty : 0
+const totalAmount = product.defaultPrice ? Number(product.defaultPrice) * qty : 0
 
       const payment = await tx.payment.create({
         data: {

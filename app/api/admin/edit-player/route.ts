@@ -2,6 +2,33 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
+import { logAudit } from '@/lib/audit'
+import { z } from 'zod'
+
+const editSchema = z.object({
+  playerId: z.string().min(1),
+  fullName: z.string().min(1),
+  phone: z.string().optional(),
+  birthDate: z.string().optional(),
+  sportsBackground: z.string().optional(),
+  medicalCheckExpiry: z.string().optional(),
+  joinDate: z.string().optional(),
+  coachId: z.string().optional(),
+  newPassword: z.string().min(6).optional().or(z.literal('')),
+  sportIds: z.array(z.string()).optional(),
+  newSubscription: z
+    .object({
+      totalSessions: z.union([z.string(), z.number()]),
+      endDate: z.string(),
+    })
+    .nullable()
+    .optional(),
+  skillRatings: z.record(z.string()).optional(),
+})
+
+const deleteSchema = z.object({
+  playerId: z.string().min(1),
+})
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
@@ -12,6 +39,10 @@ export async function POST(req: NextRequest) {
   if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
 
   const body = await req.json()
+  const parsed = editSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
   const {
     playerId,
     fullName,
@@ -25,7 +56,7 @@ export async function POST(req: NextRequest) {
     sportIds,
     newSubscription,
     skillRatings,
-  } = body
+  } = parsed.data
 
   const player = await prisma.player.findUnique({ where: { id: playerId } })
   if (!player || player.tenantId !== profile.tenantId) {
@@ -34,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   if (coachId) {
     const coach = await prisma.profile.findUnique({ where: { id: coachId } })
-    if (!coach || coach.tenantId !== profile.tenantId || coach.role !== 'COACH') {
+    if (!coach || coach.tenantId !== profile.tenantId || (coach.role !== 'COACH' && coach.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'المدرب غير صالح' }, { status: 400 })
     }
   }
@@ -63,7 +94,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
- if (Array.isArray(sportIds)) {
+  if (Array.isArray(sportIds)) {
     const validSports = await prisma.sport.findMany({
       where: { id: { in: sportIds }, tenantId: profile.tenantId },
       select: { id: true },
@@ -89,12 +120,16 @@ export async function POST(req: NextRequest) {
   }
 
   if (newSubscription && newSubscription.totalSessions && newSubscription.endDate) {
+    const sessions = Number(newSubscription.totalSessions)
+    if (isNaN(sessions) || sessions <= 0) {
+      return NextResponse.json({ error: 'عدد الحصص غير صالح' }, { status: 400 })
+    }
     await prisma.subscription.create({
       data: {
         playerId,
         tenantId: profile.tenantId,
-        totalSessions: Number(newSubscription.totalSessions),
-        remaining: Number(newSubscription.totalSessions),
+        totalSessions: sessions,
+        remaining: sessions,
         endDate: new Date(newSubscription.endDate),
       },
     })
@@ -103,16 +138,28 @@ export async function POST(req: NextRequest) {
   if (skillRatings && typeof skillRatings === 'object') {
     for (const [skillId, value] of Object.entries(skillRatings)) {
       if (value === '' || value === null || value === undefined) continue
+      const numValue = Number(value)
+      if (isNaN(numValue) || numValue < 0 || numValue > 100) continue
       await prisma.skillRating.create({
         data: {
           playerId,
           skillId,
           tenantId: profile.tenantId,
-          value: Number(value),
+          value: numValue,
         },
       })
     }
   }
+
+  await logAudit({
+    tenantId: profile.tenantId,
+    userId: user.id,
+    userRole: profile.role,
+    action: 'UPDATE',
+    entity: 'Player',
+    entityId: playerId,
+    details: `تعديل بيانات اللاعب ${fullName}`,
+  })
 
   return NextResponse.json({ success: true })
 }
@@ -125,7 +172,12 @@ export async function DELETE(req: NextRequest) {
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
   if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
 
-  const { playerId } = await req.json()
+  const body = await req.json()
+  const parsed = deleteSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
+  const { playerId } = parsed.data
 
   const player = await prisma.player.findUnique({ where: { id: playerId } })
   if (!player || player.tenantId !== profile.tenantId) {
@@ -149,6 +201,16 @@ export async function DELETE(req: NextRequest) {
   await prisma.payment.deleteMany({ where: { playerId } })
   await prisma.subscription.deleteMany({ where: { playerId } })
   await prisma.player.delete({ where: { id: playerId } })
+
+  await logAudit({
+    tenantId: profile.tenantId,
+    userId: user.id,
+    userRole: profile.role,
+    action: 'DELETE',
+    entity: 'Player',
+    entityId: playerId,
+    details: `حذف اللاعب ${player.fullName} نهائيًا`,
+  })
 
   return NextResponse.json({ success: true })
 }

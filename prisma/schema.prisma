@@ -246,7 +246,7 @@ model Payment {
   subscriptionId String?
   subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
 
-  amount      Float
+  amount      Decimal @db.Decimal(10, 2)
   source      PaymentSource
   description String?
   date        DateTime @default(now())
@@ -261,7 +261,7 @@ model Product {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
   name           String
-  defaultPrice   Float?
+  defaultPrice   Decimal? @db.Decimal(10, 2)
   totalPurchased Int    @default(0)
   totalSold      Int    @default(0)
 
@@ -292,8 +292,8 @@ model ProductSale {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
   quantity     Int
-  pricePerUnit Float?
-  totalAmount  Float?
+  pricePerUnit Decimal? @db.Decimal(10, 2)
+  totalAmount  Decimal? @db.Decimal(10, 2)
   date         DateTime @default(now())
 
   paymentId String? @unique
@@ -356,5 +356,17 @@ model Event {
   sportId String?
   sport   Sport?  @relation(fields: [sportId], references: [id])
 
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  userId    String
+  userRole  String
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
   createdAt DateTime @default(now())
 }
