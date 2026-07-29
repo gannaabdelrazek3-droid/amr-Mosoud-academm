@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       date: new Date(date),
       present: Boolean(present),
       coachNote: coachNote || null,
+      recordedById: user.id,
     },
   })
 
