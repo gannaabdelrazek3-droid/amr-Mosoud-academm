@@ -157,6 +157,7 @@ model Attendance {
 
   date    DateTime @default(now())
   present Boolean
+  recordedById String
 
   coachNote String?
 
