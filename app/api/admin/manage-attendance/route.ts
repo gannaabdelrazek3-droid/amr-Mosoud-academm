@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
   if (!player || player.tenantId !== profile.tenantId) {
     return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
   }
+
+  const sportCheck = await prisma.sport.findUnique({ where: { id: sportId } })
+  if (!sportCheck || sportCheck.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
+  }
+
   const dateObj = new Date(date)
   const startOfDay = new Date(dateObj)
   startOfDay.setHours(0, 0, 0, 0)

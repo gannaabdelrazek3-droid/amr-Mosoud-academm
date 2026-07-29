@@ -12,10 +12,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
   }
 
-  const { playerId, sportId, date, present } = await req.json()
+  const { playerId, sportId, date, present, coachNote } = await req.json()
 
   if (!playerId || !sportId || !date) {
     return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
+  }
+
+  const player = await prisma.player.findUnique({ where: { id: playerId } })
+  if (!player || player.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
+  }
+
+  const sportCheck = await prisma.sport.findUnique({ where: { id: sportId } })
+  if (!sportCheck || sportCheck.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
   }
 
   const dateObj = new Date(date)
@@ -38,9 +48,7 @@ export async function POST(req: NextRequest) {
 
   const now = new Date()
 
-  // تنفيذ عملية تسجيل الحضور وخصم الاشتراك بشكل آمن
   const attendance = await prisma.$transaction(async (tx) => {
-    // إذا كان اللاعب حاضرًا، نقوم بخصم حصة من الاشتراك النشط
     if (present) {
       const activeSub = await tx.subscription.findFirst({
         where: { playerId, isFrozen: false, remaining: { gt: 0 }, endDate: { gte: now } },
@@ -61,6 +69,7 @@ export async function POST(req: NextRequest) {
         sportId,
         date: dateObj,
         present: Boolean(present),
+        coachNote: coachNote || null,
         recordedById: user.id,
       },
     })

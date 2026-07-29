@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+   const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
       email: request.email,
       password: tempPassword,
       email_confirm: true,
@@ -65,33 +65,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: authError?.message || 'حدث خطأ في إنشاء الحساب، قد يكون البريد مستخدمًا بالفعل' }, { status: 500 })
     }
 
-    const player = await prisma.player.create({
-      data: {
-        tenantId: profile.tenantId,
-        fullName: request.fullName,
-        phone: request.phone,
-        email: request.email,
-        userId: authData.user.id,
-        joinDate: new Date(),
-        coachId: coach.id,
-      },
-    })
+    try {
+      await prisma.$transaction(async (tx) => {
+        const player = await tx.player.create({
+          data: {
+            tenantId: profile.tenantId,
+            fullName: request.fullName,
+            phone: request.phone,
+            email: request.email,
+            userId: authData.user.id,
+            joinDate: new Date(),
+            coachId: coach.id,
+          },
+        })
 
-    await prisma.playerSport.create({
-      data: { playerId: player.id, sportId: sport.id },
-    })
+        await tx.playerSport.create({
+          data: { playerId: player.id, sportId: sport.id },
+        })
 
-    await prisma.registrationRequest.update({
-      where: { id: requestId },
-      data: { status: 'approved' },
-    })
+        await tx.registrationRequest.update({
+          where: { id: requestId },
+          data: { status: 'approved' },
+        })
+      })
+    } catch (dbError) {
+      // لو فشل حفظ اللاعب في قاعدة البيانات، احذفي الحساب اليتيم من Supabase عشان منسيبوش حساب من غير لاعب
+      await adminSupabase.auth.admin.deleteUser(authData.user.id)
+      console.error(dbError)
+      return NextResponse.json({ error: 'حدث خطأ أثناء إنشاء اللاعب، حاول مرة أخرى' }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true, tempPassword })
-  } else {
-    await prisma.registrationRequest.update({
-      where: { id: requestId },
-      data: { status: 'rejected' },
-    })
-    return NextResponse.json({ success: true })
   }
 }

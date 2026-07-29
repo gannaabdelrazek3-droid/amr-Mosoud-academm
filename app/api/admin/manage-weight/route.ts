@@ -21,6 +21,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
   }
 
+  const sportCheck = await prisma.sport.findUnique({ where: { id: sportId } })
+  if (!sportCheck || sportCheck.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
+  }
+
   await prisma.weightLog.create({
     data: {
       playerId,

@@ -63,12 +63,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (Array.isArray(sportIds)) {
+ if (Array.isArray(sportIds)) {
+    const validSports = await prisma.sport.findMany({
+      where: { id: { in: sportIds }, tenantId: profile.tenantId },
+      select: { id: true },
+    })
+    const validSportIds = validSports.map((s) => s.id)
+
     const currentLinks = await prisma.playerSport.findMany({ where: { playerId } })
     const currentSportIds = currentLinks.map((l) => l.sportId)
 
-    const toAdd = sportIds.filter((id: string) => !currentSportIds.includes(id))
-    const toRemove = currentSportIds.filter((id) => !sportIds.includes(id))
+    const toAdd = validSportIds.filter((id) => !currentSportIds.includes(id))
+    const toRemove = currentSportIds.filter((id) => !validSportIds.includes(id))
 
     if (toAdd.length > 0) {
       await prisma.playerSport.createMany({

@@ -91,9 +91,17 @@ export async function POST(req: NextRequest) {
   })
 
   if (Array.isArray(sportIds) && sportIds.length > 0) {
-    await prisma.playerSport.createMany({
-      data: sportIds.map((sportId: string) => ({ playerId: player.id, sportId })),
+    const validSports = await prisma.sport.findMany({
+      where: { id: { in: sportIds }, tenantId: profile.tenantId },
+      select: { id: true },
     })
+    const validSportIds = validSports.map((s) => s.id)
+
+    if (validSportIds.length > 0) {
+      await prisma.playerSport.createMany({
+        data: validSportIds.map((sportId: string) => ({ playerId: player.id, sportId })),
+      })
+    }
   }
 
   return NextResponse.json({ success: true })
