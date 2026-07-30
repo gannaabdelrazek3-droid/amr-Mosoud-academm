@@ -35,7 +35,7 @@ export default async function PaymentsPage() {
             <PaymentRow
               key={p.id}
               id={p.id}
-              amount={p.amount}
+              amount={Number(p.amount)}
               description={p.description}
               date={p.date.toISOString()}
               source={p.source}
