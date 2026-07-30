@@ -23,7 +23,7 @@ const editSchema = z.object({
     })
     .nullable()
     .optional(),
-  skillRatings: z.record(z.string()).optional(),
+  skillRatings: z.record(z.string(), z.string()).optional(),
 })
 
 const deleteSchema = z.object({
