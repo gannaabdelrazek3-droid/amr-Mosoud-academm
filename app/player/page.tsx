@@ -1,32 +1,70 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import WeightChart from './WeightChart'
 import SkillsRadarChart from './SkillsRadarChart'
 import SignOutButtonGeneric from '../SignOutButtonGeneric'
 
-const prisma = new PrismaClient()
+interface SkillRatingRelation {
+  skillId: string
+  value: number
+  skill: {
+    name: string
+  }
+}
+
+interface WeightLogRecord {
+  date: Date | string
+  weightKg: number
+}
+
+interface TournamentRecord {
+  id: string
+  name: string
+  year: number
+  result?: string | null
+}
+
+interface SubscriptionRecord {
+  remaining: number
+  totalSessions: number
+  endDate: Date | string
+}
 
 export default async function PlayerDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+  if (!user) {
+    redirect('/login')
+  }
 
-  const player = await prisma.player.findUnique({
+  const rawPlayer = await prisma.player.findUnique({
     where: { userId: user.id },
     include: {
       subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
       tournaments: { orderBy: { year: 'desc' } },
       attendances: true,
       weightLogs: { orderBy: { date: 'asc' } },
-      skillRatings: { include: { skill: true }, orderBy: { date: 'desc' } },
+      skillRatings: {
+        include: { skill: true },
+        orderBy: { date: 'desc' },
+      },
     },
   })
 
-  if (!player) redirect('/login')
+  if (!rawPlayer) {
+    redirect('/login')
+  }
 
-  const activeSubscription = player.subscriptions[0]
+  const player = rawPlayer as typeof rawPlayer & {
+    subscriptions: SubscriptionRecord[]
+    weightLogs: WeightLogRecord[]
+    skillRatings: SkillRatingRelation[]
+    tournaments: TournamentRecord[]
+  }
+
+  const activeSubscription = player.subscriptions[0] ?? null
   const daysLeft = activeSubscription
     ? Math.ceil((new Date(activeSubscription.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
@@ -44,20 +82,32 @@ export default async function PlayerDashboard() {
 
   const latestSkillsMap = new Map<string, { name: string; value: number }>()
   for (const r of player.skillRatings) {
-    if (!latestSkillsMap.has(r.skillId)) {
+    if (r.skill && !latestSkillsMap.has(r.skillId)) {
       latestSkillsMap.set(r.skillId, { name: r.skill.name, value: r.value })
     }
   }
   const skillsData = Array.from(latestSkillsMap.values())
 
-  const pageStyle = { maxWidth: 560, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0', minHeight: '100vh' }
-  const cardStyle = { background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 16, padding: 22, marginTop: 20 }
+  const pageStyle = {
+    maxWidth: 560,
+    margin: '0 auto',
+    fontFamily: "'Tajawal', sans-serif",
+    padding: '32px 20px',
+    color: '#e2e8f0',
+    minHeight: '100vh',
+  }
+  
+  const cardStyle = {
+    background: 'rgba(30,41,59,0.6)',
+    border: '1px solid rgba(212,175,55,0.25)',
+    borderRadius: 16,
+    padding: 22,
+    marginTop: 20,
+  }
 
   return (
     <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
       <div style={pageStyle}>
-        
-       
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h1 style={{ color: '#f8fafc', margin: 0 }}>أهلًا بك، {player.fullName} 👋</h1>
           <SignOutButtonGeneric />
@@ -127,7 +177,7 @@ export default async function PlayerDashboard() {
         <div style={cardStyle}>
           <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>🏆 البطولات</h3>
           {player.tournaments.length > 0 ? (
-            <ul>
+            <ul style={{ margin: 0, paddingRight: 20 }}>
               {player.tournaments.map((t) => (
                 <li key={t.id}>{t.name} ({t.year}) {t.result && `- ${t.result}`}</li>
               ))}

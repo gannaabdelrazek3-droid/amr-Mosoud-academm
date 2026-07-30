@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface Sport {
   id: string
@@ -41,16 +41,19 @@ export default function CoachSkillsPage() {
       .finally(() => setLoadingSports(false))
   }, [])
 
-  function loadSkills(sportId: string) {
+  const loadSkills = useCallback((sportId: string) => {
     fetch(`/api/coach/skills?sportId=${sportId}`)
       .then((res) => res.json())
       .then((data) => setSkills(data.skills || []))
-  }
+  }, [])
 
   useEffect(() => {
-    if (selectedSportId) loadSkills(selectedSportId)
-    else setSkills([])
-  }, [selectedSportId])
+    if (selectedSportId) {
+      loadSkills(selectedSportId)
+    } else {
+      setSkills([])
+    }
+  }, [selectedSportId, loadSkills])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()

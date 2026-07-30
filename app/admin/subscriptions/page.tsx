@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { adminStyles as s } from '../adminStyles'
 import AdminShell from '../AdminShell'
 
@@ -23,18 +23,24 @@ export default function SubscriptionsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  function loadPlayers() {
+  const loadPlayers = useCallback(() => {
     setLoading(true)
     fetch('/api/admin/subscriptions/due')
       .then((res) => res.json())
       .then((data) => setPlayers(data.players || []))
       .finally(() => setLoading(false))
-  }
+  }, [])
 
-  useEffect(() => { loadPlayers() }, [])
+  useEffect(() => {
+    loadPlayers()
+  }, [loadPlayers])
 
   function openRenew(id: string) {
-    setOpenId(id); setAmount(''); setSessions(''); setDuration('30'); setMessage('')
+    setOpenId(id)
+    setAmount('')
+    setSessions('')
+    setDuration('30')
+    setMessage('')
   }
 
   async function handleRenew(e: React.FormEvent) {
@@ -43,16 +49,26 @@ export default function SubscriptionsPage() {
     setMessage('')
     const res = await fetch('/api/admin/subscriptions/renew', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ playerId: openId, amount, totalSessions: sessions, durationDays: duration }),
     })
     setSaving(false)
-    if (!res.ok) { setMessage('حدثت مشكلة، حاول مرة أخرى'); return }
+    if (!res.ok) {
+      setMessage('حدثت مشكلة، حاول مرة أخرى')
+      return
+    }
     setOpenId('')
     loadPlayers()
   }
 
   if (loading) {
-    return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
+    return (
+      <AdminShell fullName="">
+        <div style={s.page}>
+          <p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p>
+        </div>
+      </AdminShell>
+    )
   }
 
   return (
@@ -77,7 +93,12 @@ export default function SubscriptionsPage() {
                     {p.lastEndDate ? `انتهى آخر اشتراك في ${new Date(p.lastEndDate).toLocaleDateString('ar-EG')}` : 'لم يُسجَّل له أي اشتراك بعد'}
                   </p>
                 </div>
-                <button onClick={() => openRenew(p.id)} className="btn-primary" style={{ padding: '10px 20px', background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 8, fontWeight: 700 }}>
+                <button
+                  type="button"
+                  onClick={() => openRenew(p.id)}
+                  className="btn-primary"
+                  style={{ padding: '10px 20px', background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                >
                   تجديد
                 </button>
               </div>

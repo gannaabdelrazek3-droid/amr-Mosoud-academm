@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 const cardStyle = { maxWidth: 640, margin: '40px auto', fontFamily: "'Tajawal', sans-serif", padding: 32, background: 'rgba(30,41,59,0.7)', color: '#e2e8f0', borderRadius: 16, border: '1px solid rgba(212,175,55,0.25)' }
 const labelStyle = { display: 'block', marginTop: 20, fontSize: 16, fontWeight: 700, color: '#cbd5e1' }
@@ -27,15 +27,24 @@ export default function CoachSubscriptionsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  function loadPlayers() {
+  const loadPlayers = useCallback(() => {
     setLoading(true)
-    fetch('/api/coach/subscriptions').then((res) => res.json()).then((data) => setPlayers(data.players || [])).finally(() => setLoading(false))
-  }
+    fetch('/api/coach/subscriptions')
+      .then((res) => res.json())
+      .then((data) => setPlayers(data.players || []))
+      .finally(() => setLoading(false))
+  }, [])
 
-  useEffect(() => { loadPlayers() }, [])
+  useEffect(() => {
+    loadPlayers()
+  }, [loadPlayers])
 
   function openRenew(id: string) {
-    setOpenId(id); setAmount(''); setSessions(''); setDuration('30'); setMessage('')
+    setOpenId(id)
+    setAmount('')
+    setSessions('')
+    setDuration('30')
+    setMessage('')
   }
 
   async function handleRenew(e: React.FormEvent) {
@@ -44,10 +53,14 @@ export default function CoachSubscriptionsPage() {
     setMessage('')
     const res = await fetch('/api/coach/renew-subscription', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ playerId: openId, amount, totalSessions: sessions, durationDays: duration }),
     })
     setSaving(false)
-    if (!res.ok) { setMessage('حدثت مشكلة، حاول مرة أخرى'); return }
+    if (!res.ok) {
+      setMessage('حدثت مشكلة، حاول مرة أخرى')
+      return
+    }
     setOpenId('')
     loadPlayers()
   }
@@ -81,7 +94,12 @@ export default function CoachSubscriptionsPage() {
                     <p style={{ fontSize: 13, color: '#94a3b8', margin: '2px 0 0' }}>الحصص المتبقية: {p.remaining} من {p.totalSessions}</p>
                   )}
                 </div>
-                <button onClick={() => openRenew(p.id)} className="btn-primary" style={{ padding: '8px 16px', background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 8, fontWeight: 700 }}>
+                <button
+                  type="button"
+                  onClick={() => openRenew(p.id)}
+                  className="btn-primary"
+                  style={{ padding: '8px 16px', background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                >
                   تجديد
                 </button>
               </div>

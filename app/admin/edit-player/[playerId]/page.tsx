@@ -84,7 +84,6 @@ export default function EditPlayerPage() {
   const [player, setPlayer] = useState<PlayerDetails | null>(null)
   const [allSports, setAllSports] = useState<Sport[]>([])
   const [coaches, setCoaches] = useState<Coach[]>([])
-  const [playerSportIds, setPlayerSportIds] = useState<string[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
   const [skillRatingsInitial, setSkillRatingsInitial] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -123,10 +122,16 @@ export default function EditPlayerPage() {
   const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
 
-  function loadData() {
+  useEffect(() => {
+    if (!playerId) return
+
+    let isMounted = true
+    setLoading(true)
+
     fetch(`/api/admin/player-details?playerId=${playerId}`)
       .then((res) => res.json())
       .then((data) => {
+        if (!isMounted) return
         if (data.player) {
           setPlayer(data.player)
           setFullName(data.player.fullName)
@@ -138,31 +143,34 @@ export default function EditPlayerPage() {
           setCoachId(data.player.coachId || '')
           setAllSports(data.allSports || [])
           setCoaches(data.coaches || [])
-          setPlayerSportIds(data.playerSportIds || [])
           setSelectedSportIds(data.playerSportIds || [])
           setSkillRatingsInitial(data.skillRatings || {})
         }
       })
-      .finally(() => setLoading(false))
-  }
+      .finally(() => {
+        if (isMounted) setLoading(false)
+      })
 
-  useEffect(() => {
-    if (!playerId) return
-    loadData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      isMounted = false
+    }
   }, [playerId])
 
-  // يحدّث قائمة المهارات المعروضة فورًا حسب الرياضات المحددة حاليًا في الفورم
+  // تحديث قائمة المهارات بشكل آمن ودون مشاكل رندر متكررة
   useEffect(() => {
+    let isMounted = true
+
     if (selectedSportIds.length === 0) {
       setSkills([])
       return
     }
+
     Promise.all(
-      selectedSportIds.map((sportId) =>
-        fetch(`/api/admin/skills?sportId=${sportId}`).then((res) => res.json())
+      selectedSportIds.map((sId) =>
+        fetch(`/api/admin/skills?sportId=${sId}`).then((res) => res.json())
       )
     ).then((results) => {
+      if (!isMounted) return
       const merged: Skill[] = []
       results.forEach((res, i) => {
         const sportName = allSports.find((sp) => sp.id === selectedSportIds[i])?.name || ''
@@ -175,7 +183,10 @@ export default function EditPlayerPage() {
       })
       setSkills(merged)
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => {
+      isMounted = false
+    }
   }, [selectedSportIds, allSports])
 
   function toggleSport(sportId: string) {
@@ -220,7 +231,14 @@ export default function EditPlayerPage() {
     setSubSessions('')
     setSubEndDate('')
     setSkillRatings({})
-    loadData()
+    
+    // إعادة تحميل البيانات الحديثة
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) {
+      setPlayer(refetchData.player)
+      setSkillRatingsInitial(refetchData.skillRatings || {})
+    }
   }
 
   async function handleToggleFreeze(subscriptionId: string) {
@@ -229,7 +247,9 @@ export default function EditPlayerPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscriptionId, action: 'toggle-freeze' }),
     })
-    loadData()
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) setPlayer(refetchData.player)
   }
 
   async function handleDeleteSubscription(subscriptionId: string) {
@@ -239,7 +259,9 @@ export default function EditPlayerPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ subscriptionId, action: 'delete' }),
     })
-    loadData()
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) setPlayer(refetchData.player)
   }
 
   async function handleAddTournament(e: React.FormEvent) {
@@ -256,7 +278,9 @@ export default function EditPlayerPage() {
       setTournamentName('')
       setTournamentYear('')
       setTournamentResult('')
-      loadData()
+      const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+      const refetchData = await refetch.json()
+      if (refetchData.player) setPlayer(refetchData.player)
     } else {
       alert('حدثت مشكلة، حاول مرة أخرى')
     }
@@ -269,7 +293,9 @@ export default function EditPlayerPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tournamentId }),
     })
-    loadData()
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) setPlayer(refetchData.player)
   }
 
   async function handleDeleteSkillRating(ratingId: string) {
@@ -279,7 +305,12 @@ export default function EditPlayerPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ratingId }),
     })
-    loadData()
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) {
+      setPlayer(refetchData.player)
+      setSkillRatingsInitial(refetchData.skillRatings || {})
+    }
   }
 
   async function handleAddAttendance(e: React.FormEvent) {
@@ -297,7 +328,9 @@ export default function EditPlayerPage() {
       setAttDate('')
       setAttPresent(true)
       setAttNote('')
-      loadData()
+      const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+      const refetchData = await refetch.json()
+      if (refetchData.player) setPlayer(refetchData.player)
     } else {
       alert('حدثت مشكلة، حاول مرة أخرى')
     }
@@ -310,7 +343,9 @@ export default function EditPlayerPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ attendanceId }),
     })
-    loadData()
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) setPlayer(refetchData.player)
   }
 
   async function handleAddWeight(e: React.FormEvent) {
@@ -327,7 +362,9 @@ export default function EditPlayerPage() {
       setWeightSportId('')
       setWeightValue('')
       setWeightDate('')
-      loadData()
+      const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+      const refetchData = await refetch.json()
+      if (refetchData.player) setPlayer(refetchData.player)
     } else {
       alert('حدثت مشكلة، حاول مرة أخرى')
     }
@@ -340,7 +377,9 @@ export default function EditPlayerPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ weightId }),
     })
-    loadData()
+    const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
+    const refetchData = await refetch.json()
+    if (refetchData.player) setPlayer(refetchData.player)
   }
 
   async function handleDelete() {
@@ -427,7 +466,6 @@ export default function EditPlayerPage() {
         </div>
 
         <form onSubmit={handleSave}>
-          {/* بيانات أساسية */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>📝 البيانات الأساسية</h3>
             <label style={s.label}>
@@ -463,7 +501,6 @@ export default function EditPlayerPage() {
             )}
           </div>
 
-          {/* المدرب */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🏋️ المدرب المسؤول</h3>
             <label style={s.label}>
@@ -477,7 +514,6 @@ export default function EditPlayerPage() {
             </label>
           </div>
 
-          {/* الرياضات */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🏅 الرياضات المسجّل بها</h3>
             {allSports.length === 0 ? (
@@ -506,7 +542,6 @@ export default function EditPlayerPage() {
             )}
           </div>
 
-          {/* المهارات - بتتحدّث فورًا حسب الرياضات المحددة أعلاه */}
           {skills.length > 0 && (
             <div style={{ ...s.formCard, marginBottom: 20 }}>
               <h3 style={sectionTitle}>🎯 تقييم المهارات</h3>
@@ -535,7 +570,6 @@ export default function EditPlayerPage() {
             </div>
           )}
 
-          {/* إضافة اشتراك جديد */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>📅 إضافة اشتراك جديد</h3>
             <label style={s.label}>
@@ -555,7 +589,6 @@ export default function EditPlayerPage() {
           {message && <p style={s.error}>{message}</p>}
         </form>
 
-        {/* سجل تقييمات المهارات - حذف */}
         {player.recentSkillRatings.length > 0 && (
           <div style={{ ...s.formCard, marginTop: 24, marginBottom: 20 }}>
             <h3 style={sectionTitle}>📊 سجل تقييمات المهارات</h3>
@@ -576,7 +609,6 @@ export default function EditPlayerPage() {
           </div>
         )}
 
-        {/* الاشتراكات */}
         <div style={{ ...s.formCard, marginBottom: 20 }}>
           <h3 style={sectionTitle}>📋 كل الاشتراكات</h3>
           {player.subscriptions.length === 0 ? (
@@ -615,7 +647,6 @@ export default function EditPlayerPage() {
           )}
         </div>
 
-        {/* البطولات */}
         <div style={{ ...s.formCard, marginBottom: 20 }}>
           <h3 style={sectionTitle}>🏆 بطولات اللاعب</h3>
 
@@ -657,7 +688,6 @@ export default function EditPlayerPage() {
           </form>
         </div>
 
-        {/* الحضور */}
         <div style={{ ...s.formCard, marginBottom: 20 }}>
           <h3 style={sectionTitle}>✅ سجل الحضور</h3>
 
@@ -712,7 +742,6 @@ export default function EditPlayerPage() {
           </form>
         </div>
 
-        {/* الوزن */}
         <div style={{ ...s.formCard, marginBottom: 20 }}>
           <h3 style={sectionTitle}>⚖️ تطور الوزن</h3>
 

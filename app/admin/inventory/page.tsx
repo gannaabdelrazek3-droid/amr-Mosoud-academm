@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { adminStyles as s } from '../adminStyles'
 import AdminShell from '../AdminShell'
@@ -28,26 +28,33 @@ export default function InventoryPage() {
 
   const [message, setMessage] = useState('')
 
-  function loadProducts() {
+  const loadProducts = useCallback(() => {
     setLoading(true)
     fetch('/api/admin/inventory')
       .then((res) => res.json())
       .then((data) => setProducts(data.products || []))
       .finally(() => setLoading(false))
-  }
+  }, [])
 
-  useEffect(() => { loadProducts() }, [])
+  useEffect(() => {
+    loadProducts()
+  }, [loadProducts])
 
   async function handleRestock(e: React.FormEvent) {
     e.preventDefault()
     setMessage('')
     const res = await fetch('/api/admin/inventory/restock', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId: restockId, quantity: restockQty }),
     })
-    if (!res.ok) { setMessage('حدثت مشكلة في التجديد'); return }
+    if (!res.ok) {
+      setMessage('حدثت مشكلة في التجديد')
+      return
+    }
     setMessage('تم تجديد الكمية بنجاح')
-    setRestockId(''); setRestockQty('')
+    setRestockId('')
+    setRestockQty('')
     loadProducts()
   }
 
@@ -56,12 +63,18 @@ export default function InventoryPage() {
     setMessage('')
     const res = await fetch('/api/admin/inventory/sell', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId: sellId, quantity: sellQty, pricePerUnit: sellPrice }),
     })
     const data = await res.json()
-    if (!res.ok) { setMessage(data.error || 'حدثت مشكلة في البيع'); return }
+    if (!res.ok) {
+      setMessage(data.error || 'حدثت مشكلة في البيع')
+      return
+    }
     setMessage('تم تسجيل البيع بنجاح')
-    setSellId(''); setSellQty(''); setSellPrice('')
+    setSellId('')
+    setSellQty('')
+    setSellPrice('')
     loadProducts()
   }
 
@@ -72,7 +85,13 @@ export default function InventoryPage() {
   }
 
   if (loading) {
-    return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
+    return (
+      <AdminShell fullName="">
+        <div style={s.page}>
+          <p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p>
+        </div>
+      </AdminShell>
+    )
   }
 
   const totalRevenue = products.reduce((sum, p) => sum + p.revenue, 0)
@@ -85,7 +104,11 @@ export default function InventoryPage() {
             <h1 style={s.title}>المخزون والمبيعات</h1>
             <p style={{ color: '#94a3b8', margin: 0 }}>إجمالي إيراد المنتجات: {totalRevenue} جنيه</p>
           </div>
-          <Link href="/admin/inventory/add-product" className="btn-primary" style={{ ...s.button, width: 'auto', margin: 0, padding: '12px 22px' }}>
+          <Link
+            href="/admin/inventory/add-product"
+            className="btn-primary"
+            style={{ ...s.button, width: 'auto', margin: 0, padding: '12px 22px', textDecoration: 'none', display: 'inline-block', textAlign: 'center' }}
+          >
             + إضافة منتج جديد
           </Link>
         </div>
@@ -121,7 +144,11 @@ export default function InventoryPage() {
                   المنتج
                   <select value={sellId} onChange={(e) => onSelectSellProduct(e.target.value)} style={s.input} required>
                     <option value="">-- اختر منتجًا --</option>
-                    {products.map((p) => <option key={p.id} value={p.id}>{p.name} (متبقٍ {p.remaining})</option>)}
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} (متبقٍ {p.remaining})
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label style={s.label}>
@@ -132,7 +159,9 @@ export default function InventoryPage() {
                   سعر الوحدة (جنيه)
                   <input type="number" step="0.5" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} style={s.input} required />
                 </label>
-                <button type="submit" className="btn-primary" style={s.button}>تسجيل البيع</button>
+                <button type="submit" className="btn-primary" style={s.button}>
+                  تسجيل البيع
+                </button>
               </form>
             </div>
 
@@ -143,14 +172,20 @@ export default function InventoryPage() {
                   المنتج
                   <select value={restockId} onChange={(e) => setRestockId(e.target.value)} style={s.input} required>
                     <option value="">-- اختر منتجًا --</option>
-                    {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label style={s.label}>
                   الكمية الجديدة
                   <input type="number" min="1" value={restockQty} onChange={(e) => setRestockQty(e.target.value)} style={s.input} required />
                 </label>
-                <button type="submit" className="btn-primary" style={s.button}>تجديد الكمية</button>
+                <button type="submit" className="btn-primary" style={s.button}>
+                  تجديد الكمية
+                </button>
               </form>
             </div>
           </div>

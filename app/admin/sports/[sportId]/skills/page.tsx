@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { adminStyles as s } from '../../../adminStyles'
 import AdminShell from '../../../AdminShell'
@@ -20,17 +20,18 @@ export default function SportSkillsPage() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
-  function loadSkills() {
+  const loadSkills = useCallback(() => {
+    if (!sportId) return
     setLoading(true)
     fetch(`/api/admin/skills?sportId=${sportId}`)
       .then((res) => res.json())
       .then((data) => setSkills(data.skills || []))
       .finally(() => setLoading(false))
-  }
+  }, [sportId])
 
   useEffect(() => {
-    if (sportId) loadSkills()
-  }, [sportId])
+    loadSkills()
+  }, [loadSkills])
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -40,6 +41,7 @@ export default function SportSkillsPage() {
 
     const res = await fetch('/api/admin/skills', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sportId, name: newSkill }),
     })
 
@@ -53,7 +55,13 @@ export default function SportSkillsPage() {
   }
 
   if (loading) {
-    return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
+    return (
+      <AdminShell fullName="">
+        <div style={s.page}>
+          <p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p>
+        </div>
+      </AdminShell>
+    )
   }
 
   return (
@@ -72,7 +80,9 @@ export default function SportSkillsPage() {
           ) : (
             <div style={{ marginBottom: 24 }}>
               {skills.map((sk) => (
-                <div key={sk.id} style={s.checkboxLabel}><span>{sk.name}</span></div>
+                <div key={sk.id} style={s.checkboxLabel}>
+                  <span>{sk.name}</span>
+                </div>
               ))}
             </div>
           )}
@@ -80,7 +90,13 @@ export default function SportSkillsPage() {
           <form onSubmit={handleAdd}>
             <label style={s.label}>
               إضافة مهارة جديدة
-              <input type="text" value={newSkill} onChange={(e) => setNewSkill(e.target.value)} style={s.input} placeholder="مثال: الملاكمة" />
+              <input
+                type="text"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                style={s.input}
+                placeholder="مثال: الملاكمة"
+              />
             </label>
 
             <button type="submit" disabled={saving} className="btn-primary" style={s.button}>

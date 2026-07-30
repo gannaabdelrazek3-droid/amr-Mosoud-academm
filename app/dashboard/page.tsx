@@ -83,7 +83,7 @@ export default async function DashboardPage() {
     recentPayments.forEach((p) => {
       const key = new Date(p.date).toLocaleDateString('ar-EG', { month: 'short' })
       if (monthlyRevenue[key] !== undefined) {
-       monthlyRevenue[key] += Number(p.amount)
+        monthlyRevenue[key] += Number(p.amount)
       }
     })
     const revenueChartData = Object.entries(monthlyRevenue).map(([month, amount]) => ({ month, amount }))
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
             </div>
             <div style={s.statCard}>
               <p style={s.statLabel}>💰 الإيرادات الكلية</p>
-             <p style={s.statValue}>{Number(totalRevenue._sum.amount || 0)} جنيه</p>
+              <p style={s.statValue}>{Number(totalRevenue._sum.amount || 0)} جنيه</p>
             </div>
           </div>
 
