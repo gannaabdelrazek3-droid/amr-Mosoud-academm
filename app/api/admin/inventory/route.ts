@@ -31,7 +31,7 @@ export async function GET() {
     remaining: p.totalPurchased - p.totalSold,
     totalPurchased: p.totalPurchased,
     totalSold: p.totalSold,
-    revenue: p.sales.reduce((sum, s) => sum + (s.totalAmount || 0), 0),
+    revenue: p.sales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0),
   }))
 
   return NextResponse.json({ products: result })

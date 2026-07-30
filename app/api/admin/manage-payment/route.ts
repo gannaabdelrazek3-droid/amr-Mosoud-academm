@@ -34,8 +34,7 @@ export async function POST(req: NextRequest) {
   if (!payment || payment.tenantId !== profile.tenantId) {
     return NextResponse.json({ error: 'الدفعة غير موجودة' }, { status: 404 })
   }
-
-  const newAmount = amount !== undefined ? Number(amount) : payment.amount
+const newAmount = amount !== undefined ? Number(amount) : Number(payment.amount)
   if (isNaN(newAmount) || newAmount < 0) {
     return NextResponse.json({ error: 'المبلغ غير صالح' }, { status: 400 })
   }
