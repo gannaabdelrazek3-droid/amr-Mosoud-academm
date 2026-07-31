@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 const tournamentSchema = z.object({
   playerId: z.string().min(1),
-  sportId: z.string().optional(), // خليناه اختياري عشان مايعطلش النظام لو مش مبعوث
+  sportId: z.string().optional(),
   name: z.string().min(1),
   year: z.union([z.string(), z.number()]),
   result: z.string().optional(),
@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-    if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
+      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    }
 
     const body = await req.json()
     const parsed = tournamentSchema.safeParse(body)
@@ -42,7 +44,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
     }
 
-    // لو الـ sportId مش مبعوث من الواجهة، نجيب أول رياضة متاحة للأكاديمية تلقائياً
     let finalSportId = sportId;
     if (!finalSportId) {
       const defaultSport = await prisma.sport.findFirst({
@@ -94,7 +95,9 @@ export async function DELETE(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-    if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
+      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    }
 
     const body = await req.json()
     const parsed = deleteSchema.safeParse(body)
