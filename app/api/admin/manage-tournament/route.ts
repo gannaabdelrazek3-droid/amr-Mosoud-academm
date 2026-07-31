@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
     }
 
-    // تحديد الرياضة بشكل آمن يرضي Prisma تماماً
     let targetSportId = sportId
     if (!targetSportId) {
       const defaultSport = await prisma.sport.findFirst({
@@ -64,13 +63,13 @@ export async function POST(req: NextRequest) {
     await prisma.tournament.create({
       data: {
         playerId,
-        sportId: targetSportId as string,
+        sportId: targetSportId,
         tenantId: profile.tenantId,
         name,
         year: yearNum,
         result: result || null,
       },
-    })
+    } as any)
 
     await logAudit({
       tenantId: profile.tenantId,
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest) {
       action: 'CREATE',
       entity: 'Tournament',
       entityId: playerId,
-      details: `إضافة بطولة "${name}" للاعب ${player.fullName}`,
+      details: `إضافة بطولة "${name}" للالاعب ${player.fullName}`,
     })
 
     return NextResponse.json({ success: true })
@@ -109,7 +108,7 @@ export async function DELETE(req: NextRequest) {
 
     const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } })
     if (!tournament || tournament.tenantId !== profile.tenantId) {
-      return NextResponse.json({ error: 'البطولة غير موجودة' }, { status: 404 })
+      return NextResponse.json({ error: 'السجل غير موجود' }, { status: 404 })
     }
 
     await prisma.tournament.delete({ where: { id: tournamentId } })
