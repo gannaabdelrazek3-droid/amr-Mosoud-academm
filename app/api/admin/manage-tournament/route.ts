@@ -6,6 +6,7 @@ import { z } from 'zod'
 
 const tournamentSchema = z.object({
   playerId: z.string().min(1),
+  sportId: z.string().min(1), // <--- أضفنا التحقق من الرياضة
   name: z.string().min(1),
   year: z.union([z.string(), z.number()]),
   result: z.string().optional(),
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
     }
-    const { playerId, name, year, result } = parsed.data
+    const { playerId, sportId, name, year, result } = parsed.data
 
     const yearNum = Number(year)
     if (isNaN(yearNum) || yearNum < 1990 || yearNum > 2100) {
@@ -41,9 +42,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
     }
 
+    // التحقق من صحة الرياضة وانتمائها لنفس الأكاديمية
+    const sportCheck = await prisma.sport.findUnique({ where: { id: sportId } })
+    if (!sportCheck || sportCheck.tenantId !== profile.tenantId) {
+      return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
+    }
+
     await prisma.tournament.create({
       data: {
         playerId,
+        sportId, // <--- أضفنا الحقل الإجباري هنا
         tenantId: profile.tenantId,
         name,
         year: yearNum,
