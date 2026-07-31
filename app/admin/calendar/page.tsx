@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { adminStyles as s } from '../adminStyles'
 import AdminShell from '../AdminShell'
 import CalendarView from '../../calendar/CalendarView'
+import { EventType } from '@prisma/client'
 
 export default async function AdminCalendarPage() {
   const supabase = await createClient()
@@ -27,7 +28,7 @@ export default async function AdminCalendarPage() {
   const formattedEvents = events.map((e) => ({
     id: e.id,
     title: e.title,
-    type: e.type,
+    type: e.type as EventType,
     date: e.date.toISOString(),
     time: e.time,
     location: e.location,
