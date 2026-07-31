@@ -120,7 +120,22 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'السجل غير موجود' }, { status: 404 })
     }
 
-    await prisma.attendance.delete({ where: { id: attendanceId } })
+    await prisma.$transaction(async (tx) => {
+      await tx.attendance.delete({ where: { id: attendanceId } })
+
+      if (attendance.present) {
+        const sub = await tx.subscription.findFirst({
+          where: { playerId: attendance.playerId },
+          orderBy: { endDate: 'desc' },
+        })
+        if (sub) {
+          await tx.subscription.update({
+            where: { id: sub.id },
+            data: { remaining: { increment: 1 } },
+          })
+        }
+      }
+    })
 
     await logAudit({
       tenantId: profile.tenantId,
@@ -129,6 +144,7 @@ export async function DELETE(req: NextRequest) {
       action: 'DELETE',
       entity: 'Attendance',
       entityId: attendanceId,
+      details: 'حذف حضور وإرجاع الحصة للاشتراك',
     })
 
     return NextResponse.json({ success: true })
