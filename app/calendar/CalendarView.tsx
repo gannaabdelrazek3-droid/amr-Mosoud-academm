@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 type EventItem = {
   id: string
   title: string
-  type: 'TRAINING' | 'TOURNAMENT' | 'TEST' | 'ACTIVITY'
+  type: 'TRAINING' | 'TOURNAMENT' | 'TEST' | 'ACTIVITY' | 'MATCH' | 'MEETING' | 'CAMP' | 'OTHER'
   date: string
   time: string | null
   location: string | null
@@ -22,6 +22,10 @@ const typeInfo = {
   TOURNAMENT: { label: 'بطولة', color: '#ef4444', icon: '🏆' },
   TEST: { label: 'اختبار', color: '#eab308', icon: '📝' },
   ACTIVITY: { label: 'فعالية', color: '#22c55e', icon: '🎉' },
+  MATCH: { label: 'مباراة', color: '#a855f7', icon: '⚔️' },
+  MEETING: { label: 'اجتماع', color: '#06b6d4', icon: '📅' },
+  CAMP: { label: 'معسكر', color: '#f97316', icon: '⛺' },
+  OTHER: { label: 'أخرى', color: '#64748b', icon: '📌' },
 }
 
 const weekDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
@@ -176,26 +180,29 @@ export default function CalendarView({
             >
               <span style={{ color: isToday ? '#d4af37' : '#94a3b8', fontSize: 12, fontWeight: 700 }}>{day}</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 4 }}>
-                {dayEvents.map((ev) => (
-                  <div
-                    key={ev.id}
-                    onClick={() => setSelectedEvent(ev)}
-                    style={{
-                      background: typeInfo[ev.type].color + '30',
-                      borderRight: `3px solid ${typeInfo[ev.type].color}`,
-                      color: '#f1f5f9',
-                      fontSize: 10.5,
-                      padding: '3px 5px',
-                      borderRadius: 4,
-                      cursor: 'pointer',
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {typeInfo[ev.type].icon} {ev.title}
-                  </div>
-                ))}
+                {dayEvents.map((ev) => {
+                  const currentTypeInfo = typeInfo[ev.type] || { color: '#64748b', icon: '📌' }
+                  return (
+                    <div
+                      key={ev.id}
+                      onClick={() => setSelectedEvent(ev)}
+                      style={{
+                        background: currentTypeInfo.color + '30',
+                        borderRight: `3px solid ${currentTypeInfo.color}`,
+                        color: '#f1f5f9',
+                        fontSize: 10.5,
+                        padding: '3px 5px',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      {currentTypeInfo.icon} {ev.title}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )
@@ -244,7 +251,7 @@ export default function CalendarView({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <span style={{ fontSize: 26 }}>{typeInfo[selectedEvent.type].icon}</span>
+              <span style={{ fontSize: 26 }}>{typeInfo[selectedEvent.type]?.icon || '📌'}</span>
               <h3 style={{ color: '#f8fafc', fontSize: 20, fontWeight: 900, margin: 0 }}>{selectedEvent.title}</h3>
             </div>
 
@@ -306,6 +313,10 @@ export default function CalendarView({
                 <option value="TOURNAMENT">🏆 بطولة</option>
                 <option value="TEST">📝 اختبار</option>
                 <option value="ACTIVITY">🎉 فعالية</option>
+                <option value="MATCH">⚔️ مباراة</option>
+                <option value="MEETING">📅 اجتماع</option>
+                <option value="CAMP">⛺ معسكر</option>
+                <option value="OTHER">📌 أخرى</option>
               </select>
 
               <label style={labelStyle}>التاريخ</label>
