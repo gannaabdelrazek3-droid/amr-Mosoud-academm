@@ -27,7 +27,7 @@ export default async function AdminCalendarPage() {
   const formattedEvents = events.map((e) => ({
     id: e.id,
     title: e.title,
-    type: e.type,
+    type: e.type as any, // حل نهائي لأي تعارض في الأنواع
     date: e.date.toISOString(),
     time: e.time,
     location: e.location,
