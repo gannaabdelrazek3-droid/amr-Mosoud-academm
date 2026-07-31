@@ -6,10 +6,10 @@ import { z } from 'zod'
 
 const tournamentSchema = z.object({
   playerId: z.string().min(1),
-  sportId: z.string().optional(),
+  sportId: z.string().optional().nullable(),
   name: z.string().min(1),
   year: z.union([z.string(), z.number()]),
-  result: z.string().optional(),
+  result: z.string().optional().nullable(),
 })
 
 const deleteSchema = z.object({
@@ -44,17 +44,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
     }
 
-    let finalSportId = sportId;
-    if (!finalSportId) {
+    // تحديد الرياضة بشكل آمن يرضي Prisma تماماً
+    let targetSportId = sportId
+    if (!targetSportId) {
       const defaultSport = await prisma.sport.findFirst({
         where: { tenantId: profile.tenantId }
       })
       if (!defaultSport) {
         return NextResponse.json({ error: 'يجب إضافة رياضة واحدة على الأقل في النظام أولاً' }, { status: 400 })
       }
-      finalSportId = defaultSport.id;
+      targetSportId = defaultSport.id
     } else {
-      const sportCheck = await prisma.sport.findUnique({ where: { id: finalSportId } })
+      const sportCheck = await prisma.sport.findUnique({ where: { id: targetSportId } })
       if (!sportCheck || sportCheck.tenantId !== profile.tenantId) {
         return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
       }
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     await prisma.tournament.create({
       data: {
         playerId,
-        sportId: finalSportId,
+        sportId: targetSportId as string,
         tenantId: profile.tenantId,
         name,
         year: yearNum,
