@@ -102,7 +102,7 @@ export default function EditPlayerPage() {
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
 
-  // الحقول الجديدة للصورة والأحزمة
+  // الحقول الخاصة للصورة والأحزمة
   const [avatarUrl, setAvatarUrl] = useState('')
   const [currentBelt, setCurrentBelt] = useState('')
   const [targetBelt, setTargetBelt] = useState('')
@@ -150,7 +150,6 @@ export default function EditPlayerPage() {
           setJoinDate(data.player.joinDate ? data.player.joinDate.split('T')[0] : '')
           setCoachId(data.player.coachId || '')
           
-          // تعبئة البيانات الجديدة لوجهة التعديل
           setAvatarUrl(data.player.avatar_url || '')
           setCurrentBelt(data.player.current_belt || '')
           setTargetBelt(data.player.target_belt || '')
@@ -170,7 +169,6 @@ export default function EditPlayerPage() {
     }
   }, [playerId])
 
-  // تحديث قائمة المهارات بشكل آمن
   useEffect(() => {
     let isMounted = true
 
@@ -232,9 +230,9 @@ export default function EditPlayerPage() {
         sportIds: selectedSportIds,
         newSubscription,
         skillRatings,
-        avatarUrl,      // تم الإضافة هنا
-        currentBelt,    // تم الإضافة هنا
-        targetBelt,     // تم الإضافة هنا
+        avatarUrl,
+        currentBelt,
+        targetBelt,
       }),
     })
     const data = await res.json()
@@ -249,7 +247,6 @@ export default function EditPlayerPage() {
     setSubEndDate('')
     setSkillRatings({})
     
-    // إعادة تحميل البيانات الحديثة
     const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
     const refetchData = await refetch.json()
     if (refetchData.player) {
@@ -521,7 +518,7 @@ export default function EditPlayerPage() {
             )}
           </div>
 
-          {/* قسم بيانات الصورة والأحزمة في صفحة التعديل */}
+          {/* قسم الصورة والأحزمة */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
             <label style={s.label}>
@@ -537,11 +534,7 @@ export default function EditPlayerPage() {
 
             <label style={s.label}>
               الحزام الحالي
-              <select 
-                value={currentBelt} 
-                onChange={(e) => setCurrentBelt(e.target.value)} 
-                style={s.input}
-              >
+              <select value={currentBelt} onChange={(e) => setCurrentBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام الحالي</option>
                 <option value="أبيض">أبيض</option>
                 <option value="أصفر">أصفر</option>
@@ -555,11 +548,7 @@ export default function EditPlayerPage() {
 
             <label style={s.label}>
               الحزام المطلوب
-              <select 
-                value={targetBelt} 
-                onChange={(e) => setTargetBelt(e.target.value)} 
-                style={s.input}
-              >
+              <select value={targetBelt} onChange={(e) => setTargetBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام المطلوب</option>
                 <option value="أبيض">أبيض</option>
                 <option value="أصفر">أصفر</option>

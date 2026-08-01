@@ -15,40 +15,88 @@ interface Coach {
   fullName: string
 }
 
+interface Skill {
+  id: string
+  name: string
+  sportName: string
+}
+
 export default function AddPlayerPage() {
   const router = useRouter()
 
+  const [allSports, setAllSports] = useState<Sport[]>([])
+  const [coaches, setCoaches] = useState<Coach[]>([])
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // البيانات الأساسية
   const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [sportsBackground, setSportsBackground] = useState('')
   const [medicalCheckExpiry, setMedicalCheckExpiry] = useState('')
   const [joinDate, setJoinDate] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [coachId, setCoachId] = useState('')
-  const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
-
-  // الحقول الجديدة للإضافة
+  
+  // الحقول الجديدة للصورة والأحزمة
   const [avatarUrl, setAvatarUrl] = useState('')
   const [currentBelt, setCurrentBelt] = useState('')
   const [targetBelt, setTargetBelt] = useState('')
 
-  const [allSports, setAllSports] = useState<Sport[]>([])
-  const [coaches, setCoaches] = useState<Coach[]>([])
-  const [loadingData, setLoadingData] = useState(true)
+  const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
+  const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
+
+  // الاشتراك الافتتاحي
+  const [subSessions, setSubSessions] = useState('')
+  const [subEndDate, setSubEndDate] = useState('')
+
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/add-player')
+    fetch('/api/admin/add-player-init')
       .then((res) => res.json())
       .then((data) => {
-        setAllSports(data.sports || [])
-        setCoaches(data.coaches || [])
+        if (data.allSports) setAllSports(data.allSports)
+        if (data.coaches) setCoaches(data.coaches)
       })
-      .finally(() => setLoadingData(false))
+      .finally(() => setLoading(false))
   }, [])
+
+  // جلب المهارات الخاصة بالرياضات المحددة
+  useEffect(() => {
+    let isMounted = true
+
+    if (selectedSportIds.length === 0) {
+      setSkills([])
+      return
+    }
+
+    Promise.all(
+      selectedSportIds.map((sId) =>
+        fetch(`/api/admin/skills?sportId=${sId}`).then((res) => res.json())
+      )
+    ).then((results) => {
+      if (!isMounted) return
+      const merged: Skill[] = []
+      results.forEach((res, i) => {
+        const sportName = allSports.find((sp) => sp.id === selectedSportIds[i])?.name || ''
+        const sportSkills = (res.skills || []).map((sk: { id: string; name: string }) => ({
+          id: sk.id,
+          name: sk.name,
+          sportName,
+        }))
+        merged.push(...sportSkills)
+      })
+      setSkills(merged)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedSportIds, allSports])
 
   function toggleSport(sportId: string) {
     setSelectedSportIds((prev) =>
@@ -58,49 +106,46 @@ export default function AddPlayerPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
-
-    if (!coachId) {
-      setError('من فضلك اختر المدرب المسؤول')
-      return
-    }
-    if (email && password.length < 6) {
-      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
-      return
-    }
-
     setSaving(true)
+    setMessage('')
+
+    const newSubscription =
+      subSessions && subEndDate ? { totalSessions: subSessions, endDate: subEndDate } : null
+
     const res = await fetch('/api/admin/add-player', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fullName,
+        email,
+        password,
         phone,
         birthDate,
         sportsBackground,
         medicalCheckExpiry,
         joinDate,
-        email,
-        password,
         coachId,
         sportIds: selectedSportIds,
+        newSubscription,
+        skillRatings,
         avatarUrl,
         currentBelt,
         targetBelt,
       }),
     })
+
     const data = await res.json()
     setSaving(false)
 
     if (!res.ok) {
-      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
+      setMessage(data.error || 'حدثت مشكلة أثناء إضافة اللاعب')
       return
     }
 
     router.push('/dashboard')
   }
 
-  if (loadingData) {
+  if (loading) {
     return (
       <AdminShell fullName="">
         <div style={s.page}>
@@ -125,16 +170,24 @@ export default function AddPlayerPage() {
         <div style={s.headerBar}>
           <div>
             <h1 style={s.title}>إضافة لاعب جديد</h1>
-            <p style={{ color: '#94a3b8', margin: 0 }}>أدخل بيانات اللاعب الجديد</p>
+            <p style={{ color: '#94a3b8', margin: 0 }}>تسجيل لاعب جديد في الأكاديمية</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>📝 البيانات الأساسية</h3>
+            <h3 style={sectionTitle}>📝 البيانات الأساسية وحساب الدخول</h3>
             <label style={s.label}>
-              الاسم الكامل
+              الاسم الكامل *
               <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
+            </label>
+            <label style={s.label}>
+              البريد الإلكتروني (لتسجيل الدخول)
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              كلمة المرور
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} minLength={6} />
             </label>
             <label style={s.label}>
               رقم الهاتف
@@ -158,7 +211,7 @@ export default function AddPlayerPage() {
             </label>
           </div>
 
-          {/* قسم بيانات الصورة والأحزمة الجديد */}
+          {/* قسم الصورة والأحزمة */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
             <label style={s.label}>
@@ -174,11 +227,7 @@ export default function AddPlayerPage() {
 
             <label style={s.label}>
               الحزام الحالي
-              <select 
-                value={currentBelt} 
-                onChange={(e) => setCurrentBelt(e.target.value)} 
-                style={s.input}
-              >
+              <select value={currentBelt} onChange={(e) => setCurrentBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام الحالي</option>
                 <option value="أبيض">أبيض</option>
                 <option value="أصفر">أصفر</option>
@@ -192,11 +241,7 @@ export default function AddPlayerPage() {
 
             <label style={s.label}>
               الحزام المطلوب
-              <select 
-                value={targetBelt} 
-                onChange={(e) => setTargetBelt(e.target.value)} 
-                style={s.input}
-              >
+              <select value={targetBelt} onChange={(e) => setTargetBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام المطلوب</option>
                 <option value="أبيض">أبيض</option>
                 <option value="أصفر">أصفر</option>
@@ -213,8 +258,8 @@ export default function AddPlayerPage() {
             <h3 style={sectionTitle}>🏋️ المدرب المسؤول</h3>
             <label style={s.label}>
               اختر المدرب
-              <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={s.input} required>
-                <option value="">اختر المدرب</option>
+              <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={s.input}>
+                <option value="">بدون مدرب</option>
                 {coaches.map((c) => (
                   <option key={c.id} value={c.id}>{c.fullName}</option>
                 ))}
@@ -223,7 +268,7 @@ export default function AddPlayerPage() {
           </div>
 
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>🏅 الرياضات</h3>
+            <h3 style={sectionTitle}>🏅 الرياضات المسجّل بها</h3>
             {allSports.length === 0 ? (
               <p style={{ color: '#94a3b8' }}>لا توجد رياضات مضافة في الأكاديمية بعد</p>
             ) : (
@@ -250,26 +295,43 @@ export default function AddPlayerPage() {
             )}
           </div>
 
+          {skills.length > 0 && (
+            <div style={{ ...s.formCard, marginBottom: 20 }}>
+              <h3 style={sectionTitle}>🎯 تقييم المهارات الأولية</h3>
+              {skills.map((skill) => (
+                <label key={skill.id} style={s.label}>
+                  {skill.name} <span style={{ color: '#94a3b8', fontSize: 12 }}>({skill.sportName})</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="التقييم من 0 إلى 100"
+                    value={skillRatings[skill.id] || ''}
+                    onChange={(e) => setSkillRatings((prev) => ({ ...prev, [skill.id]: e.target.value }))}
+                    style={s.input}
+                  />
+                </label>
+              ))}
+            </div>
+          )}
+
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>🔐 حساب الدخول (اختياري)</h3>
-            <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 14 }}>
-              لو أدخلت بريدًا إلكترونيًا وكلمة مرور، سيتمكن اللاعب من تسجيل الدخول فورًا. اتركهما فارغين لإضافة اللاعب بدون حساب دخول حاليًا.
-            </p>
+            <h3 style={sectionTitle}>📅 الاشتراك الافتتاحي (اختياري)</h3>
             <label style={s.label}>
-              البريد الإلكتروني
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} />
+              عدد الحصص
+              <input type="number" min={1} value={subSessions} onChange={(e) => setSubSessions(e.target.value)} style={s.input} />
             </label>
             <label style={s.label}>
-              كلمة المرور
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} minLength={6} />
+              تاريخ انتهاء الاشتراك
+              <input type="date" value={subEndDate} onChange={(e) => setSubEndDate(e.target.value)} style={s.input} />
             </label>
           </div>
 
           <button type="submit" disabled={saving} className="btn-primary" style={s.button}>
-            {saving ? 'جارٍ الإضافة...' : 'إضافة اللاعب'}
+            {saving ? 'جارٍ الحفظ...' : 'حفظ وإضافة اللاعب'}
           </button>
 
-          {error && <p style={s.error}>{error}</p>}
+          {message && <p style={s.error}>{message}</p>}
         </form>
       </div>
     </AdminShell>
