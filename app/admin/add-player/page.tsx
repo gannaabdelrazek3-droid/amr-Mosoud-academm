@@ -29,6 +29,11 @@ export default function AddPlayerPage() {
   const [coachId, setCoachId] = useState('')
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
 
+  // الحقول الجديدة للإضافة
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [currentBelt, setCurrentBelt] = useState('')
+  const [targetBelt, setTargetBelt] = useState('')
+
   const [allSports, setAllSports] = useState<Sport[]>([])
   const [coaches, setCoaches] = useState<Coach[]>([])
   const [loadingData, setLoadingData] = useState(true)
@@ -79,6 +84,9 @@ export default function AddPlayerPage() {
         password,
         coachId,
         sportIds: selectedSportIds,
+        avatarUrl,
+        currentBelt,
+        targetBelt,
       }),
     })
     const data = await res.json()
@@ -147,6 +155,57 @@ export default function AddPlayerPage() {
             <label style={s.label}>
               تاريخ انتهاء الكشف الطبي
               <input type="date" value={medicalCheckExpiry} onChange={(e) => setMedicalCheckExpiry(e.target.value)} style={s.input} />
+            </label>
+          </div>
+
+          {/* قسم بيانات الصورة والأحزمة الجديد */}
+          <div style={{ ...s.formCard, marginBottom: 20 }}>
+            <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
+            <label style={s.label}>
+              رابط صورة اللاعب (Avatar URL)
+              <input 
+                type="text" 
+                value={avatarUrl} 
+                onChange={(e) => setAvatarUrl(e.target.value)} 
+                style={s.input} 
+                placeholder="https://example.com/image.jpg" 
+              />
+            </label>
+
+            <label style={s.label}>
+              الحزام الحالي
+              <select 
+                value={currentBelt} 
+                onChange={(e) => setCurrentBelt(e.target.value)} 
+                style={s.input}
+              >
+                <option value="">اختر الحزام الحالي</option>
+                <option value="أبيض">أبيض</option>
+                <option value="أصفر">أصفر</option>
+                <option value="برتقالي">برتقالي</option>
+                <option value="أخضر">أخضر</option>
+                <option value="أزرق">أزرق</option>
+                <option value="بني">بني</option>
+                <option value="أسود">أسود</option>
+              </select>
+            </label>
+
+            <label style={s.label}>
+              الحزام المطلوب
+              <select 
+                value={targetBelt} 
+                onChange={(e) => setTargetBelt(e.target.value)} 
+                style={s.input}
+              >
+                <option value="">اختر الحزام المطلوب</option>
+                <option value="أبيض">أبيض</option>
+                <option value="أصفر">أصفر</option>
+                <option value="برتقالي">برتقالي</option>
+                <option value="أخضر">أخضر</option>
+                <option value="أزرق">أزرق</option>
+                <option value="بني">بني</option>
+                <option value="أسود">أسود</option>
+              </select>
             </label>
           </div>
 

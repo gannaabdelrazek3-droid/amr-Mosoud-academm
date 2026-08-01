@@ -62,6 +62,9 @@ export default async function PlayerDashboard() {
     weightLogs: WeightLogRecord[]
     skillRatings: SkillRatingRelation[]
     tournaments: TournamentRecord[]
+    avatar_url?: string | null
+    current_belt?: string | null
+    target_belt?: string | null
   }
 
   const activeSubscription = player.subscriptions[0] ?? null
@@ -108,9 +111,37 @@ export default async function PlayerDashboard() {
   return (
     <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
       <div style={pageStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ color: '#f8fafc', margin: 0 }}>أهلًا بك، {player.fullName} 👋</h1>
+        
+        {/* رأس الصفحة وصورة اللاعب */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <img 
+              src={player.avatar_url || "https://www.w3schools.com/howto/img_avatar.png"} 
+              alt={player.fullName} 
+              style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #d4af37' }}
+            />
+            <div>
+              <h1 style={{ color: '#f8fafc', margin: 0, fontSize: 22 }}>أهلًا بك، {player.fullName} 👋</h1>
+              <p style={{ color: '#94a3b8', margin: '4px 0 0', fontSize: 13 }}>لوحة متابعة اللاعب الشخصية</p>
+            </div>
+          </div>
           <SignOutButtonGeneric />
+        </div>
+
+        {/* كارت معلومات الأحزمة الجديد */}
+        <div style={{ ...cardStyle, background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(30,41,59,0.6) 100%)' }}>
+          <h3 style={{ color: '#d4af37', margin: '0 0 12px' }}>🥋 تفاصيل الأحزمة</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+            <div>
+              <span style={{ display: 'block', color: '#94a3b8', fontSize: 13, marginBottom: 4 }}>الحزام الحالي</span>
+              <strong style={{ color: '#f8fafc', fontSize: 16 }}>{player.current_belt || "غير محدد"}</strong>
+            </div>
+            <div style={{ borderLeft: '1px solid rgba(212,175,55,0.2)' }}></div>
+            <div>
+              <span style={{ display: 'block', color: '#94a3b8', fontSize: 13, marginBottom: 4 }}>الحزام المطلوب</span>
+              <strong style={{ color: '#34d399', fontSize: 16 }}>{player.target_belt || "غير محدد"}</strong>
+            </div>
+          </div>
         </div>
 
         <a
