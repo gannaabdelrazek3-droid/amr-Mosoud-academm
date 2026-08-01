@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { adminStyles as s } from '../../adminStyles'
 import AdminShell from '../../AdminShell'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 interface Sport {
   id: string
@@ -102,8 +107,9 @@ export default function EditPlayerPage() {
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
 
-  // الحقول الخاصة للصورة والأحزمة
+  // الحقول المحدثة للصورة والأحزمة
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [currentBelt, setCurrentBelt] = useState('')
   const [targetBelt, setTargetBelt] = useState('')
 
@@ -205,6 +211,37 @@ export default function EditPlayerPage() {
     setSelectedSportIds((prev) =>
       prev.includes(sportId) ? prev.filter((id) => id !== sportId) : [...prev, sportId]
     )
+  }
+
+  // دالة رفع الصورة إلى Supabase Storage (Bucket: player-avatars)
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setUploadingImage(true)
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('player-avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data } = supabase.storage
+        .from('player-avatars')
+        .getPublicUrl(filePath)
+
+      setAvatarUrl(data.publicUrl)
+      setMessage('تم رفع الصورة بنجاح!')
+    } catch (error) {
+      console.error(error)
+      setMessage('حدث خطأ أثناء رفع الصورة.')
+    } finally {
+      setUploadingImage(false)
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -518,19 +555,20 @@ export default function EditPlayerPage() {
             )}
           </div>
 
-          {/* قسم الصورة والأحزمة */}
+          {/* قسم الصورة والأحزمة (محدث لرفع الملفات) */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
             <label style={s.label}>
-              رابط صورة اللاعب (Avatar URL)
+              صورة اللاعب (رفع ملف جديد)
               <input 
-                type="text" 
-                value={avatarUrl} 
-                onChange={(e) => setAvatarUrl(e.target.value)} 
+                type="file" 
+                accept="image/*"
+                onChange={handleImageUpload} 
                 style={s.input} 
-                placeholder="https://example.com/image.jpg" 
               />
             </label>
+            {uploadingImage && <p style={{ color: '#d4af37', fontSize: 13, marginTop: 5 }}>جاري رفع الصورة...</p>}
+            {avatarUrl && <p style={{ color: '#22c55e', fontSize: 13, marginTop: 5, wordBreak: 'break-all' }}>تم اعتماد الصورة الحالية: {avatarUrl}</p>}
 
             <label style={s.label}>
               الحزام الحالي
@@ -642,11 +680,11 @@ export default function EditPlayerPage() {
             </label>
           </div>
 
-          <button type="submit" disabled={saving} className="btn-primary" style={s.button}>
+          <button type="submit" disabled={saving || uploadingImage} className="btn-primary" style={s.button}>
             {saving ? 'جارٍ الحفظ...' : 'حفظ جميع التعديلات'}
           </button>
 
-          {message && <p style={s.error}>{message}</p>}
+          {message && <p style={{ ...s.error, marginTop: 15 }}>{message}</p>}
         </form>
 
         {player.recentSkillRatings.length > 0 && (
