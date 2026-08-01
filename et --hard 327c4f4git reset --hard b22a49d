@@ -1,0 +1,138 @@
+[33maaf53b0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{0}: reset: moving to aaf53b032eece037db09cfa17ab2c2e88fe995af
+[33maaf53b0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{1}: commit: restore first stable secretary version
+[33mc1d24e2[m HEAD@{2}: reset: moving to c1d24e277111db94aa005408de20b141981e8b33
+[33m9d29319[m[33m ([m[1;32mbackup-before-secretary[m[33m)[m HEAD@{3}: commit: restore stable working version
+[33m7c7945e[m HEAD@{4}: reset: moving to 7c7945e
+[33mc1d24e2[m HEAD@{5}: reset: moving to c1d24e2
+[33mc1d24e2[m HEAD@{6}: reset: moving to c1d24e2
+[33mc1d24e2[m HEAD@{7}: reset: moving to c1d24e2
+[33m74a2ce1[m HEAD@{8}: commit: Add middleware for supabase session
+[33mdcc7325[m HEAD@{9}: commit: Fix dashboard auth check with debug output
+[33ma1cc1a1[m HEAD@{10}: commit: Fix login redirect loop by using full page reload after auth
+[33md49692c[m HEAD@{11}: commit: fix multiple Supabase client instances causing auth session refresh loop
+[33meb8b6c4[m HEAD@{12}: commit: remove middleware causing login redirect loop, protection remains at page/API level
+[33m7aeaebc[m HEAD@{13}: commit: temp bypass middleware
+[33mb704cd3[m HEAD@{14}: commit: fix: update both manage-tournament api routes with sportId
+[33mb949018[m HEAD@{15}: commit: fix: make sportId optional with fallback in tournament api
+[33m55febd5[m HEAD@{16}: commit: fix: make sportId optional with fallback in tournament api
+[33ma71542f[m HEAD@{17}: commit: fix: make sportId optional with fallback in tournament api
+[33m373dbd5[m HEAD@{18}: commit: fix: add sportId to tournament route
+[33m236eb46[m HEAD@{19}: commit: fix: type cast to any for build success
+[33md5dd3ea[m HEAD@{20}: commit: fix: update calendar event types and components sync
+[33mcdd2e14[m HEAD@{21}: commit: fix: schema and build sync
+[33m327c4f4[m HEAD@{22}: commit: add database indexes for performance, restore subscription session when attendance is deleted
+[33mb22a49d[m HEAD@{23}: commit (amend): fix: move project to C drive and clean build
+[33m912955d[m HEAD@{24}: commit: add coach edit-player security hardening, simple rate limiting for public registration endpoint
+[33m9538c2c[m HEAD@{25}: commit: unify try/catch and add zod validation across all remaining API routes with audit logging
+[33m0b346bf[m HEAD@{26}: commit: Clean player dashboard code and update structure
+[33mc4f0fe5[m HEAD@{27}: commit: restore stable middleware configuration
+[33m266bed4[m HEAD@{28}: commit: fix middleware code and restore original filename
+[33m076e3fb[m HEAD@{29}: commit: rename middleware to proxy to avoid deprecation warning
+[33m92fa785[m HEAD@{30}: commit: fix decimal type conversion for totalRevenue in dashboard
+[33m8998e3e[m HEAD@{31}: commit: fix decimal type conversions across multiple api routes
+[33mef80b4f[m HEAD@{32}: commit: fix zod record type arguments in edit-player route
+[33m9eb22dd[m HEAD@{33}: commit (amend): fix decimal amount type in payments page
+[33m744abf7[m HEAD@{34}: commit: fix decimal amount type in payments page
+[33m8c47f20[m HEAD@{35}: commit: add middleware for route protection and .env.example for setup documentation
+[33m4daea35[m HEAD@{36}: commit: add audit log system, zod validation for critical routes, convert monetary fields to Decimal for precision
+[33mf0a60dc[m HEAD@{37}: commit: wrap product sale and restock in transactions with concurrency protection, soft-delete payments, coach sign-out button
+[33m065f62d[m HEAD@{38}: commit: add tenant isolation checks for sports, rollback orphaned auth user on registration approval failure, restrict coach actions to their assigned sports
+[33m3745aa0[m HEAD@{39}: commit: fix: correct metadata import and type in layout
+[33md3f0eba[m HEAD@{40}: commit: fix: make recordedById optional in Attendance
+[33m81feb54[m HEAD@{41}: commit: fix: update attendance api with recordedby
+[33ma6055fa[m HEAD@{42}: commit: fix: finalize attendance routes with recordedById
+[33m3e23c32[m HEAD@{43}: commit: fix attendance schema with recordedById
+[33m32ef2cf[m HEAD@{44}: commit: fix font loading and layout styles
+[33m0ba6464[m HEAD@{45}: commit: hash-free registration password flow, prevent duplicate daily attendance, atomic subscription deduction with expiry check
+[33m7c7945e[m HEAD@{46}: commit: add sign-out for coach/secretary, forgot password flow, tenant-specific registration, and clarify login tab label
+[33mb9e530e[m HEAD@{47}: commit: deduct subscription session on attendance recorded by admin or coach, matching secretary behavior
+[33m43643e4[m HEAD@{48}: commit: link secretary product sales to payments/revenue, and group attendance by sport or coach
+[33mc1d24e2[m HEAD@{49}: commit: add secretary role with limited access to attendance, subscriptions view, and inventory sales
+[33m38b8bc3[m HEAD@{50}: commit: add missing admin events API route
+[33m626cbcc[m HEAD@{51}: commit: Update page.tsx
+[33m9208dc0[m HEAD@{52}: commit: allow admin to appear as coach option and show their own team on dashboard
+[33mc3d324a[m HEAD@{53}: commit: make skill ratings section reactive to currently selected sports
+[33mfe2c541[m HEAD@{54}: commit: replace skills radar chart with simple progress bars
+[33mecb36a4[m HEAD@{55}: commit: add payment management for admin, and full player management page for coaches
+[33m4729d97[m HEAD@{56}: commit: add skill rating deletion, and full attendance and weight tracking to admin edit-player page
+[33mdef2f8b[m HEAD@{57}: commit: add subscription freeze/delete and tournament add/delete to admin edit-player page
+[33m67c38d4[m HEAD@{58}: commit: add full add-player form with auth account creation, and extend edit-player with medical check, join date, coach transfer, and delete
+[33m0524f37[m HEAD@{59}: commit: expand admin edit-player page: manage sports, subscriptions, and skill ratings
+[33mcaca905[m HEAD@{60}: commit: let player set their own email and password at registration, used automatically on approval
+[33m5485c25[m HEAD@{61}: commit: fix admin calendar page filename typo
+[33m7bcd541[m HEAD@{62}: commit: add shared calendar with events for admin, coach, and player, filtered by sport
+[33ma89fe34[m HEAD@{63}: commit: add registration requests button with pending count badge on dashboard
+[33m4e2b096[m HEAD@{64}: commit: let admin assign coach when approving registration requests
+[33m192c043[m HEAD@{65}: commit: simplify login page, remove player self-signup, direct new players to registration form
+[33med71d2a[m HEAD@{66}: commit: separate login link from registration form link
+[33m874575f[m HEAD@{67}: commit: add navbar, hero CTAs, interactive timeline, player filtering, full registration page with backend
+[33m2295c7f[m HEAD@{68}: commit: add loading indicator on login
+[33mf04961f[m HEAD@{69}: commit: make homepage responsive for mobile
+[33m5d3b605[m HEAD@{70}: commit: make homepage responsive for mobile
+[33m86afcec[m HEAD@{71}: commit: fix admin dashboard mobile responsiveness
+[33m03b14cf[m HEAD@{72}: commit: Update prisma.ts
+[33m4f5fd80[m HEAD@{73}: commit: Add public folder and academy images
+[33m53ebaf1[m HEAD@{74}: commit: Add public folder and academy images
+[33maf7a1fd[m HEAD@{75}: commit: Add public folder and academy images
+[33me8014b7[m HEAD@{76}: commit: Add public folder and academy images
+[33mfb0562b[m HEAD@{77}: commit: Add public folder and academy images
+[33mc640189[m HEAD@{78}: commit: Add public folder and academy images
+[33m42ec637[m HEAD@{79}: commit: Add public folder and academy images
+[33m50694cf[m HEAD@{80}: commit: Add public folder and academy images
+[33mf4a8e8e[m HEAD@{81}: commit: Add public folder and academy images
+[33me477dee[m HEAD@{82}: commit: fix image filename
+[33mb5c3b3b[m HEAD@{83}: commit: add new images
+[33m752523d[m HEAD@{84}: commit: update homepage design and content
+[33m10d52ac[m HEAD@{85}: commit: update homepage design and content
+[33m9a32ea5[m HEAD@{86}: commit: update homepage design and content
+[33maa91acb[m HEAD@{87}: commit: update homepage design and content
+[33me8b0433[m HEAD@{88}: commit: update homepage design and content
+[33mc4e3582[m HEAD@{89}: commit: update homepage design and content
+[33m402740d[m HEAD@{90}: commit (merge): feat: delete login page to test 404
+[33m5af9ce9[m HEAD@{91}: Branch: renamed refs/heads/clean-branch to refs/heads/main
+[33m5af9ce9[m HEAD@{93}: commit (initial): initial clean commit
+[33mda2e004[m HEAD@{94}: commit: chore: add gitignore and cleanup heavy files
+[33m4c363a4[m HEAD@{95}: checkout: moving from main to fix-upload-branch
+[33m4c363a4[m HEAD@{96}: commit: test push
+[33m6959a5c[m HEAD@{97}: commit: remove large images temporarily
+[33m37a5b95[m HEAD@{98}: commit: compress images to reduce size
+[33m63b622e[m HEAD@{99}: commit: add landing page with captain and players achievements
+[33m591889f[m HEAD@{100}: commit: redesign login page and coach dashboard with navy-gold theme
+[33m20edfe1[m HEAD@{101}: commit: apply dark navy-gold theme across admin, coach, and player pages
+[33m8a3a5f4[m HEAD@{102}: commit: major redesign: navy and gold professional theme, full-width layout
+[33maa98cce[m HEAD@{103}: commit: major redesign: navy and gold professional theme, full-width layout
+[33m35de168[m HEAD@{104}: commit: translate and restyle add-player and add-coach pages
+[33mf96f407[m HEAD@{105}: commit: update global styles: light mode only, Tajawal font
+[33mc40aa31[m HEAD@{106}: commit: add coach subscriptions tracking page
+[33m97f2761[m HEAD@{107}: commit: coach can add own players
+[33m9d541d3[m HEAD@{108}: commit: add coach edit and search features
+[33mad6195c[m HEAD@{109}: commit: add search and edit pages for players and coaches
+[33m41e097d[m HEAD@{110}: commit: add skills radar chart to player page
+[33m068d4cc[m HEAD@{111}: commit: add skill rating sliders to sport page
+[33m38b0c83[m HEAD@{112}: commit: add skills management page for sports
+[33m541e576[m HEAD@{113}: commit: add monthly subscriptions renewal system
+[33m85d9cbe[m HEAD@{114}: commit: add inventory system
+[33m7836f18[m HEAD@{115}: commit: add sports button to dashboard
+[33mca5b6cc[m HEAD@{116}: commit: add sports pages and update file structure
+[33me7e6d05[m HEAD@{117}: commit: add shared admin styles and update add-player page
+[33m75a2a1d[m HEAD@{118}: commit: update adminStyles.ts
+[33mc088c2a[m HEAD@{119}: commit: add add-player page and API route
+[33mc9d9b8d[m HEAD@{120}: commit: move update-player page to correct location
+[33m409ff7f[m HEAD@{121}: commit: move page.tsx out of api route folder
+[33mbbb46ba[m HEAD@{122}: commit: add coach creation page and admin API
+[33m808c398[m HEAD@{123}: commit: add admin add-player page and sports management
+[33mbee0372[m HEAD@{124}: commit: fix all prisma client instances to use shared singleton
+[33m0e69177[m HEAD@{125}: commit: fix prisma client in player-signup route
+[33m59321ed[m HEAD@{126}: commit: fix prisma client singleton and pgbouncer param
+[33m0c0ab9b[m HEAD@{127}: commit: fix: use env variables instead of hardcoded supabase keys
+[33m975bd43[m HEAD@{128}: commit: fix supabase hardcoded config
+[33m3922ab6[m HEAD@{129}: commit: fix supabase client syntax
+[33m112cfa2[m HEAD@{130}: commit: debugging supabase url
+[33m5f8f1bb[m HEAD@{131}: commit: add welcome page
+[33mf409c36[m HEAD@{132}: commit: fix build script
+[33m3121c72[m HEAD@{133}: commit: fix build script
+[33md92ce02[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{134}: Branch: renamed refs/heads/master to refs/heads/main
+[33md92ce02[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{136}: checkout: moving from master to master
+[33md92ce02[m[33m ([m[1;31morigin/master[m[33m)[m HEAD@{137}: commit: إصلاح الأخطاء وإضافة الرسم البياني
+[33ma86c153[m HEAD@{138}: commit (amend): your commit message here
+[33mdbe764d[m HEAD@{139}: commit (initial): your commit message here

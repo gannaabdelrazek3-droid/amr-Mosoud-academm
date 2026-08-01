@@ -7,7 +7,7 @@ import Image from 'next/image'
 const captainAchievements = [
   { title: 'بطولة العالم للساندا', year: '2012', place: 'الصين', sport: 'كونغ فو ساندا' },
   { title: 'بطولة العرب للساندا', year: '2014', place: 'تونس', sport: 'كونغ فو ساندا' },
-  { title: 'بطولة اليورو للساندا', year: '2015', place: 'موسكو', sport: 'كونغ فو ساندا' },
+  { title: 'بطولة  للساندا', year: '2015', place: 'موسكو', sport: 'كونغ فو ساندا' },
   { title: 'بطولة إفريقيا للساندا', year: '2016', place: 'مصر', sport: 'كونغ فو ساندا' },
   { title: 'بطل مصر للمحترفين - كيك بوكسينج', year: '2012', place: '', sport: 'كيك بوكسينج' },
   { title: 'بطل ISKA وحامل حزام اللقب - كيك بوكسينج', year: '2013', place: '', sport: 'كيك بوكسينج' },
