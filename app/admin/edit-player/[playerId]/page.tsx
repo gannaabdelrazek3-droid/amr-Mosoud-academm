@@ -68,6 +68,9 @@ interface PlayerDetails {
   medicalCheckExpiry: string | null
   joinDate: string | null
   coachId: string | null
+  avatar_url?: string | null
+  current_belt?: string | null
+  target_belt?: string | null
   subscriptions: SubscriptionItem[]
   sports: { sport: { name: string } }[]
   tournaments: TournamentItem[]
@@ -98,6 +101,11 @@ export default function EditPlayerPage() {
   const [newPassword, setNewPassword] = useState('')
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
+
+  // الحقول الجديدة للصورة والأحزمة
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [currentBelt, setCurrentBelt] = useState('')
+  const [targetBelt, setTargetBelt] = useState('')
 
   const [subSessions, setSubSessions] = useState('')
   const [subEndDate, setSubEndDate] = useState('')
@@ -141,6 +149,12 @@ export default function EditPlayerPage() {
           setMedicalCheckExpiry(data.player.medicalCheckExpiry ? data.player.medicalCheckExpiry.split('T')[0] : '')
           setJoinDate(data.player.joinDate ? data.player.joinDate.split('T')[0] : '')
           setCoachId(data.player.coachId || '')
+          
+          // تعبئة البيانات الجديدة لوجهة التعديل
+          setAvatarUrl(data.player.avatar_url || '')
+          setCurrentBelt(data.player.current_belt || '')
+          setTargetBelt(data.player.target_belt || '')
+
           setAllSports(data.allSports || [])
           setCoaches(data.coaches || [])
           setSelectedSportIds(data.playerSportIds || [])
@@ -156,7 +170,7 @@ export default function EditPlayerPage() {
     }
   }, [playerId])
 
-  // تحديث قائمة المهارات بشكل آمن ودون مشاكل رندر متكررة
+  // تحديث قائمة المهارات بشكل آمن
   useEffect(() => {
     let isMounted = true
 
@@ -218,6 +232,9 @@ export default function EditPlayerPage() {
         sportIds: selectedSportIds,
         newSubscription,
         skillRatings,
+        avatarUrl,      // تم الإضافة هنا
+        currentBelt,    // تم الإضافة هنا
+        targetBelt,     // تم الإضافة هنا
       }),
     })
     const data = await res.json()
@@ -237,6 +254,9 @@ export default function EditPlayerPage() {
     const refetchData = await refetch.json()
     if (refetchData.player) {
       setPlayer(refetchData.player)
+      setAvatarUrl(refetchData.player.avatar_url || '')
+      setCurrentBelt(refetchData.player.current_belt || '')
+      setTargetBelt(refetchData.player.target_belt || '')
       setSkillRatingsInitial(refetchData.skillRatings || {})
     }
   }
@@ -499,6 +519,57 @@ export default function EditPlayerPage() {
                 <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={s.input} minLength={6} />
               </label>
             )}
+          </div>
+
+          {/* قسم بيانات الصورة والأحزمة في صفحة التعديل */}
+          <div style={{ ...s.formCard, marginBottom: 20 }}>
+            <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
+            <label style={s.label}>
+              رابط صورة اللاعب (Avatar URL)
+              <input 
+                type="text" 
+                value={avatarUrl} 
+                onChange={(e) => setAvatarUrl(e.target.value)} 
+                style={s.input} 
+                placeholder="https://example.com/image.jpg" 
+              />
+            </label>
+
+            <label style={s.label}>
+              الحزام الحالي
+              <select 
+                value={currentBelt} 
+                onChange={(e) => setCurrentBelt(e.target.value)} 
+                style={s.input}
+              >
+                <option value="">اختر الحزام الحالي</option>
+                <option value="أبيض">أبيض</option>
+                <option value="أصفر">أصفر</option>
+                <option value="برتقالي">برتقالي</option>
+                <option value="أخضر">أخضر</option>
+                <option value="أزرق">أزرق</option>
+                <option value="بني">بني</option>
+                <option value="أسود">أسود</option>
+              </select>
+            </label>
+
+            <label style={s.label}>
+              الحزام المطلوب
+              <select 
+                value={targetBelt} 
+                onChange={(e) => setTargetBelt(e.target.value)} 
+                style={s.input}
+              >
+                <option value="">اختر الحزام المطلوب</option>
+                <option value="أبيض">أبيض</option>
+                <option value="أصفر">أصفر</option>
+                <option value="برتقالي">برتقالي</option>
+                <option value="أخضر">أخضر</option>
+                <option value="أزرق">أزرق</option>
+                <option value="بني">بني</option>
+                <option value="أسود">أسود</option>
+              </select>
+            </label>
           </div>
 
           <div style={{ ...s.formCard, marginBottom: 20 }}>
