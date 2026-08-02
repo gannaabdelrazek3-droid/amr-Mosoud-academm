@@ -26,23 +26,29 @@ export default async function PaymentsPage() {
         <div style={s.headerBar}>
           <div>
             <h1 style={s.title}>سجل المدفوعات</h1>
-            <p style={{ color: '#94a3b8', margin: 0 }}>آخر 100 عملية دفع</p>
+            <p style={{ color: '#94a3b8', margin: 0 }}>آخر 100 عملية دفع مسجلة في الأكاديمية</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {payments.map((p) => (
-            <PaymentRow
-              key={p.id}
-              id={p.id}
-              amount={Number(p.amount)}
-              description={p.description}
-              date={p.date.toISOString()}
-              source={p.source}
-              playerName={p.player?.fullName || null}
-              status={p.status}
-            />
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 15 }}>
+          {payments.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
+              لا توجد عمليات دفع مسجلة حتى الآن.
+            </div>
+          ) : (
+            payments.map((p) => (
+              <PaymentRow
+                key={p.id}
+                id={p.id}
+                amount={Number(p.amount)}
+                description={p.description}
+                date={p.date.toISOString()}
+                source={p.source}
+                playerName={p.player?.fullName || null}
+                status={p.status}
+              />
+            ))
+          )}
         </div>
       </div>
     </AdminShell>

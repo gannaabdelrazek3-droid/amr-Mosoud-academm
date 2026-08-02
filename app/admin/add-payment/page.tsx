@@ -14,23 +14,38 @@ export default function AddPaymentPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    const res = await fetch('/api/admin/add-payment', {
-      method: 'POST',
-      body: JSON.stringify({ amount, description }),
-    })
-
-    setLoading(false)
-
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
+    
+    const parsedAmount = Number(amount)
+    if (!parsedAmount || parsedAmount <= 0) {
+      setError('يرجى إدخال مبلغ صحيح أكبر من الصفر')
       return
     }
 
-    router.push('/dashboard')
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/admin/add-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: parsedAmount, description }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'حدثت مشكلة، حاول مرة أخرى')
+        return
+      }
+
+      router.push('/dashboard')
+      router.refresh()
+    } catch (err) {
+      console.error(err)
+      setError('حدث خطأ في الاتصال بالخادم، حاول مرة أخرى')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -47,12 +62,26 @@ export default function AddPaymentPage() {
           <form onSubmit={handleSubmit}>
             <label style={s.label}>
               المبلغ (جنيه)
-              <input type="number" step="0.5" value={amount} onChange={(e) => setAmount(e.target.value)} style={s.input} required />
+              <input 
+                type="number" 
+                step="0.5" 
+                value={amount} 
+                onChange={(e) => setAmount(e.target.value)} 
+                style={s.input} 
+                placeholder="0.00"
+                required 
+              />
             </label>
 
             <label style={s.label}>
               الوصف
-              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} style={s.input} />
+              <input 
+                type="text" 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                style={s.input} 
+                placeholder="أدخل تفاصيل الدخل اليدوي..."
+              />
             </label>
 
             <button type="submit" disabled={loading} className="btn-primary" style={s.button}>

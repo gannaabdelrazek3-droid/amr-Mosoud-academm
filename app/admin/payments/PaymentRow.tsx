@@ -33,32 +33,50 @@ export default function PaymentRow({
   const router = useRouter()
 
   async function handleSave() {
+    if (!newAmount || Number(newAmount) <= 0) {
+      alert('يرجى إدخال مبلغ صحيح')
+      return
+    }
+
     setSaving(true)
-    const res = await fetch('/api/admin/manage-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId: id, amount: newAmount, description: newDescription }),
-    })
-    setSaving(false)
-    if (res.ok) {
-      setEditing(false)
-      router.refresh()
-    } else {
-      alert('حدثت مشكلة، حاول مرة أخرى')
+    try {
+      const res = await fetch('/api/admin/manage-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: id, amount: Number(newAmount), description: newDescription }),
+      })
+      if (res.ok) {
+        setEditing(false)
+        router.refresh()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'حدثت مشكلة، حاول مرة أخرى')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('حدث خطأ في الاتصال بالخادم')
+    } finally {
+      setSaving(false)
     }
   }
 
   async function handleDelete() {
     if (!confirm('هل أنت متأكد من إلغاء هذه الدفعة؟')) return
-    const res = await fetch('/api/admin/manage-payment', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paymentId: id }),
-    })
-    if (res.ok) {
-      router.refresh()
-    } else {
-      alert('حدثت مشكلة، حاول مرة أخرى')
+    try {
+      const res = await fetch('/api/admin/manage-payment', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: id }),
+      })
+      if (res.ok) {
+        router.refresh()
+      } else {
+        const data = await res.json()
+        alert(data.error || 'حدثت مشكلة، حاول مرة أخرى')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('حدث خطأ في الاتصال بالخادم')
     }
   }
 
@@ -93,14 +111,14 @@ export default function PaymentRow({
     return (
       <div style={rowStyle}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
-          <input type="number" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} style={{ ...inputStyle, width: 120 }} />
+          <input type="number" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} style={{ ...inputStyle, width: 120 }} placeholder="المبلغ" />
           <input type="text" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 160 }} placeholder="الوصف" />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handleSave} disabled={saving} style={{ ...smallBtn, background: '#22c55e', color: '#0f172a' }}>
-            {saving ? '...' : 'حفظ'}
+            {saving ? 'جار الحفظ...' : 'حفظ'}
           </button>
-          <button onClick={() => setEditing(false)} style={{ ...smallBtn, background: 'rgba(148,163,184,0.15)', color: '#e2e8f0' }}>
+          <button onClick={() => setEditing(false)} disabled={saving} style={{ ...smallBtn, background: 'rgba(148,163,184,0.15)', color: '#e2e8f0' }}>
             إلغاء
           </button>
         </div>

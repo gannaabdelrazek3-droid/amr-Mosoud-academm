@@ -44,28 +44,50 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
-      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
-      return
+    
+    try {
+      const supabase = createClient()
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      
+      if (authError || !data.user) {
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
+        setLoading(false)
+        return
+      }
+
+      // توجيه طاقم العمل للوحة التحكم الرئيسية
+      router.push('/dashboard')
+      router.refresh()
+    } catch (err) {
+      console.error(err)
+      setError('حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى')
+      setLoading(false)
     }
-    router.push('/dashboard')
   }
 
   async function handlePlayerLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
-    if (error) {
-      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
-      return
+    
+    try {
+      const supabase = createClient()
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      
+      if (authError || !data.user) {
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
+        setLoading(false)
+        return
+      }
+
+      // توجيه اللاعب لصفحته الخاصة
+      router.push('/player')
+      router.refresh()
+    } catch (err) {
+      console.error(err)
+      setError('حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى')
+      setLoading(false)
     }
-    router.push('/player')
   }
 
   return (
@@ -158,7 +180,6 @@ export default function LoginPage() {
         <div style={{ display: 'flex', marginBottom: 24, background: 'rgba(15, 23, 42, 0.5)', borderRadius: 10, padding: 4 }}>
           <button
             onClick={() => { setMode('staff'); setError('') }}
-            className="btn-primary"
             style={{
               flex: 1,
               padding: 10,
@@ -175,7 +196,6 @@ export default function LoginPage() {
           </button>
           <button
             onClick={() => { setMode('player'); setError('') }}
-            className="btn-primary"
             style={{
               flex: 1,
               padding: 10,
@@ -196,7 +216,7 @@ export default function LoginPage() {
           <form onSubmit={handleStaffLogin}>
             <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
             <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
-            <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
+            <button type="submit" disabled={loading} style={buttonStyle}>
               {loading ? 'جارٍ الدخول...' : 'دخول'}
             </button>
             <p style={{ textAlign: 'center', marginTop: 16 }}>
@@ -211,7 +231,7 @@ export default function LoginPage() {
           <form onSubmit={handlePlayerLogin}>
             <input type="email" placeholder="البريد الإلكتروني" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} required />
             <input type="password" placeholder="كلمة المرور" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} required />
-            <button type="submit" disabled={loading} className="btn-primary" style={buttonStyle}>
+            <button type="submit" disabled={loading} style={buttonStyle}>
               {loading ? 'جارٍ الدخول...' : 'دخول'}
             </button>
             <p style={{ textAlign: 'center', marginTop: 16 }}>
