@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
@@ -45,9 +45,13 @@ export async function GET() {
       where: { tenantId: profile.tenantId },
       orderBy: { name: 'asc' },
     })
+
     const coaches = await prisma.profile.findMany({
-      where: { tenantId: profile.tenantId, role: { in: ['COACH', 'ADMIN'] } },
-      select: { id: true, fullName: true },
+      where: { 
+        tenantId: profile.tenantId, 
+        role: { in: ['COACH', 'ADMIN'] } 
+      },
+      select: { id: true, fullName: true, role: true },
     })
 
     return NextResponse.json({ allSports: sports, coaches })
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
     if (coachId) {
       const coach = await prisma.profile.findUnique({ where: { id: coachId } })
       if (!coach || coach.tenantId !== profile.tenantId || (coach.role !== 'COACH' && coach.role !== 'ADMIN')) {
-        return NextResponse.json({ error: 'المدرب غير صالح' }, { status: 400 })
+        return NextResponse.json({ error: 'المدرب أو المسؤول غير صالح' }, { status: 400 })
       }
     }
 
@@ -109,7 +113,7 @@ export async function POST(req: NextRequest) {
       )
       const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
         email,
-        password,
+        password: password,
         email_confirm: true,
       })
       if (authError || !authData.user) {
@@ -154,7 +158,6 @@ export async function POST(req: NextRequest) {
           })
         }
 
-        // إضافة الاشتراك التلقائي والنظام المالي
         if (newSubscription && newSubscription.totalSessions && newSubscription.endDate) {
           const totalAmt = Number(newSubscription.totalAmount || 0)
           const paidAmt = Number(newSubscription.paidAmount || 0)
@@ -178,7 +181,6 @@ export async function POST(req: NextRequest) {
             },
           })
 
-          // تسجيل المبلغ المدفوع في الإيرادات/المدفوعات
           if (paidAmt > 0) {
             await tx.payment.create({
               data: {
@@ -194,7 +196,6 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // حفظ تقييمات المهارات الأولية
         if (skillRatings && Object.keys(skillRatings).length > 0) {
           const ratingData = Object.entries(skillRatings).map(([skillId, value]) => ({
             playerId: created.id,
