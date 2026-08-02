@@ -61,14 +61,19 @@ model Profile {
 model Player {
   id                 String    @id @default(uuid())
   fullName           String
-  phone              String?   @unique // رقم الموبايل لتسهيل تسجيل الدخول أو البحث
-  playerCode         String?   @unique // كود اللاعب الاختياري لتسجيل الدخول السريع
-  email              String?   // اختياري (بدون حساب إجباري)
+  phone              String?   @unique 
+  playerCode         String?   @unique 
+  email              String?   
   userId             String?   @unique
   birthDate          DateTime?
   sportsBackground   String?
   medicalCheckExpiry DateTime?
   joinDate           DateTime? @default(now())
+  
+  // الحقول المفقودة التي تتسبب في الخطأ:
+  avatarUrl          String?
+  currentBelt        String?
+  targetBelt         String?
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -92,7 +97,6 @@ model Player {
   @@index([phone])
   @@index([playerCode])
 }
-
 model Sport {
   id       String @id @default(uuid())
   name     String
