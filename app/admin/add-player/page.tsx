@@ -18,6 +18,7 @@ interface Sport {
 interface Coach {
   id: string
   fullName: string
+  role: string
 }
 
 interface Skill {
@@ -34,7 +35,6 @@ export default function AddPlayerPage() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
 
-  // البيانات الأساسية (بدون إجبار الإيميل والباسورد + إضافة رقم الموبايل وكود اللاعب)
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
   const [playerCode, setPlayerCode] = useState('')
@@ -46,7 +46,6 @@ export default function AddPlayerPage() {
   const [joinDate, setJoinDate] = useState('')
   const [coachId, setCoachId] = useState('')
   
-  // الصورة والأحزمة (محدثة: حذف الأبيض، إضافة الأسود دان وناشئين)
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
   const [currentBelt, setCurrentBelt] = useState('')
@@ -55,7 +54,6 @@ export default function AddPlayerPage() {
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
 
-  // الاشتراكات التلقائية ونظام الإيرادات والمدفوعات
   const [selectedSubscriptionSportId, setSelectedSubscriptionSportId] = useState('')
   const [subSessions, setSubSessions] = useState('')
   const [sessionsPerWeek, setSessionsPerWeek] = useState('')
@@ -63,14 +61,13 @@ export default function AddPlayerPage() {
   const [totalAmount, setTotalAmount] = useState('')
   const [paidAmount, setPaidAmount] = useState('')
 
-  // حساب المتبقي تلقائياً
   const remainingAmount = Number(totalAmount || 0) - Number(paidAmount || 0)
 
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/add-player-init')
+    fetch('/api/admin/add-player')
       .then((res) => res.json())
       .then((data) => {
         if (data.allSports) setAllSports(data.allSports)
@@ -79,7 +76,6 @@ export default function AddPlayerPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  // جلب المهارات الخاصة بالرياضات المحددة
   useEffect(() => {
     let isMounted = true
 
@@ -118,7 +114,6 @@ export default function AddPlayerPage() {
     )
   }
 
-  // دالة رفع الصورة إلى Supabase Storage (Bucket: player-avatars)
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -154,7 +149,6 @@ export default function AddPlayerPage() {
     setSaving(true)
     setMessage('')
 
-    // تجهيز بيانات الاشتراك التلقائي والإيرادات
     const newSubscription =
       subSessions && subEndDate ? {
         sportId: selectedSubscriptionSportId || null,
@@ -230,7 +224,6 @@ export default function AddPlayerPage() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* البيانات الأساسية */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>📝 البيانات الأساسية وتسجيل الدخول</h3>
             <label style={s.label}>
@@ -271,17 +264,11 @@ export default function AddPlayerPage() {
             </label>
           </div>
 
-          {/* صورة اللاعب والأحزمة المعدلة */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
             <label style={s.label}>
               صورة اللاعب (رفع ملف)
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={handleImageUpload} 
-                style={s.input} 
-              />
+              <input type="file" accept="image/*" onChange={handleImageUpload} style={s.input} />
             </label>
             {uploadingImage && <p style={{ color: '#d4af37', fontSize: 13, marginTop: 5 }}>جاري رفع الصورة...</p>}
             {avatarUrl && <p style={{ color: '#22c55e', fontSize: 13, marginTop: 5, wordBreak: 'break-all' }}>تم الرفع بنجاح: {avatarUrl}</p>}
@@ -315,21 +302,21 @@ export default function AddPlayerPage() {
             </label>
           </div>
 
-          {/* المدرب المسؤول */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🏋️ المدرب المسؤول</h3>
             <label style={s.label}>
-              اختر المدرب
+              اختر المدرب (يشمل المدربين والمسؤولين)
               <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={s.input}>
                 <option value="">بدون مدرب</option>
                 {coaches.map((c) => (
-                  <option key={c.id} value={c.id}>{c.fullName}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.fullName} {c.role === 'ADMIN' ? '(آدمن)' : ''}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
 
-          {/* الرياضات المسجّل بها */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🏅 الأنشطة والرياضات المسجّل بها</h3>
             {allSports.length === 0 ? (
@@ -358,7 +345,6 @@ export default function AddPlayerPage() {
             )}
           </div>
 
-          {/* التقييمات الأولية للمهارات */}
           {skills.length > 0 && (
             <div style={{ ...s.formCard, marginBottom: 20 }}>
               <h3 style={sectionTitle}>🎯 تقييم المهارات الأولية</h3>
@@ -379,7 +365,6 @@ export default function AddPlayerPage() {
             </div>
           )}
 
-          {/* نظام الاشتراكات التلقائية والإيرادات والمدفوعات */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>💰 الاشتراك والإيرادات (نظام تلقائي)</h3>
             
@@ -394,7 +379,7 @@ export default function AddPlayerPage() {
             </label>
 
             <label style={s.label}>
-              عدد مرات التمرين أسبوعياً (للحساب التلقائي للجلسات)
+              عدد مرات التمرين أسبوعياً
               <input type="number" min={1} value={sessionsPerWeek} onChange={(e) => setSessionsPerWeek(e.target.value)} style={s.input} placeholder="مثال: 3 مرات أسبوعياً" />
             </label>
 
@@ -415,7 +400,7 @@ export default function AddPlayerPage() {
               </label>
 
               <label style={s.label}>
-                المبلغ المدفوع (يسجل في الإيرادات)
+                المبلغ المدفوع
                 <input type="number" min={0} step="0.01" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} style={s.input} placeholder="0.00" />
               </label>
             </div>
