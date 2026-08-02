@@ -95,6 +95,7 @@ const navLinks = [
   { href: '#home', label: 'الرئيسية' },
   { href: '#about', label: 'عن الأكاديمية' },
   { href: '#sports', label: 'الرياضات' },
+  { href: '/coaches', label: 'المدربون' },
   { href: '#players', label: 'الأبطال' },
   { href: '#achievements', label: 'الإنجازات' },
   { href: '/register', label: 'التسجيل' },
