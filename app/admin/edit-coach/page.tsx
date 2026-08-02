@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { adminStyles as s } from '@/app/admin/adminStyles'
-import AdminShell from '@/app/admin/AdminShell'
+import { adminStyles as s } from '../adminStyles'
+import AdminShell from '../AdminShell'
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
