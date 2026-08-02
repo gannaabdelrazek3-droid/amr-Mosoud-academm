@@ -70,6 +70,7 @@ export default function AddPlayerPage() {
     fetch('/api/admin/add-player')
       .then((res) => res.json())
       .then((data) => {
+        console.log("API Data received:", data)
         if (data.allSports) setAllSports(data.allSports)
         if (data.coaches) setCoaches(data.coaches)
       })

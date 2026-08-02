@@ -1,4 +1,4 @@
- import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
@@ -53,6 +53,8 @@ export async function GET() {
       },
       select: { id: true, fullName: true, role: true },
     })
+
+    console.log("Coaches fetched from DB:", coaches)
 
     return NextResponse.json({ allSports: sports, coaches })
   } catch (err) {
@@ -113,7 +115,7 @@ export async function POST(req: NextRequest) {
       )
       const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
         email,
-        password: password,
+        password,
         email_confirm: true,
       })
       if (authError || !authData.user) {
