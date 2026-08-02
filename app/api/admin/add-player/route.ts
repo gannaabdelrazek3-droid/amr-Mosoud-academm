@@ -46,9 +46,9 @@ export async function GET() {
       orderBy: { name: 'asc' },
     })
 
+    // جلب كل المدربين والآدمن بغض النظر عن الـ tenantId لضمان ظهورهم فوراً
     const coaches = await prisma.profile.findMany({
       where: { 
-        tenantId: profile.tenantId, 
         role: { in: ['COACH', 'ADMIN'] } 
       },
       select: { id: true, fullName: true, role: true },
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     if (coachId) {
       const coach = await prisma.profile.findUnique({ where: { id: coachId } })
-      if (!coach || coach.tenantId !== profile.tenantId || (coach.role !== 'COACH' && coach.role !== 'ADMIN')) {
+      if (!coach || (coach.role !== 'COACH' && coach.role !== 'ADMIN')) {
         return NextResponse.json({ error: 'المدرب أو المسؤول غير صالح' }, { status: 400 })
       }
     }
