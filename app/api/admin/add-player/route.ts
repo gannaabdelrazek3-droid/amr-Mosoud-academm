@@ -46,7 +46,7 @@ export async function GET() {
       orderBy: { name: 'asc' },
     })
 
-    // جلب كل المدربين والآدمن بغض النظر عن الـ tenantId لضمان ظهورهم فوراً
+    // التعديل هنا: جلب كل المدربين والآدمن بدون قيود الـ tenantId لضمان ظهورهم في خانة المدرب
     const coaches = await prisma.profile.findMany({
       where: { 
         role: { in: ['COACH', 'ADMIN'] } 
@@ -228,9 +228,9 @@ export async function POST(req: NextRequest) {
     } catch (dbError) {
       if (createdAuthUserId) {
         const adminSupabase = createAdminClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        )
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
         await adminSupabase.auth.admin.deleteUser(createdAuthUserId)
       }
       console.error(dbError)
