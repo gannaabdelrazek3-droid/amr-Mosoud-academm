@@ -55,7 +55,76 @@ model Profile {
   coachSports CoachSport[]
   tournaments Tournament[]
 
+  // ==== حقول خاصة بصفحة المدرب العامة ====
+  avatarUrl         String?
+  bio               String?  // نبذة عن المدرب
+  title             String?  // الوظيفة: "مدرب ساندا - مدرب كيك بوكسينج"
+  yearsExperience   Int?
+  playersTrained    Int?
+  belts             String?  // الأحزمة/الدرجات
+  isActive          Boolean  @default(true)
+  displayOrder      Int      @default(0)
+  whatsapp          String?
+  facebookUrl       String?
+  instagramUrl      String?
+  trainingSchedule  String?  // أيام ومواعيد التدريب
+
+  achievements  CoachAchievement[]
+  certificates  CoachCertificate[]
+  galleryItems  CoachGalleryItem[]
+
   createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([role])
+}
+
+model CoachAchievement {
+  id       String  @id @default(uuid())
+  coachId  String
+  coach    Profile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  title    String  // مثال: "بطولة الجمهورية 2025"
+  year     Int?
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([coachId])
+}
+
+model CoachCertificate {
+  id       String  @id @default(uuid())
+  coachId  String
+  coach    Profile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  title    String
+  imageUrl String?
+  order    Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([coachId])
+}
+
+enum GalleryType {
+  IMAGE
+  VIDEO
+}
+
+model CoachGalleryItem {
+  id       String      @id @default(uuid())
+  coachId  String
+  coach    Profile     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  type     GalleryType
+  url      String
+  caption  String?
+  order    Int         @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([coachId])
 }
 
 model Player {
@@ -70,7 +139,6 @@ model Player {
   medicalCheckExpiry DateTime?
   joinDate           DateTime? @default(now())
   
-  // الحقول المفقودة التي تتسبب في الخطأ:
   avatarUrl          String?
   currentBelt        String?
   targetBelt         String?
@@ -97,6 +165,7 @@ model Player {
   @@index([phone])
   @@index([playerCode])
 }
+
 model Sport {
   id       String @id @default(uuid())
   name     String
@@ -149,17 +218,15 @@ model Subscription {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  // الاشتراكات التلقائية وعدد الجلسات
-  totalSessions    Int      // إجمالي عدد الجلسات
-  remaining        Int      // الجلسات المتبقية
-  sessionsPerWeek  Int?     // عدد مرات التمرين أسبوعياً
-  sessionsPerMonth Int?     // عدد مرات التمرين شهرياً
+  totalSessions    Int
+  remaining        Int
+  sessionsPerWeek  Int?
+  sessionsPerMonth Int?
 
-  // نظام الإيرادات والماليات
-  totalAmount     Decimal  @db.Decimal(10, 2) @default(0) // قيمة الاشتراك الكاملة
-  paidAmount      Decimal  @db.Decimal(10, 2) @default(0) // المبلغ المدفوع
-  remainingAmount Decimal  @db.Decimal(10, 2) @default(0) // المتبقي
-  paymentStatus   String   @default("PAID")                // حالة الدفع (خالص / جزئي)
+  totalAmount     Decimal  @db.Decimal(10, 2) @default(0)
+  paidAmount      Decimal  @db.Decimal(10, 2) @default(0)
+  remainingAmount Decimal  @db.Decimal(10, 2) @default(0)
+  paymentStatus   String   @default("PAID")
 
   startDate     DateTime @default(now())
   endDate       DateTime
