@@ -7,15 +7,29 @@ import { z } from 'zod'
 
 const addPlayerSchema = z.object({
   fullName: z.string().min(1),
-  phone: z.string().optional(),
-  birthDate: z.string().optional(),
-  sportsBackground: z.string().optional(),
-  medicalCheckExpiry: z.string().optional(),
-  joinDate: z.string().optional(),
+  phone: z.string().optional().or(z.literal('')),
+  playerCode: z.string().optional().or(z.literal('')),
+  birthDate: z.string().optional().or(z.literal('')),
+  sportsBackground: z.string().optional().or(z.literal('')),
+  medicalCheckExpiry: z.string().optional().or(z.literal('')),
+  joinDate: z.string().optional().or(z.literal('')),
   email: z.string().email().optional().or(z.literal('')),
   password: z.string().min(6).optional().or(z.literal('')),
-  coachId: z.string().min(1),
+  coachId: z.string().optional().or(z.literal('')),
   sportIds: z.array(z.string()).optional(),
+  avatarUrl: z.string().optional().or(z.literal('')),
+  currentBelt: z.string().optional().or(z.literal('')),
+  targetBelt: z.string().optional().or(z.literal('')),
+  newSubscription: z.object({
+    sportId: z.string().optional().nullable(),
+    totalSessions: z.number(),
+    sessionsPerWeek: z.number().optional().nullable(),
+    endDate: z.string(),
+    totalAmount: z.number(),
+    paidAmount: z.number(),
+    remainingAmount: z.number(),
+  }).optional().nullable(),
+  skillRatings: z.record(z.string(), z.string()).optional(),
 })
 
 export async function GET() {
@@ -36,7 +50,7 @@ export async function GET() {
       select: { id: true, fullName: true },
     })
 
-    return NextResponse.json({ sports, coaches })
+    return NextResponse.json({ allSports: sports, coaches })
   } catch (err) {
     console.error(err)
     return NextResponse.json({ error: 'حدثت مشكلة، حاول مرة أخرى' }, { status: 500 })
@@ -55,11 +69,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const parsed = addPlayerSchema.safeParse(body)
     if (!parsed.success) {
+      console.error(parsed.error)
       return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
     }
+
     const {
       fullName,
       phone,
+      playerCode,
       birthDate,
       sportsBackground,
       medicalCheckExpiry,
@@ -68,11 +85,18 @@ export async function POST(req: NextRequest) {
       password,
       coachId,
       sportIds,
+      avatarUrl,
+      currentBelt,
+      targetBelt,
+      newSubscription,
+      skillRatings,
     } = parsed.data
 
-    const coach = await prisma.profile.findUnique({ where: { id: coachId } })
-    if (!coach || coach.tenantId !== profile.tenantId || (coach.role !== 'COACH' && coach.role !== 'ADMIN')) {
-      return NextResponse.json({ error: 'المدرب غير صالح' }, { status: 400 })
+    if (coachId) {
+      const coach = await prisma.profile.findUnique({ where: { id: coachId } })
+      if (!coach || coach.tenantId !== profile.tenantId || (coach.role !== 'COACH' && coach.role !== 'ADMIN')) {
+        return NextResponse.json({ error: 'المدرب غير صالح' }, { status: 400 })
+      }
     }
 
     let userId: string | undefined
@@ -109,19 +133,78 @@ export async function POST(req: NextRequest) {
             tenantId: profile.tenantId,
             fullName,
             phone: phone || null,
+            playerCode: playerCode || null,
             email: email || null,
             userId: userId || null,
             birthDate: birthDate ? new Date(birthDate) : null,
             sportsBackground: sportsBackground || null,
             medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : null,
             joinDate: joinDate ? new Date(joinDate) : new Date(),
-            coachId: coach.id,
+            coachId: coachId || null,
+            avatarUrl: avatarUrl || null,
+            currentBelt: currentBelt || null,
+            targetBelt: targetBelt || null,
           },
         })
 
         if (validSportIds.length > 0) {
           await tx.playerSport.createMany({
             data: validSportIds.map((sportId: string) => ({ playerId: created.id, sportId })),
+            skipDuplicates: true,
+          })
+        }
+
+        // إضافة الاشتراك التلقائي والنظام المالي
+        if (newSubscription && newSubscription.totalSessions && newSubscription.endDate) {
+          const totalAmt = Number(newSubscription.totalAmount || 0)
+          const paidAmt = Number(newSubscription.paidAmount || 0)
+          const remainingAmt = totalAmt - paidAmt
+          const paymentSt = remainingAmt <= 0 ? 'PAID' : paidAmt > 0 ? 'PARTIAL' : 'UNPAID'
+
+          const subscription = await tx.subscription.create({
+            data: {
+              playerId: created.id,
+              tenantId: profile.tenantId,
+              sportId: newSubscription.sportId || null,
+              totalSessions: Number(newSubscription.totalSessions),
+              remaining: Number(newSubscription.totalSessions),
+              sessionsPerWeek: newSubscription.sessionsPerWeek ? Number(newSubscription.sessionsPerWeek) : null,
+              totalAmount: totalAmt,
+              paidAmount: paidAmt,
+              remainingAmount: remainingAmt,
+              paymentStatus: paymentSt,
+              startDate: joinDate ? new Date(joinDate) : new Date(),
+              endDate: new Date(newSubscription.endDate),
+            },
+          })
+
+          // تسجيل المبلغ المدفوع في الإيرادات/المدفوعات
+          if (paidAmt > 0) {
+            await tx.payment.create({
+              data: {
+                tenantId: profile.tenantId,
+                playerId: created.id,
+                subscriptionId: subscription.id,
+                amount: paidAmt,
+                source: 'SUBSCRIPTION',
+                description: `دفعة اشتراك أولية للاعب: ${fullName}`,
+                date: new Date(),
+              },
+            })
+          }
+        }
+
+        // حفظ تقييمات المهارات الأولية
+        if (skillRatings && Object.keys(skillRatings).length > 0) {
+          const ratingData = Object.entries(skillRatings).map(([skillId, value]) => ({
+            playerId: created.id,
+            skillId,
+            tenantId: profile.tenantId,
+            value: Number(value),
+          }))
+
+          await tx.skillRating.createMany({
+            data: ratingData,
           })
         }
 
@@ -138,7 +221,7 @@ export async function POST(req: NextRequest) {
         details: `إضافة لاعب جديد: ${fullName}`,
       })
 
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ success: true, playerId: player.id })
     } catch (dbError) {
       if (createdAuthUserId) {
         const adminSupabase = createAdminClient(

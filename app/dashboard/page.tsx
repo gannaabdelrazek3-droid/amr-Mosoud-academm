@@ -5,6 +5,7 @@ import { adminStyles as s } from '../admin/adminStyles'
 import AdminShell from '../admin/AdminShell'
 import DashboardCharts from './DashboardCharts'
 import SignOutButtonGeneric from '../SignOutButtonGeneric'
+import QuickAddPlayerClientWrapper from './QuickAddPlayerClientWrapper' // سننشئ هذا الملف المساعد لربط الزر والنافذة
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -119,6 +120,8 @@ export default async function DashboardPage() {
               <h1 style={s.title}>لوحة التحكم</h1>
               <p style={{ color: '#94a3b8', margin: 0 }}>مرحبًا بك، {profile.fullName} 👑</p>
             </div>
+            {/* زر الإضافة السريعة الجديد */}
+            <QuickAddPlayerClientWrapper />
           </div>
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>

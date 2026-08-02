@@ -61,13 +61,14 @@ model Profile {
 model Player {
   id                 String    @id @default(uuid())
   fullName           String
-  phone              String?
-  email              String?   @unique
+  phone              String?   @unique // رقم الموبايل لتسهيل تسجيل الدخول أو البحث
+  playerCode         String?   @unique // كود اللاعب الاختياري لتسجيل الدخول السريع
+  email              String?   // اختياري (بدون حساب إجباري)
   userId             String?   @unique
   birthDate          DateTime?
   sportsBackground   String?
   medicalCheckExpiry DateTime?
-  joinDate           DateTime?
+  joinDate           DateTime? @default(now())
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -88,6 +89,8 @@ model Player {
 
   @@index([tenantId])
   @@index([coachId])
+  @@index([phone])
+  @@index([playerCode])
 }
 
 model Sport {
@@ -96,14 +99,15 @@ model Sport {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  players     PlayerSport[]
-  coaches     CoachSport[]
-  attendances Attendance[]
-  weightLogs  WeightLog[]
-  progress    PlayerProgress[]
-  skills      Skill[]
-  events      Event[]
-  tournaments Tournament[]
+  players       PlayerSport[]
+  coaches       CoachSport[]
+  attendances   Attendance[]
+  weightLogs    WeightLog[]
+  progress      PlayerProgress[]
+  skills        Skill[]
+  events        Event[]
+  tournaments   Tournament[]
+  subscriptions Subscription[]
 
   createdAt DateTime @default(now())
 
@@ -135,11 +139,24 @@ model Subscription {
   playerId String
   player   Player @relation(fields: [playerId], references: [id])
 
+  sportId String?
+  sport   Sport?  @relation(fields: [sportId], references: [id])
+
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  totalSessions Int
-  remaining     Int
+  // الاشتراكات التلقائية وعدد الجلسات
+  totalSessions    Int      // إجمالي عدد الجلسات
+  remaining        Int      // الجلسات المتبقية
+  sessionsPerWeek  Int?     // عدد مرات التمرين أسبوعياً
+  sessionsPerMonth Int?     // عدد مرات التمرين شهرياً
+
+  // نظام الإيرادات والماليات
+  totalAmount     Decimal  @db.Decimal(10, 2) @default(0) // قيمة الاشتراك الكاملة
+  paidAmount      Decimal  @db.Decimal(10, 2) @default(0) // المبلغ المدفوع
+  remainingAmount Decimal  @db.Decimal(10, 2) @default(0) // المتبقي
+  paymentStatus   String   @default("PAID")                // حالة الدفع (خالص / جزئي)
+
   startDate     DateTime @default(now())
   endDate       DateTime
   
@@ -152,6 +169,7 @@ model Subscription {
 
   @@index([tenantId, playerId])
   @@index([playerId, endDate])
+  @@index([sportId])
 }
 
 model Attendance {
@@ -267,7 +285,7 @@ model Payment {
   player   Player? @relation(fields: [playerId], references: [id])
 
   subscriptionId String?
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   amount      Decimal       @db.Decimal(10, 2)
   source      PaymentSource
@@ -364,8 +382,8 @@ model RegistrationRequest {
   hasCompeted Boolean  @default(false)
   status      String   @default("pending")
   createdAt   DateTime @default(now())
-  email       String
-  password    String
+  email       String?
+  password    String?
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 

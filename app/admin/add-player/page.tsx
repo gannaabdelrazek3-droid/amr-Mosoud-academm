@@ -34,18 +34,19 @@ export default function AddPlayerPage() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
 
-  // البيانات الأساسية
+  // البيانات الأساسية (بدون إجبار الإيميل والباسورد + إضافة رقم الموبايل وكود اللاعب)
   const [fullName, setFullName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [playerCode, setPlayerCode] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [phone, setPhone] = useState('')
   const [birthDate, setBirthDate] = useState('')
   const [sportsBackground, setSportsBackground] = useState('')
   const [medicalCheckExpiry, setMedicalCheckExpiry] = useState('')
   const [joinDate, setJoinDate] = useState('')
   const [coachId, setCoachId] = useState('')
   
-  // الحقول المحدثة للصورة والأحزمة
+  // الصورة والأحزمة (محدثة: حذف الأبيض، إضافة الأسود دان وناشئين)
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
   const [currentBelt, setCurrentBelt] = useState('')
@@ -54,9 +55,16 @@ export default function AddPlayerPage() {
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [skillRatings, setSkillRatings] = useState<Record<string, string>>({})
 
-  // الاشتراك الافتتاحي
+  // الاشتراكات التلقائية ونظام الإيرادات والمدفوعات
+  const [selectedSubscriptionSportId, setSelectedSubscriptionSportId] = useState('')
   const [subSessions, setSubSessions] = useState('')
+  const [sessionsPerWeek, setSessionsPerWeek] = useState('')
   const [subEndDate, setSubEndDate] = useState('')
+  const [totalAmount, setTotalAmount] = useState('')
+  const [paidAmount, setPaidAmount] = useState('')
+
+  // حساب المتبقي تلقائياً
+  const remainingAmount = Number(totalAmount || 0) - Number(paidAmount || 0)
 
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -146,17 +154,27 @@ export default function AddPlayerPage() {
     setSaving(true)
     setMessage('')
 
+    // تجهيز بيانات الاشتراك التلقائي والإيرادات
     const newSubscription =
-      subSessions && subEndDate ? { totalSessions: subSessions, endDate: subEndDate } : null
+      subSessions && subEndDate ? {
+        sportId: selectedSubscriptionSportId || null,
+        totalSessions: Number(subSessions),
+        sessionsPerWeek: sessionsPerWeek ? Number(sessionsPerWeek) : null,
+        endDate: subEndDate,
+        totalAmount: Number(totalAmount || 0),
+        paidAmount: Number(paidAmount || 0),
+        remainingAmount: remainingAmount,
+      } : null
 
     const res = await fetch('/api/admin/add-player', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fullName,
+        phone,
+        playerCode,
         email,
         password,
-        phone,
         birthDate,
         sportsBackground,
         medicalCheckExpiry,
@@ -207,28 +225,33 @@ export default function AddPlayerPage() {
         <div style={s.headerBar}>
           <div>
             <h1 style={s.title}>إضافة لاعب جديد</h1>
-            <p style={{ color: '#94a3b8', margin: 0 }}>تسجيل لاعب جديد في الأكاديمية</p>
+            <p style={{ color: '#94a3b8', margin: 0 }}>تسجيل لاعب جديد في الأكاديمية بدون حساب إجباري</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* البيانات الأساسية */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>📝 البيانات الأساسية وحساب الدخول</h3>
+            <h3 style={sectionTitle}>📝 البيانات الأساسية وتسجيل الدخول</h3>
             <label style={s.label}>
               الاسم الكامل *
               <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required />
             </label>
             <label style={s.label}>
-              البريد الإلكتروني (لتسجيل الدخول)
+              رقم الموبايل (لتسهيل تسجيل الدخول)
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              كود اللاعب (اختياري لتسجيل الدخول السريع)
+              <input type="text" value={playerCode} onChange={(e) => setPlayerCode(e.target.value)} style={s.input} />
+            </label>
+            <label style={s.label}>
+              البريد الإلكتروني (اختياري)
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={s.input} />
             </label>
             <label style={s.label}>
-              كلمة المرور
+              كلمة المرور (اختياري)
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={s.input} minLength={6} />
-            </label>
-            <label style={s.label}>
-              رقم الهاتف
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} />
             </label>
             <label style={s.label}>
               تاريخ الميلاد
@@ -239,8 +262,8 @@ export default function AddPlayerPage() {
               <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={s.input} />
             </label>
             <label style={s.label}>
-              تاريخ الانضمام للأكاديمية
-              <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} style={s.input} />
+              تاريخ الاشتراك / الانضمام *
+              <input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} style={s.input} required />
             </label>
             <label style={s.label}>
               تاريخ انتهاء الكشف الطبي
@@ -248,7 +271,7 @@ export default function AddPlayerPage() {
             </label>
           </div>
 
-          {/* قسم الصورة والأحزمة (المحدث لرفع الملفات) */}
+          {/* صورة اللاعب والأحزمة المعدلة */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🥋 بيانات الصورة والأحزمة</h3>
             <label style={s.label}>
@@ -267,13 +290,13 @@ export default function AddPlayerPage() {
               الحزام الحالي
               <select value={currentBelt} onChange={(e) => setCurrentBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام الحالي</option>
-                <option value="أبيض">أبيض</option>
                 <option value="أصفر">أصفر</option>
                 <option value="برتقالي">برتقالي</option>
                 <option value="أخضر">أخضر</option>
                 <option value="أزرق">أزرق</option>
                 <option value="بني">بني</option>
-                <option value="أسود">أسود</option>
+                <option value="أسود دان">أسود (دان)</option>
+                <option value="أسود ناشئين">أسود ناشئين</option>
               </select>
             </label>
 
@@ -281,17 +304,18 @@ export default function AddPlayerPage() {
               الحزام المطلوب
               <select value={targetBelt} onChange={(e) => setTargetBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام المطلوب</option>
-                <option value="أبيض">أبيض</option>
                 <option value="أصفر">أصفر</option>
                 <option value="برتقالي">برتقالي</option>
                 <option value="أخضر">أخضر</option>
                 <option value="أزرق">أزرق</option>
                 <option value="بني">بني</option>
-                <option value="أسود">أسود</option>
+                <option value="أسود دان">أسود (دان)</option>
+                <option value="أسود ناشئين">أسود ناشئين</option>
               </select>
             </label>
           </div>
 
+          {/* المدرب المسؤول */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>🏋️ المدرب المسؤول</h3>
             <label style={s.label}>
@@ -305,8 +329,9 @@ export default function AddPlayerPage() {
             </label>
           </div>
 
+          {/* الرياضات المسجّل بها */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>🏅 الرياضات المسجّل بها</h3>
+            <h3 style={sectionTitle}>🏅 الأنشطة والرياضات المسجّل بها</h3>
             {allSports.length === 0 ? (
               <p style={{ color: '#94a3b8' }}>لا توجد رياضات مضافة في الأكاديمية بعد</p>
             ) : (
@@ -333,6 +358,7 @@ export default function AddPlayerPage() {
             )}
           </div>
 
+          {/* التقييمات الأولية للمهارات */}
           {skills.length > 0 && (
             <div style={{ ...s.formCard, marginBottom: 20 }}>
               <h3 style={sectionTitle}>🎯 تقييم المهارات الأولية</h3>
@@ -353,16 +379,53 @@ export default function AddPlayerPage() {
             </div>
           )}
 
+          {/* نظام الاشتراكات التلقائية والإيرادات والمدفوعات */}
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>📅 الاشتراك الافتتاحي (اختياري)</h3>
+            <h3 style={sectionTitle}>💰 الاشتراك والإيرادات (نظام تلقائي)</h3>
+            
             <label style={s.label}>
-              عدد الحصص
-              <input type="number" min={1} value={subSessions} onChange={(e) => setSubSessions(e.target.value)} style={s.input} />
+              النشاط التابع له الاشتراك
+              <select value={selectedSubscriptionSportId} onChange={(e) => setSelectedSubscriptionSportId(e.target.value)} style={s.input}>
+                <option value="">اختر النشاط</option>
+                {allSports.map((sp) => (
+                  <option key={sp.id} value={sp.id}>{sp.name}</option>
+                ))}
+              </select>
             </label>
+
+            <label style={s.label}>
+              عدد مرات التمرين أسبوعياً (للحساب التلقائي للجلسات)
+              <input type="number" min={1} value={sessionsPerWeek} onChange={(e) => setSessionsPerWeek(e.target.value)} style={s.input} placeholder="مثال: 3 مرات أسبوعياً" />
+            </label>
+
+            <label style={s.label}>
+              إجمالي عدد الجلسات
+              <input type="number" min={1} value={subSessions} onChange={(e) => setSubSessions(e.target.value)} style={s.input} placeholder="مثال: 12 جلسة" />
+            </label>
+
             <label style={s.label}>
               تاريخ انتهاء الاشتراك
               <input type="date" value={subEndDate} onChange={(e) => setSubEndDate(e.target.value)} style={s.input} />
             </label>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+              <label style={s.label}>
+                قيمة الاشتراك الكاملة
+                <input type="number" min={0} step="0.01" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} style={s.input} placeholder="0.00" />
+              </label>
+
+              <label style={s.label}>
+                المبلغ المدفوع (يسجل في الإيرادات)
+                <input type="number" min={0} step="0.01" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} style={s.input} placeholder="0.00" />
+              </label>
+            </div>
+
+            <div style={{ marginTop: 10, padding: 12, background: 'rgba(212,175,55,0.05)', borderRadius: 8, border: '1px solid rgba(212,175,55,0.2)' }}>
+              <span style={{ color: '#d4af37', fontWeight: 'bold' }}>المبلغ المتبقي تلقائياً: </span>
+              <span style={{ color: remainingAmount > 0 ? '#ef4444' : '#22c55e', fontWeight: 'bold', fontSize: 16 }}>
+                {remainingAmount.toFixed(2)} ج.م
+              </span>
+            </div>
           </div>
 
           <button type="submit" disabled={saving || uploadingImage} className="btn-primary" style={s.button}>
