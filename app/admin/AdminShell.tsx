@@ -18,6 +18,7 @@ const navLinks = [
   { href: '/admin/audit-log', label: 'سجل العمليات', icon: '🕵️' },
   { href: '/admin/payments', label: 'المدفوعات', icon: '💰' },
   { href: '/admin/tournaments', label: 'البطولات', icon: '🏆' },
+  { href: '/admin/albums', label: 'معرض الصور', icon: '📸' },
 ]
 
 export default function AdminShell({

@@ -34,6 +34,7 @@ model Tenant {
   events               Event[]
   auditLogs            AuditLog[]
   tournamentEvents TournamentEvent[]
+  mediaAlbums MediaAlbum[]
 }
 
 enum Role {
@@ -559,4 +560,50 @@ model TournamentParticipant {
   order             Int             @default(0)
 
   @@index([tournamentEventId])
+}
+enum GalleryCategory {
+  TOURNAMENTS
+  TRAINING
+  BELT_TESTS
+  CAMPS
+  PARTIES
+}
+
+enum MediaItemType {
+  IMAGE
+  VIDEO
+}
+
+model MediaAlbum {
+  id           String          @id @default(uuid())
+  tenantId     String
+  tenant       Tenant          @relation(fields: [tenantId], references: [id])
+
+  title        String
+  category     GalleryCategory
+  coverUrl     String?
+  isActive     Boolean         @default(true)
+  displayOrder Int             @default(0)
+
+  items        MediaAlbumItem[]
+
+  createdAt    DateTime        @default(now())
+
+  @@index([tenantId])
+  @@index([category])
+}
+
+model MediaAlbumItem {
+  id        String        @id @default(uuid())
+  albumId   String
+  album     MediaAlbum    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+
+  type      MediaItemType
+  url       String
+  caption   String?
+  order     Int           @default(0)
+
+  createdAt DateTime      @default(now())
+
+  @@index([albumId])
 }

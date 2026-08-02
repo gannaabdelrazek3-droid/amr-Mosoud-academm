@@ -101,6 +101,7 @@ const navLinks = [
   { href: '/register', label: 'التسجيل' },
   { href: '/login', label: 'تسجيل الدخول' },
   { href: '/tournaments', label: 'البطولات', icon: '' },
+  { href: '/gallery', label: 'معرض الصور' },
 ]
 
 const filterOptions = ['الكل', 'كونغ فو ساندا', 'كيك بوكسينج', 'مواي تاي', 'MMA']
