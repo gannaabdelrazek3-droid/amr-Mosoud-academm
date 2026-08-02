@@ -9,6 +9,7 @@ const navLinks = [
   { href: '/admin/calendar', label: 'التقويم', icon: '📅' },
   { href: '/admin/add-player', label: 'إضافة لاعب', icon: '➕' },
   { href: '/admin/add-staff', label: 'إضافة موظف', icon: '🏋️' },
+  { href: '/admin/coaches', label: 'المدربين', icon: '👨‍🏫' },
   { href: '/admin/sports', label: 'الرياضات', icon: '🏅' },
   { href: '/admin/inventory', label: 'المخزون', icon: '📦' },
   { href: '/admin/subscriptions', label: 'الاشتراكات', icon: '📅' },
