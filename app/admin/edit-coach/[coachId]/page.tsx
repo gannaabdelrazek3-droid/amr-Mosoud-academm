@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { adminStyles as s } from '@/app/admin/adminStyles'
 import AdminShell from '@/app/admin/AdminShell'
 import { createClient } from '@supabase/supabase-js'
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 const supabase = createClient(supabaseUrl, supabaseKey)
@@ -33,7 +34,7 @@ interface GalleryItem {
   caption: string
 }
 
-export default function EditCoachPage() {
+function EditCoachContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const coachId = searchParams.get('id') || ''
@@ -521,5 +522,13 @@ export default function EditCoachPage() {
         </form>
       </div>
     </AdminShell>
+  )
+}
+
+export default function EditCoachPage() {
+  return (
+    <Suspense fallback={<p style={{ color: '#e2e8f0', padding: 40 }}>جارٍ التحميل...</p>}>
+      <EditCoachContent />
+    </Suspense>
   )
 }
