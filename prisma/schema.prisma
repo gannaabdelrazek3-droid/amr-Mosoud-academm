@@ -35,6 +35,7 @@ model Tenant {
   auditLogs            AuditLog[]
   tournamentEvents TournamentEvent[]
   mediaAlbums MediaAlbum[]
+  featuredPlayers FeaturedPlayer[]
 }
 
 enum Role {
@@ -606,4 +607,24 @@ model MediaAlbumItem {
   createdAt DateTime      @default(now())
 
   @@index([albumId])
+}
+model FeaturedPlayer {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  season       Int
+  name         String
+  imageUrl     String?
+  sport        String?
+  reason       String?  // سبب التميز
+  achievement  String?  // الإنجاز
+
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([season])
 }
