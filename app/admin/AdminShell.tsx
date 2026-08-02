@@ -17,6 +17,7 @@ const navLinks = [
   { href: '/admin/registration-requests', label: 'طلبات التسجيل', icon: '📋' },
   { href: '/admin/audit-log', label: 'سجل العمليات', icon: '🕵️' },
   { href: '/admin/payments', label: 'المدفوعات', icon: '💰' },
+  { href: '/admin/tournaments', label: 'البطولات', icon: '🏆' },
 ]
 
 export default function AdminShell({

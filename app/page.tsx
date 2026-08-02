@@ -100,6 +100,7 @@ const navLinks = [
   { href: '#achievements', label: 'الإنجازات' },
   { href: '/register', label: 'التسجيل' },
   { href: '/login', label: 'تسجيل الدخول' },
+  { href: '/tournaments', label: 'البطولات', icon: '' },
 ]
 
 const filterOptions = ['الكل', 'كونغ فو ساندا', 'كيك بوكسينج', 'مواي تاي', 'MMA']
