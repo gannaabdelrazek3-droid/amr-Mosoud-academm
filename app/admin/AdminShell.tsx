@@ -20,6 +20,8 @@ const navLinks = [
   { href: '/admin/tournaments', label: 'البطولات', icon: '🏆' },
   { href: '/admin/albums', label: 'معرض الصور', icon: '📸' },
   { href: '/admin/featured-players', label: 'اللاعبون المميزون', icon: '⭐' },
+  { href: '/admin/academy-info', label: 'معلومات الأكاديمية', icon: 'ℹ️' },
+{ href: '/admin/news', label: 'الأخبار', icon: '📰' },
 ]
 
 export default function AdminShell({

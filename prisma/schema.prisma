@@ -36,6 +36,8 @@ model Tenant {
   tournamentEvents TournamentEvent[]
   mediaAlbums MediaAlbum[]
   featuredPlayers FeaturedPlayer[]
+  academyInfo AcademyInfo?
+  newsPosts   NewsPost[]
 }
 
 enum Role {
@@ -627,4 +629,38 @@ model FeaturedPlayer {
 
   @@index([tenantId])
   @@index([season])
+}
+model AcademyInfo {
+  id               String   @id @default(uuid())
+  tenantId         String   @unique
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+
+  aboutText        String?
+  trainingSchedule String?
+  activitiesText   String?
+  phone            String?
+  whatsapp         String?
+  email            String?
+  address          String?
+  mapUrl           String?
+  facebookUrl      String?
+  instagramUrl     String?
+
+  updatedAt        DateTime @updatedAt
+}
+
+model NewsPost {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  title        String
+  content      String?
+  imageUrl     String?
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
 }

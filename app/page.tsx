@@ -4,6 +4,26 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
+interface AcademyInfo {
+  aboutText: string | null
+  trainingSchedule: string | null
+  activitiesText: string | null
+  phone: string | null
+  whatsapp: string | null
+  email: string | null
+  address: string | null
+  mapUrl: string | null
+  facebookUrl: string | null
+  instagramUrl: string | null
+}
+
+interface NewsItem {
+  id: string
+  title: string
+  content: string | null
+  imageUrl: string | null
+}
+
 const captainAchievements = [
   { title: 'بطولة العالم للساندا', year: '2012', place: 'الصين', sport: 'كونغ فو ساندا' },
   { title: 'بطولة العرب للساندا', year: '2014', place: 'تونس', sport: 'كونغ فو ساندا' },
@@ -98,6 +118,7 @@ const navLinks = [
   { href: '/coaches', label: 'المدربون' },
   { href: '#players', label: 'الأبطال' },
   { href: '#achievements', label: 'الإنجازات' },
+  { href: '#news', label: 'الأخبار' },
   { href: '/register', label: 'التسجيل' },
   { href: '/login', label: 'تسجيل الدخول' },
   { href: '/tournaments', label: 'البطولات', icon: '' },
@@ -110,6 +131,17 @@ const filterOptions = ['الكل', 'كونغ فو ساندا', 'كيك بوكس�
 export default function HomePage() {
   const [openYear, setOpenYear] = useState<number | null>(null)
   const [playerFilter, setPlayerFilter] = useState('الكل')
+  const [academyInfo, setAcademyInfo] = useState<AcademyInfo | null>(null)
+  const [newsList, setNewsList] = useState<NewsItem[]>([])
+
+  useEffect(() => {
+    fetch('/api/academy-public')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.info) setAcademyInfo(data.info)
+        if (data.news) setNewsList(data.news)
+      })
+  }, [])
 
   useEffect(() => {
     const els = document.querySelectorAll('.reveal')
@@ -757,6 +789,75 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* News + Contact Info */}
+      {(newsList.length > 0 || academyInfo) && (
+        <section id="news" className="home-section reveal" style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px 80px' }}>
+          {newsList.length > 0 && (
+            <>
+              <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 30 }}>
+                📰 أحدث <span style={{ color: '#d4af37' }}>الأخبار</span>
+              </h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, marginBottom: 60 }}>
+                {newsList.map((n) => (
+                  <div
+                    key={n.id}
+                    className="card-hover"
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.7)',
+                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                      boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    {n.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={n.imageUrl} alt={n.title} style={{ width: '100%', height: 150, objectFit: 'cover' }} />
+                    )}
+                    <div style={{ padding: 18 }}>
+                      <h3 style={{ color: '#f8fafc', fontWeight: 800, fontSize: 16, margin: '0 0 8px' }}>{n.title}</h3>
+                      {n.content && <p style={{ color: '#94a3b8', fontSize: 13.5, lineHeight: 1.7, margin: 0 }}>{n.content}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {academyInfo && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+              {academyInfo.trainingSchedule && (
+                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: 16, padding: 22 }}>
+                  <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>🗓️ مواعيد التمرين</p>
+                  <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.8, margin: 0 }}>{academyInfo.trainingSchedule}</p>
+                </div>
+              )}
+              {academyInfo.activitiesText && (
+                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: 16, padding: 22 }}>
+                  <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>🥋 الأنشطة الموجودة</p>
+                  <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.8, margin: 0 }}>{academyInfo.activitiesText}</p>
+                </div>
+              )}
+              {(academyInfo.phone || academyInfo.whatsapp || academyInfo.email || academyInfo.address) && (
+                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: 16, padding: 22 }}>
+                  <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>📞 بيانات التواصل</p>
+                  {academyInfo.phone && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>☎️ {academyInfo.phone}</p>}
+                  {academyInfo.whatsapp && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>💬 {academyInfo.whatsapp}</p>}
+                  {academyInfo.email && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>✉️ {academyInfo.email}</p>}
+                  {academyInfo.address && <p style={{ color: '#e2e8f0', fontSize: 14, margin: 0 }}>📍 {academyInfo.address}</p>}
+                </div>
+              )}
+            </div>
+          )}
+
+          {academyInfo?.mapUrl && (
+            <div style={{ marginTop: 30, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+              <iframe src={academyInfo.mapUrl} width="100%" height="300" style={{ border: 0 }} loading="lazy" title="موقع الأكاديمية" />
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Footer CTA */}
       <section
