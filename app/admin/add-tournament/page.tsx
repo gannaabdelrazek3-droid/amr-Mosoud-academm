@@ -203,13 +203,19 @@ export default function AddTournamentPage() {
                     <input type="file" accept="image/*" onChange={(e) => handleMediaUpload(e, idx)} style={s.input} />
                   </label>
                 ) : (
-                  <label style={s.label}>
-                    رابط الفيديو
-                    <input type="text" value={m.url} onChange={(e) => updateMedia(idx, 'url', e.target.value)} style={s.input} placeholder="رابط يوتيوب أو رابط مباشر" />
-                  </label>
+                  <>
+                    <label style={s.label}>
+                      رفع فيديو من الجهاز
+                      <input type="file" accept="video/*" onChange={(e) => handleMediaUpload(e, idx)} style={s.input} />
+                    </label>
+                    <label style={s.label}>
+                      أو ألصقي رابط فيديو (يوتيوب مثلاً)
+                      <input type="text" value={m.url} onChange={(e) => updateMedia(idx, 'url', e.target.value)} style={s.input} placeholder="اختياري لو رفعتِ ملف بالأعلى" />
+                    </label>
+                  </>
                 )}
                 {uploadingIdx === idx && <p style={{ color: '#d4af37', fontSize: 13 }}>جاري الرفع...</p>}
-                {m.type === 'IMAGE' && m.url && <p style={{ color: '#22c55e', fontSize: 13 }}>تم الرفع بنجاح</p>}
+                {m.url && <p style={{ color: '#22c55e', fontSize: 13, wordBreak: 'break-all' as const }}>تم الرفع/الإضافة بنجاح</p>}
                 <label style={s.label}>
                   وصف (اختياري)
                   <input type="text" value={m.caption} onChange={(e) => updateMedia(idx, 'caption', e.target.value)} style={s.input} />

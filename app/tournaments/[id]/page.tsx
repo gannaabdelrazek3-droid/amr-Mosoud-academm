@@ -27,6 +27,11 @@ interface TournamentDetail {
   participants: Participant[]
 }
 
+function getYouTubeEmbedUrl(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null
+}
+
 export default function TournamentDetailPage() {
   const params = useParams()
   const id = params?.id as string
@@ -80,10 +85,10 @@ export default function TournamentDetailPage() {
       <style jsx global>{`
         .gallery-item {
           transition: transform 0.3s ease;
-          cursor: pointer;
         }
-        .gallery-item:hover {
+        .gallery-item:has(img):hover {
           transform: scale(1.04);
+          cursor: pointer;
         }
       `}</style>
 
@@ -164,15 +169,21 @@ export default function TournamentDetailPage() {
                 {m.type === 'IMAGE' ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={m.url} alt={m.caption || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : getYouTubeEmbedUrl(m.url) ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(m.url)!}
+                    title={m.caption || 'فيديو'}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
                 ) : (
-                  <a
-                    href={m.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d4af37', fontSize: 40, textDecoration: 'none' }}
-                  >
-                    ▶️
-                  </a>
+                  // eslint-disable-next-line jsx-a11y/media-has-caption
+                  <video
+                    src={m.url}
+                    controls
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
+                  />
                 )}
                 {m.caption && (
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(15,23,42,0.85)', padding: '6px 10px', fontSize: 12, color: '#e2e8f0' }}>

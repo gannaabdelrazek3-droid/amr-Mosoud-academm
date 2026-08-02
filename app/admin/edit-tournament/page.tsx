@@ -278,10 +278,17 @@ function EditTournamentContent() {
                     )}
                   </>
                 ) : (
-                  <label style={s.label}>
-                    رابط الفيديو
-                    <input type="text" value={m.url} onChange={(e) => updateMedia(idx, 'url', e.target.value)} style={s.input} />
-                  </label>
+                  <>
+                    <label style={s.label}>
+                      رفع فيديو جديد من الجهاز
+                      <input type="file" accept="video/*" onChange={(e) => handleMediaUpload(e, idx)} style={s.input} />
+                    </label>
+                    {uploadingIdx === idx && <p style={{ color: '#d4af37', fontSize: 13 }}>جاري الرفع...</p>}
+                    <label style={s.label}>
+                      أو ألصقي رابط فيديو (يوتيوب مثلاً)
+                      <input type="text" value={m.url} onChange={(e) => updateMedia(idx, 'url', e.target.value)} style={s.input} />
+                    </label>
+                  </>
                 )}
                 <label style={s.label}>
                   وصف (اختياري)
