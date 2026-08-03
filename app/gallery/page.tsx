@@ -190,8 +190,7 @@ export default function GalleryPage() {
                     transitionDelay: `${idx * 0.05}s`,
                   }}
                 >
-                  <div style={{ width: '100%', height: 170, background: '#1e293b', position: 'relative' }}>
-                    {a.coverUrl ? (
+<div style={{ width: '100%', aspectRatio: '1 / 1', background: '#1e293b', position: 'relative' }}>                    {a.coverUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={a.coverUrl} alt={a.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (

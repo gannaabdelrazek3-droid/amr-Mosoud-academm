@@ -129,8 +129,7 @@ export default function AlbumDetailPage() {
                 overflow: 'hidden',
                 border: '1px solid rgba(212,175,55,0.3)',
                 position: 'relative',
-                aspectRatio: '4/3',
-                background: '#1e293b',
+               aspectRatio: '1 / 1', background: '#1e293b',
               }}
             >
               {it.type === 'IMAGE' ? (

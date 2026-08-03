@@ -107,7 +107,13 @@ export default function AddNewsPage() {
             </label>
             {uploadingImage && <p style={{ color: '#d4af37', fontSize: 13, marginTop: 5 }}>جاري رفع الصورة...</p>}
             {imageUrl && (
-              <img src={imageUrl} alt="خبر" style={{ width: 160, height: 100, borderRadius: 8, objectFit: 'cover', marginTop: 8, border: '1px solid rgba(212,175,55,0.4)' }} />
+              <div style={{ width: 160, height: 100, overflow: 'hidden', borderRadius: 8, marginTop: 8, border: '1px solid rgba(212,175,55,0.4)' }}>
+                <img
+                  src={imageUrl}
+                  alt="خبر"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              </div>
             )}
             <label style={s.label}>
               ترتيب الظهور (الأقل يظهر أولاً)

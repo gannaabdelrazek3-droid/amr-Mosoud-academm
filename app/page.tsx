@@ -158,7 +158,7 @@ export default function HomePage() {
     )
     els.forEach((el) => observer.observe(el))
     return () => observer.disconnect()
-  }, [])
+  }, [newsList, academyInfo])
 
   const filteredPlayers = playerFilter === 'الكل' ? players : players.filter((p) => p.sport === playerFilter)
 
@@ -812,8 +812,14 @@ export default function HomePage() {
                     }}
                   >
                     {n.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={n.imageUrl} alt={n.title} style={{ width: '100%', height: 150, objectFit: 'cover' }} />
+                      <div style={{ width: '100%', aspectRatio: '1 / 1', overflow: 'hidden', position: 'relative' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={n.imageUrl}
+                          alt={n.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      </div>
                     )}
                     <div style={{ padding: 18 }}>
                       <h3 style={{ color: '#f8fafc', fontWeight: 800, fontSize: 16, margin: '0 0 8px' }}>{n.title}</h3>

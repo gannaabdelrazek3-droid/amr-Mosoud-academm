@@ -145,7 +145,7 @@ export default function TournamentsPage() {
                   transitionDelay: `${idx * 0.05}s`,
                 }}
               >
-                <div style={{ width: '100%', height: 190, background: '#1e293b', position: 'relative' }}>
+                <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#1e293b', position: 'relative' }}>
                   {coverImage(t) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={coverImage(t)} alt={t.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
