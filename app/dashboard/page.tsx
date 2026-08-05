@@ -5,7 +5,7 @@ import { adminStyles as s } from '../admin/adminStyles'
 import AdminShell from '../admin/AdminShell'
 import DashboardCharts from './DashboardCharts'
 import SignOutButtonGeneric from '../SignOutButtonGeneric'
-import QuickAddPlayerClientWrapper from './QuickAddPlayerClientWrapper' // سننشئ هذا الملف المساعد لربط الزر والنافذة
+import QuickAddPlayerClientWrapper from './QuickAddPlayerClientWrapper'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -32,47 +32,58 @@ export default async function DashboardPage() {
   }
 
   if (profile.role === 'ADMIN') {
-    const totalPlayers = await prisma.player.count({
-      where: { tenantId: profile.tenantId },
-    })
-    const totalCoaches = await prisma.profile.count({
-      where: { tenantId: profile.tenantId, role: 'COACH' },
-    })
-    const totalRevenue = await prisma.payment.aggregate({
-      where: { tenantId: profile.tenantId, status: 'ACTIVE' },
-      _sum: { amount: true },
-    })
-
-    const pendingRequestsCount = await prisma.registrationRequest.count({
-      where: { tenantId: profile.tenantId, status: 'pending' },
-    })
-
-    const myPlayers = await prisma.player.findMany({
-      where: { coachId: profile.id },
-      include: {
-        subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
-      },
-    })
-
     const nextWeek = new Date()
     nextWeek.setDate(nextWeek.getDate() + 7)
-
-    const expiringSubs = await prisma.subscription.findMany({
-      where: {
-        tenantId: profile.tenantId,
-        endDate: { lte: nextWeek, gte: new Date() },
-      },
-      include: { player: true },
-    })
 
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5)
     sixMonthsAgo.setDate(1)
 
-    const recentPayments = await prisma.payment.findMany({
-      where: { tenantId: profile.tenantId, date: { gte: sixMonthsAgo }, status: 'ACTIVE' },
-      select: { amount: true, date: true },
-    })
+    const [
+      totalPlayers,
+      totalCoaches,
+      totalRevenue,
+      pendingRequestsCount,
+      myPlayers,
+      expiringSubs,
+      recentPayments,
+      allSubs,
+    ] = await Promise.all([
+      prisma.player.count({
+        where: { tenantId: profile.tenantId },
+      }),
+      prisma.profile.count({
+        where: { tenantId: profile.tenantId, role: 'COACH' },
+      }),
+      prisma.payment.aggregate({
+        where: { tenantId: profile.tenantId, status: 'ACTIVE' },
+        _sum: { amount: true },
+      }),
+      prisma.registrationRequest.count({
+        where: { tenantId: profile.tenantId, status: 'pending' },
+      }),
+      prisma.player.findMany({
+        where: { coachId: profile.id },
+        include: {
+          subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
+        },
+      }),
+      prisma.subscription.findMany({
+        where: {
+          tenantId: profile.tenantId,
+          endDate: { lte: nextWeek, gte: new Date() },
+        },
+        include: { player: true },
+      }),
+      prisma.payment.findMany({
+        where: { tenantId: profile.tenantId, date: { gte: sixMonthsAgo }, status: 'ACTIVE' },
+        select: { amount: true, date: true },
+      }),
+      prisma.subscription.findMany({
+        where: { tenantId: profile.tenantId },
+        orderBy: { endDate: 'desc' },
+      }),
+    ])
 
     const monthlyRevenue: Record<string, number> = {}
     for (let i = 5; i >= 0; i--) {
@@ -89,10 +100,6 @@ export default async function DashboardPage() {
     })
     const revenueChartData = Object.entries(monthlyRevenue).map(([month, amount]) => ({ month, amount }))
 
-    const allSubs = await prisma.subscription.findMany({
-      where: { tenantId: profile.tenantId },
-      orderBy: { endDate: 'desc' },
-    })
     const now = new Date()
     let active = 0
     let expiringSoon = 0
@@ -120,7 +127,6 @@ export default async function DashboardPage() {
               <h1 style={s.title}>لوحة التحكم</h1>
               <p style={{ color: '#94a3b8', margin: 0 }}>مرحبًا بك، {profile.fullName} 👑</p>
             </div>
-            {/* زر الإضافة السريعة الجديد */}
             <QuickAddPlayerClientWrapper />
           </div>
 

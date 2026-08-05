@@ -20,14 +20,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap"
-          rel="stylesheet"
-        />
-      </head>
       <body className={`${tajawal.variable} font-sans antialiased bg-gray-50 text-gray-900`}>
         {children}
       </body>

@@ -177,6 +177,9 @@ model Sport {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
+  isActive     Boolean @default(true)
+  displayOrder Int     @default(0)
+
   players       PlayerSport[]
   coaches       CoachSport[]
   attendances   Attendance[]
@@ -191,7 +194,6 @@ model Sport {
 
   @@index([tenantId])
 }
-
 model PlayerSport {
   id       String @id @default(uuid())
   playerId String
