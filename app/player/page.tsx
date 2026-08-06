@@ -163,6 +163,52 @@ export default async function PlayerDashboard() {
           <span style={{ fontSize: 20 }}>📅</span>
           عرض التقويم ومواعيد الأكاديمية
         </a>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 16 }}>
+          <a
+            href="/coaches"
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              padding: '16px 10px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)',
+              borderRadius: 12, color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: 13, textAlign: 'center' as const,
+            }}
+          >
+            <span style={{ fontSize: 22 }}>🥋</span>
+            المدربون
+          </a>
+          <a
+            href="/featured-players"
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              padding: '16px 10px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)',
+              borderRadius: 12, color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: 13, textAlign: 'center' as const,
+            }}
+          >
+            <span style={{ fontSize: 22 }}>⭐</span>
+            اللاعبون المميزون
+          </a>
+          <a
+            href="/#news"
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              padding: '16px 10px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)',
+              borderRadius: 12, color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: 13, textAlign: 'center' as const,
+            }}
+          >
+            <span style={{ fontSize: 22 }}>📰</span>
+            أخبار الأكاديمية
+          </a>
+          <a
+            href="/tournaments"
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              padding: '16px 10px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)',
+              borderRadius: 12, color: '#e2e8f0', textDecoration: 'none', fontWeight: 700, fontSize: 13, textAlign: 'center' as const,
+            }}
+          >
+            <span style={{ fontSize: 22 }}>🏆</span>
+            بطولات الأكاديمية
+          </a>
+        </div>
 
         <div style={cardStyle}>
           <h3 style={{ color: '#d4af37', margin: '0 0 10px' }}>📊 الاشتراك</h3>
