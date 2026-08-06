@@ -38,6 +38,7 @@ model Tenant {
   featuredPlayers FeaturedPlayer[]
   academyInfo AcademyInfo?
   newsPosts   NewsPost[]
+  belts Belt[]
 }
 
 enum Role {
@@ -659,6 +660,20 @@ model NewsPost {
   title        String
   content      String?
   imageUrl     String?
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+}
+model Belt {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  name         String
+  color        String?
   isActive     Boolean  @default(true)
   displayOrder Int      @default(0)
 

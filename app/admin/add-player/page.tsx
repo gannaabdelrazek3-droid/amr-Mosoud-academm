@@ -27,12 +27,20 @@ interface Skill {
   sportName: string
 }
 
+interface Belt {
+  id: string
+  name: string
+  color: string | null
+  isActive?: boolean
+}
+
 export default function AddPlayerPage() {
   const router = useRouter()
 
   const [allSports, setAllSports] = useState<Sport[]>([])
   const [coaches, setCoaches] = useState<Coach[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
+  const [belts, setBelts] = useState<Belt[]>([])
   const [loading, setLoading] = useState(true)
 
   const [fullName, setFullName] = useState('')
@@ -67,12 +75,16 @@ export default function AddPlayerPage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/add-player')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("API Data received:", data)
-        if (data.allSports) setAllSports(data.allSports)
-        if (data.coaches) setCoaches(data.coaches)
+    Promise.all([
+      fetch('/api/admin/add-player').then((res) => res.json()),
+      fetch('/api/admin/belts-list').then((res) => res.json()),
+    ])
+      .then(([playerData, beltsData]) => {
+        if (playerData.allSports) setAllSports(playerData.allSports)
+        if (playerData.coaches) setCoaches(playerData.coaches)
+        if (beltsData.belts) {
+          setBelts(beltsData.belts.filter((b: Belt & { isActive: boolean }) => b.isActive))
+        }
       })
       .finally(() => setLoading(false))
   }, [])
@@ -278,13 +290,9 @@ export default function AddPlayerPage() {
               الحزام الحالي
               <select value={currentBelt} onChange={(e) => setCurrentBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام الحالي</option>
-                <option value="أصفر">أصفر</option>
-                <option value="برتقالي">برتقالي</option>
-                <option value="أخضر">أخضر</option>
-                <option value="أزرق">أزرق</option>
-                <option value="بني">بني</option>
-                <option value="أسود دان">أسود (دان)</option>
-                <option value="أسود ناشئين">أسود ناشئين</option>
+                {belts.map((belt) => (
+                  <option key={belt.id} value={belt.name}>{belt.name}</option>
+                ))}
               </select>
             </label>
 
@@ -292,13 +300,9 @@ export default function AddPlayerPage() {
               الحزام المطلوب
               <select value={targetBelt} onChange={(e) => setTargetBelt(e.target.value)} style={s.input}>
                 <option value="">اختر الحزام المطلوب</option>
-                <option value="أصفر">أصفر</option>
-                <option value="برتقالي">برتقالي</option>
-                <option value="أخضر">أخضر</option>
-                <option value="أزرق">أزرق</option>
-                <option value="بني">بني</option>
-                <option value="أسود دان">أسود (دان)</option>
-                <option value="أسود ناشئين">أسود ناشئين</option>
+                {belts.map((belt) => (
+                  <option key={belt.id} value={belt.name}>{belt.name}</option>
+                ))}
               </select>
             </label>
           </div>

@@ -11,6 +11,7 @@ const navLinks = [
   { href: '/admin/add-staff', label: 'إضافة موظف', icon: '🏋️' },
   { href: '/admin/coaches', label: 'المدربين', icon: '👨‍🏫' },
   { href: '/admin/sports', label: 'الرياضات', icon: '🏅' },
+  { href: '/admin/belts', label: 'الأحزمة', icon: '🥋' },
   { href: '/admin/inventory', label: 'المخزون', icon: '📦' },
   { href: '/admin/subscriptions', label: 'الاشتراكات', icon: '📅' },
   { href: '/admin/search', label: 'البحث', icon: '🔍' },
