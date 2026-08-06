@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       where: { id: user.id },
     })
 
-    if (!profile || profile.role !== 'ADMIN') {
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) {
       return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
     }
 

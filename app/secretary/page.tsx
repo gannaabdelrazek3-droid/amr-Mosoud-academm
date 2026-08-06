@@ -22,31 +22,19 @@ export default async function SecretaryHomePage() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <a
-            href="/secretary/attendance"
-            style={{
-              padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)',
-              borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16,
-            }}
-          >
+          <a href="/secretary/add-player" style={{ padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16 }}>
+            ➕ إضافة لاعب جديد
+          </a>
+          <a href="/secretary/add-payment" style={{ padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16 }}>
+            💵 تسجيل دخل / إيراد
+          </a>
+          <a href="/secretary/attendance" style={{ padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16 }}>
             ✅ تسجيل الحضور اليومي
           </a>
-          <a
-            href="/secretary/subscriptions"
-            style={{
-              padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)',
-              borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16,
-            }}
-          >
+          <a href="/secretary/subscriptions" style={{ padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16 }}>
             📅 متابعة الاشتراكات
           </a>
-          <a
-            href="/secretary/inventory"
-            style={{
-              padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)',
-              borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16,
-            }}
-          >
+          <a href="/secretary/inventory" style={{ padding: '18px', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, color: '#f1f5f9', textDecoration: 'none', fontWeight: 700, fontSize: 16 }}>
             📦 المخزون والمبيعات
           </a>
         </div>

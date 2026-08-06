@@ -39,7 +39,7 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-    if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
 
     const sports = await prisma.sport.findMany({
       where: { tenantId: profile.tenantId },
@@ -70,8 +70,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-    if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
-
+if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
     const body = await req.json()
     const parsed = addPlayerSchema.safeParse(body)
     if (!parsed.success) {
