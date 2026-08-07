@@ -37,6 +37,16 @@ const captainAchievements = [
 
 const players = [
   {
+    name: 'أحمد لطفي الجزيري',
+    image: '/images/ahmad-lotfy.jpeg',
+    sport: 'كونغ فو ساندا',
+    achievements: [
+      'لاعب نادي اتحاد الشرطة',
+      'بطل جمهورية مناطق ساندا',
+      'بطل جمهورية أندية ساندا',
+    ],
+  },
+  {
     name: 'عبدالله محمد صالح',
     image: '/images/abdullah-saleh.jpeg',
     sport: 'مواي تاي',
@@ -102,16 +112,6 @@ const players = [
     sport: 'MMA',
     achievements: ['بطل MMA - منظمة Warrior (الإمارات)'],
   },
-  {
-    name: 'أحمد لطفي الجزيري',
-    image: '/images/ahmad-lotfy.jpeg',
-    sport: 'كونغ فو ساندا',
-    achievements: [
-      'لاعب نادي اتحاد الشرطة',
-      'بطل جمهورية مناطق ساندا',
-      'بطل جمهورية أندية ساندا',
-    ],
-  },
 ]
 
 const sports = [
@@ -128,19 +128,34 @@ const sports = [
   { name: 'برامج تغذية', icon: '🥗' },
 ]
 
+// روابط الناف بار بعد التقليل - الأساسيات بس
 const navLinks = [
   { href: '#home', label: 'الرئيسية' },
-  { href: '#about', label: 'عن الأكاديمية' },
   { href: '#sports', label: 'الرياضات' },
   { href: '/coaches', label: 'المدربون' },
-  { href: '#players', label: 'الأبطال' },
-  { href: '#achievements', label: 'الإنجازات' },
-  { href: '#news', label: 'الأخبار' },
+  { href: '/tournaments', label: 'البطولات' },
+  { href: '/gallery', label: 'معرض الصور' },
   { href: '/register', label: 'التسجيل' },
   { href: '/login', label: 'تسجيل الدخول' },
-  { href: '/tournaments', label: 'البطولات', icon: '' },
-  { href: '/gallery', label: 'معرض الصور' },
-  { href: '/featured-players', label: 'اللاعبون المميزون' },
+]
+
+// كروت "عن الأكاديمية" بدل الفقرة الطويلة
+const aboutCards = [
+  {
+    icon: '🎓',
+    title: 'خبرة أكاديمية',
+    text: 'إشراف مباشر من دكتور متخصص في علوم الرياضة، يجمع بين الجانب العلمي والتطبيق العملي في التدريب.',
+  },
+  {
+    icon: '🏆',
+    title: 'خبرة بطولية',
+    text: 'بطل عالمي سابق ولاعب منتخب مصر للساندا (2012–2016)، بخبرة تمتد لأكثر من عشرين عامًا من البطولات.',
+  },
+  {
+    icon: '🥋',
+    title: 'رياضات متنوعة',
+    text: 'تدريب احترافي في رياضات القتال والجمباز بأعلى معايير الاحتراف لصناعة أبطال المستقبل.',
+  },
 ]
 
 const filterOptions = ['الكل', 'كونغ فو ساندا', 'كيك بوكسينج', 'مواي تاي', 'MMA']
@@ -228,7 +243,7 @@ export default function HomePage() {
         .nav-login-link {
           padding: 8px 20px !important;
           background: rgba(212, 175, 55, 0.15);
-          border: 1px solid rgba(212, 175, 55, 0.4);
+          border: 1px solid rgba(212, 175, 55, 0.3);
           border-radius: 8px;
           color: #d4af37 !important;
         }
@@ -236,20 +251,33 @@ export default function HomePage() {
           display: none;
         }
 
+        /* Hero */
         .home-hero {
-          padding: 90px 24px 70px;
+          padding: 120px 50px 110px;
+        }
+        .hero-inner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 70px;
+          flex-wrap: wrap;
+        }
+        .hero-text {
+          flex: 1 1 460px;
+          text-align: right;
         }
         .home-hero h1 {
-          font-size: 54px;
+          font-size: 66px;
         }
         .home-hero p {
-          font-size: 19px;
+          font-size: 20px;
+          max-width: 620px;
         }
         .hero-btns {
           display: flex;
           gap: 16px;
-          justify-content: center;
-          margin-top: 30px;
+          justify-content: flex-start;
+          margin-top: 34px;
           flex-wrap: wrap;
         }
         .hero-btn-primary {
@@ -276,7 +304,7 @@ export default function HomePage() {
           text-decoration: none;
           font-weight: 900;
           font-size: 16px;
-          border: 2px solid rgba(212, 175, 55, 0.5);
+          border: 2px solid rgba(212, 175, 55, 0.35);
           cursor: pointer;
           transition: all 0.25s ease;
         }
@@ -286,9 +314,11 @@ export default function HomePage() {
         }
 
         .home-photo-wrap {
-          width: 220px;
-          height: 220px;
+          width: 360px;
+          height: 360px;
+          flex-shrink: 0;
         }
+
         .home-section-title {
           font-size: 32px;
         }
@@ -317,7 +347,7 @@ export default function HomePage() {
         .filter-btn {
           padding: 10px 20px;
           border-radius: 30px;
-          border: 1px solid rgba(212, 175, 55, 0.35);
+          border: 1px solid rgba(212, 175, 55, 0.3);
           background: transparent;
           color: #94a3b8;
           font-family: 'Tajawal', sans-serif;
@@ -330,6 +360,22 @@ export default function HomePage() {
           background: #d4af37;
           color: #0f172a;
           border-color: #d4af37;
+        }
+
+        /* كروت موحّدة للرياضات والأبطال */
+        .unified-card {
+          background: linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);
+          border: 1px solid rgba(212, 175, 55, 0.18);
+          border-radius: 22px;
+          box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+        }
+
+        .about-card {
+          background: rgba(30, 41, 59, 0.6);
+          border: 1px solid rgba(212, 175, 55, 0.15);
+          border-radius: 20px;
+          padding: 32px 28px;
+          text-align: center;
         }
 
         @media (max-width: 900px) {
@@ -348,6 +394,19 @@ export default function HomePage() {
             font-size: 20px;
             cursor: pointer;
           }
+          .hero-inner {
+            flex-direction: column;
+          }
+          .hero-text {
+            text-align: center;
+          }
+          .hero-text p {
+            margin-left: auto;
+            margin-right: auto;
+          }
+          .hero-btns {
+            justify-content: center;
+          }
         }
 
         @media (max-width: 768px) {
@@ -361,10 +420,10 @@ export default function HomePage() {
             font-size: 18px !important;
           }
           .home-hero {
-            padding: 34px 14px 26px;
+            padding: 40px 14px 30px;
           }
           .home-hero h1 {
-            font-size: 24px !important;
+            font-size: 26px !important;
             margin-bottom: 12px !important;
           }
           .home-hero p {
@@ -385,8 +444,8 @@ export default function HomePage() {
             font-size: 12.5px !important;
           }
           .home-photo-wrap {
-            width: 100px !important;
-            height: 100px !important;
+            width: 110px !important;
+            height: 110px !important;
           }
           .home-section-title {
             font-size: 16px !important;
@@ -396,29 +455,29 @@ export default function HomePage() {
             font-size: 17px !important;
           }
           .home-section {
-            padding: 26px 12px !important;
+            padding: 30px 12px !important;
           }
           .achievement-title {
             font-size: 12px !important;
           }
           .sport-card {
-            padding: 14px !important;
-            border-radius: 12px !important;
+            padding: 18px !important;
+            border-radius: 14px !important;
           }
           .sport-icon {
-            font-size: 24px !important;
+            font-size: 26px !important;
             margin-bottom: 6px !important;
           }
           .sport-name {
             font-size: 12px !important;
           }
           .player-card {
-            padding: 14px !important;
-            border-radius: 14px !important;
+            padding: 16px !important;
+            border-radius: 16px !important;
           }
           .player-avatar {
-            width: 44px !important;
-            height: 44px !important;
+            width: 46px !important;
+            height: 46px !important;
           }
           .player-name {
             font-size: 12.5px !important;
@@ -434,6 +493,9 @@ export default function HomePage() {
           }
           .player-achv-list li {
             margin-bottom: 3px !important;
+          }
+          .about-card {
+            padding: 20px 16px !important;
           }
           .floating-interactive-btn {
             bottom: 12px !important;
@@ -487,13 +549,12 @@ export default function HomePage() {
 
       {/* Navbar */}
       <nav
-        id="home"
         className="home-navbar"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+          borderBottom: '1px solid rgba(212, 175, 55, 0.12)',
           background: 'rgba(15, 23, 42, 0.95)',
           position: 'sticky',
           top: 0,
@@ -530,7 +591,7 @@ export default function HomePage() {
           display: 'none',
           flexDirection: 'column',
           background: 'rgba(15, 23, 42, 0.98)',
-          borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+          borderBottom: '1px solid rgba(212, 175, 55, 0.12)',
           position: 'sticky',
           top: 0,
           zIndex: 99,
@@ -558,89 +619,97 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Hero Section */}
-      <section className="home-hero" style={{ textAlign: 'center', maxWidth: 1000, margin: '0 auto' }}>
-        <div
-          className="home-badge reveal"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 22px',
-            background: 'rgba(212, 175, 55, 0.12)',
-            border: '1px solid rgba(212, 175, 55, 0.4)',
-            borderRadius: 35,
-            marginBottom: 20,
-            boxShadow: '0 0 25px rgba(212, 175, 55, 0.2)',
-          }}
-        >
-          <span style={{ fontSize: 16 }}>🎓</span>
-          <span style={{ color: '#d4af37', fontWeight: 800, letterSpacing: 1, fontSize: 15 }}>
-            دكتور في كلية علوم الرياضة • خبير التدريب الاحترافي
-          </span>
-        </div>
+      {/* Hero Section - النص والصورة بجانب بعض */}
+      <section id="home" className="home-hero" style={{ maxWidth: 1300, margin: '0 auto' }}>
+        <div className="hero-inner">
+          <div className="hero-text reveal">
+            <div
+              className="home-badge"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 22px',
+                background: 'rgba(212, 175, 55, 0.12)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
+                borderRadius: 35,
+                marginBottom: 22,
+                boxShadow: '0 0 25px rgba(212, 175, 55, 0.15)',
+              }}
+            >
+              <span style={{ fontSize: 16 }}>🎓</span>
+              <span style={{ color: '#d4af37', fontWeight: 800, letterSpacing: 1, fontSize: 15 }}>
+                دكتور في كلية علوم الرياضة • خبير التدريب الاحترافي
+              </span>
+            </div>
 
-        <h1 className="reveal" style={{ fontWeight: 900, color: '#f8fafc', margin: '0 0 20px', lineHeight: 1.2 }}>
-          الكابتن <span style={{ color: '#d4af37', textShadow: '0 0 30px rgba(212, 175, 55, 0.5)' }}>عمرو مسعود</span>
-        </h1>
+            <h1 style={{ fontWeight: 900, color: '#f8fafc', margin: '0 0 22px', lineHeight: 1.15 }}>
+              الكابتن <span style={{ color: '#d4af37', textShadow: '0 0 30px rgba(212, 175, 55, 0.5)' }}>عمرو مسعود</span>
+            </h1>
 
-        <p className="reveal" style={{ color: '#94a3b8', maxWidth: 750, margin: '0 auto 10px', lineHeight: 1.8 }}>
-          لاعب منتخب مصر للساندا (2012–2016) وبطل جمهورية متعدد الألقاب في الساندا وكيك بوكسينج ومواي تاي،
-          نضع بين أيديكم خبرة أكاديمية وعملية تمتد لأكثر من عشرين عامًا من البطولات والإنجازات المطلقة.
-        </p>
+            <p style={{ color: '#94a3b8', lineHeight: 1.85, margin: '0 0 10px' }}>
+              لاعب منتخب مصر للساندا (2012–2016) وبطل جمهورية متعدد الألقاب في الساندا وكيك بوكسينج ومواي تاي،
+              نضع بين أيديكم خبرة أكاديمية وعملية تمتد لأكثر من عشرين عامًا من البطولات والإنجازات المطلقة.
+            </p>
 
-        <div className="hero-btns reveal">
-          <a href="/register" className="hero-btn-primary">
-            احجز مكانك الآن
-          </a>
-          <a href="#about" className="hero-btn-secondary">
-            اكتشف الأكاديمية
-          </a>
-        </div>
+            <div className="hero-btns">
+              <a href="/register" className="hero-btn-primary">
+                احجز مكانك الآن
+              </a>
+              <a href="#about" className="hero-btn-secondary">
+                اكتشف الأكاديمية
+              </a>
+            </div>
+          </div>
 
-        <div className="home-photo-wrap reveal" style={{ position: 'relative', margin: '40px auto 0' }}>
-          <div
-            style={{
-              position: 'absolute',
-              inset: -8,
-              background: 'linear-gradient(135deg, #d4af37, #1e293b, #d4af37)',
-              borderRadius: '50%',
-              zIndex: 0,
-              filter: 'blur(15px)',
-              opacity: 0.8,
-            }}
-          />
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              position: 'relative',
-              zIndex: 1,
-              border: '5px solid #d4af37',
-              overflow: 'hidden',
-              boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
-            }}
-          >
-            <Image src="/images/amr-masoud.jpeg" alt="الكابتن عمرو مسعود" fill style={{ objectFit: 'cover' }} />
+          <div className="home-photo-wrap reveal" style={{ position: 'relative', margin: 0 }}>
+            <div
+              style={{
+                position: 'absolute',
+                inset: -8,
+                background: 'linear-gradient(135deg, #d4af37, #1e293b, #d4af37)',
+                borderRadius: '50%',
+                zIndex: 0,
+                filter: 'blur(15px)',
+                opacity: 0.8,
+              }}
+            />
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                position: 'relative',
+                zIndex: 1,
+                border: '5px solid #d4af37',
+                overflow: 'hidden',
+                boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
+              }}
+            >
+              <Image src="/images/amr-masoud.jpeg" alt="الكابتن عمرو مسعود" fill style={{ objectFit: 'cover' }} />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* About */}
-      <section id="about" className="home-section reveal" style={{ maxWidth: 800, margin: '0 auto', padding: '20px 24px 60px', textAlign: 'center' }}>
-        <h2 className="home-section-title" style={{ color: '#f8fafc', fontWeight: 900, marginBottom: 16 }}>
+      {/* About - كروت بدل فقرة طويلة */}
+      <section id="about" className="home-section reveal" style={{ maxWidth: 1100, margin: '0 auto', padding: '30px 24px 110px', textAlign: 'center' }}>
+        <h2 className="home-section-title" style={{ color: '#f8fafc', fontWeight: 900, marginBottom: 40 }}>
           عن <span style={{ color: '#d4af37' }}>الأكاديمية</span>
         </h2>
-        <p style={{ color: '#94a3b8', lineHeight: 1.9, fontSize: 16 }}>
-          أكاديمية الكابتن عمرو مسعود هي بيت خبرة رياضية متكاملة، تجمع بين التدريب الأكاديمي والعملي في رياضات
-          القتال والجمباز، بإشراف مباشر من دكتور متخصص في علوم الرياضة وبطل عالمي سابق، لصناعة أبطال المستقبل
-          بأعلى معايير الاحتراف.
-        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 22 }}>
+          {aboutCards.map((card) => (
+            <div key={card.title} className="about-card">
+              <div style={{ fontSize: 40, marginBottom: 14 }}>{card.icon}</div>
+              <h3 style={{ color: '#d4af37', fontWeight: 800, fontSize: 18, margin: '0 0 10px' }}>{card.title}</h3>
+              <p style={{ color: '#94a3b8', fontSize: 14.5, lineHeight: 1.8, margin: 0 }}>{card.text}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Captain Achievements — Interactive Timeline */}
-      <section id="achievements" className="home-section reveal" style={{ maxWidth: 850, margin: '0 auto', padding: '20px 24px 80px' }}>
+      <section id="achievements" className="home-section reveal" style={{ maxWidth: 850, margin: '0 auto', padding: '30px 24px 130px' }}>
         <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 16 }}>
           🏆 سجل إنجازات <span style={{ color: '#d4af37' }}>الكابتن التاريخية</span>
         </h2>
@@ -677,7 +746,7 @@ export default function HomePage() {
                 onClick={() => setOpenYear(openYear === i ? null : i)}
                 style={{
                   background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%)',
-                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  border: '1px solid rgba(212, 175, 55, 0.15)',
                   borderRadius: 16,
                   padding: '18px 22px',
                 }}
@@ -694,7 +763,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <div className={`timeline-details ${openYear === i ? 'open' : ''}`}>
-                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(212, 175, 55, 0.15)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(212, 175, 55, 0.12)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <span style={{ color: '#e2e8f0', fontSize: 14 }}>🥋 الرياضة: <strong style={{ color: '#d4af37' }}>{a.sport}</strong></span>
                     {a.place && <span style={{ color: '#e2e8f0', fontSize: 14 }}>📍 الدولة: <strong style={{ color: '#d4af37' }}>{a.place}</strong></span>}
                   </div>
@@ -705,36 +774,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Sports */}
-      <section id="sports" className="home-section reveal" style={{ maxWidth: 1050, margin: '0 auto', padding: '20px 24px 80px' }}>
+      {/* Sports - كروت أكبر وموحّدة مع كروت الأبطال */}
+      <section id="sports" className="home-section reveal" style={{ maxWidth: 1100, margin: '0 auto', padding: '30px 24px 130px' }}>
         <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 40 }}>
           🔥 الرياضات الاحترافية بالأكاديمية
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 22 }}>
           {sports.map((sport) => (
             <div
               key={sport.name}
-              className="card-hover sport-card"
+              className="card-hover unified-card sport-card"
               style={{
-                background: 'rgba(30, 41, 59, 0.7)',
-                border: '1px solid rgba(212, 175, 55, 0.3)',
-                borderRadius: 18,
-                padding: 35,
+                padding: 42,
                 textAlign: 'center',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
               }}
             >
-              <div className="sport-icon" style={{ fontSize: 50, marginBottom: 15, filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.4))' }}>
+              <div className="sport-icon" style={{ fontSize: 58, marginBottom: 16, filter: 'drop-shadow(0 0 15px rgba(212,175,55,0.4))' }}>
                 {sport.icon}
               </div>
-              <p className="sport-name" style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 20, margin: 0 }}>{sport.name}</p>
+              <p className="sport-name" style={{ color: '#f1f5f9', fontWeight: 800, fontSize: 22, margin: 0 }}>{sport.name}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Players with filtering */}
-      <section id="players" className="home-section reveal" style={{ maxWidth: 1300, margin: '0 auto', padding: '20px 24px 100px' }}>
+      <section id="players" className="home-section reveal" style={{ maxWidth: 1300, margin: '0 auto', padding: '30px 24px 150px' }}>
         <h2 className="home-players-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 16 }}>
           ⭐ نجوم وأبطال <span style={{ color: '#d4af37' }}>الأكاديمية</span> الأساطير
         </h2>
@@ -742,7 +807,7 @@ export default function HomePage() {
           نفتخر بصناعة الأبطال ومنصات التتويج المحلية والعالمية
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 40 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 44 }}>
           {filterOptions.map((f) => (
             <button
               key={f}
@@ -754,17 +819,13 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 22 }}>
           {filteredPlayers.map((player) => (
             <div
               key={player.name}
-              className="card-hover player-card"
+              className="card-hover unified-card player-card"
               style={{
-                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%)',
-                border: '1px solid rgba(212, 175, 55, 0.4)',
-                borderRadius: 22,
-                padding: 30,
-                boxShadow: '0 15px 35px rgba(0, 0, 0, 0.5)',
+                padding: 34,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -774,8 +835,8 @@ export default function HomePage() {
                 <div
                   className="player-avatar"
                   style={{
-                    width: 85,
-                    height: 85,
+                    width: 92,
+                    height: 92,
                     borderRadius: '50%',
                     overflow: 'hidden',
                     position: 'relative',
@@ -787,14 +848,14 @@ export default function HomePage() {
                   <Image src={player.image} alt={player.name} fill style={{ objectFit: 'cover' }} />
                 </div>
                 <div>
-                  <h3 className="player-name" style={{ color: '#f8fafc', fontWeight: 900, fontSize: 20, margin: '0 0 6px' }}>{player.name}</h3>
+                  <h3 className="player-name" style={{ color: '#f8fafc', fontWeight: 900, fontSize: 21, margin: '0 0 6px' }}>{player.name}</h3>
                   <span className="player-badge" style={{ color: '#0f172a', background: '#d4af37', fontSize: 12.5, fontWeight: 800, padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
                     {player.sport} 🏆
                   </span>
                 </div>
               </div>
 
-              <div style={{ background: 'rgba(15, 23, 42, 0.75)', borderRadius: 14, padding: 18, border: '1px solid rgba(212, 175, 55, 0.15)' }}>
+              <div style={{ background: 'rgba(15, 23, 42, 0.75)', borderRadius: 14, padding: 18, border: '1px solid rgba(212, 175, 55, 0.1)' }}>
                 <p style={{ color: '#d4af37', fontSize: 14, fontWeight: 800, margin: '0 0 10px' }}>🎖️ إنجازات البطل:</p>
                 <ul className="player-achv-list" style={{ margin: 0, paddingRight: 18, color: '#e2e8f0', fontSize: 14.5, lineHeight: 1.9 }}>
                   {player.achievements.map((ach, i) => (
@@ -809,7 +870,7 @@ export default function HomePage() {
 
       {/* News + Contact Info */}
       {(newsList.length > 0 || academyInfo) && (
-        <section id="news" className="home-section reveal" style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 24px 80px' }}>
+        <section id="news" className="home-section reveal" style={{ maxWidth: 1200, margin: '0 auto', padding: '30px 24px 130px' }}>
           {newsList.length > 0 && (
             <>
               <h2 className="home-section-title" style={{ textAlign: 'center', color: '#f8fafc', fontWeight: 900, marginBottom: 30 }}>
@@ -822,7 +883,7 @@ export default function HomePage() {
                     className="card-hover"
                     style={{
                       background: 'rgba(30, 41, 59, 0.7)',
-                      border: '1px solid rgba(212, 175, 55, 0.3)',
+                      border: '1px solid rgba(212, 175, 55, 0.15)',
                       borderRadius: 16,
                       overflow: 'hidden',
                       boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
@@ -851,19 +912,19 @@ export default function HomePage() {
           {academyInfo && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
               {academyInfo.trainingSchedule && (
-                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: 16, padding: 22 }}>
+                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.15)', borderRadius: 16, padding: 22 }}>
                   <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>🗓️ مواعيد التمرين</p>
                   <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.8, margin: 0 }}>{academyInfo.trainingSchedule}</p>
                 </div>
               )}
               {academyInfo.activitiesText && (
-                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: 16, padding: 22 }}>
+                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.15)', borderRadius: 16, padding: 22 }}>
                   <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>🥋 الأنشطة الموجودة</p>
                   <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.8, margin: 0 }}>{academyInfo.activitiesText}</p>
                 </div>
               )}
               {(academyInfo.phone || academyInfo.whatsapp || academyInfo.email || academyInfo.address) && (
-                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: 16, padding: 22 }}>
+                <div style={{ background: 'rgba(30, 41, 59, 0.7)', border: '1px solid rgba(212, 175, 55, 0.15)', borderRadius: 16, padding: 22 }}>
                   <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>📞 بيانات التواصل</p>
                   {academyInfo.phone && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>☎️ {academyInfo.phone}</p>}
                   {academyInfo.whatsapp && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>💬 {academyInfo.whatsapp}</p>}
@@ -875,7 +936,7 @@ export default function HomePage() {
           )}
 
           {academyInfo?.mapUrl && (
-            <div style={{ marginTop: 30, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+            <div style={{ marginTop: 30, borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(212, 175, 55, 0.15)' }}>
               <iframe src={academyInfo.mapUrl} width="100%" height="300" style={{ border: 0 }} loading="lazy" title="موقع الأكاديمية" />
             </div>
           )}
@@ -885,7 +946,7 @@ export default function HomePage() {
       {/* Footer CTA */}
       <section
         className="reveal"
-        style={{ textAlign: 'center', padding: '60px 24px 90px', background: 'rgba(15, 23, 42, 0.95)', borderTop: '1px solid rgba(212, 175, 55, 0.3)' }}
+        style={{ textAlign: 'center', padding: '100px 24px 120px', background: 'rgba(15, 23, 42, 0.95)', borderTop: '1px solid rgba(212, 175, 55, 0.15)' }}
       >
         <h3 className="footer-title" style={{ color: '#f8fafc', fontSize: 28, fontWeight: 900, marginBottom: 16 }}>ابدأ رحلتك نحو البطولات الآن</h3>
         <p className="footer-sub" style={{ color: '#94a3b8', marginBottom: 30, fontSize: 17 }}>انضم لأكاديمية الدكتور عمرو مسعود واصنع مجدك الرياضي</p>
