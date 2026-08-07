@@ -102,6 +102,16 @@ const players = [
     sport: 'MMA',
     achievements: ['بطل MMA - منظمة Warrior (الإمارات)'],
   },
+  {
+    name: 'أحمد لطفي الجزيري',
+    image: '/images/ahmad-lotfy.jpeg',
+    sport: 'كونغ فو ساندا',
+    achievements: [
+      'لاعب نادي اتحاد الشرطة',
+      'بطل جمهورية مناطق ساندا',
+      'بطل جمهورية أندية ساندا',
+    ],
+  },
 ]
 
 const sports = [
@@ -109,6 +119,13 @@ const sports = [
   { name: 'كونغ فو ساندا', icon: '🥋' },
   { name: 'كيك بوكسينج', icon: '🥊' },
   { name: 'MMA', icon: '🤼' },
+  { name: 'مواي تاي', icon: '🥋' },
+  { name: 'ملاكمة', icon: '🥊' },
+  { name: 'كاراتيه', icon: '🥋' },
+  { name: 'سباحة', icon: '🏊' },
+  { name: 'فتنس', icon: '💪' },
+  { name: 'زومبا', icon: '💃' },
+  { name: 'برامج تغذية', icon: '🥗' },
 ]
 
 const navLinks = [
