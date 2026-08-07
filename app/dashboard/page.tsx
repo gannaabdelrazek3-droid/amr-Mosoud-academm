@@ -127,7 +127,7 @@ export default async function DashboardPage() {
               <h1 style={s.title}>لوحة التحكم</h1>
               <p style={{ color: '#94a3b8', margin: 0 }}>مرحبًا بك، {profile.fullName} 👑</p>
             </div>
-            <QuickAddPlayerClientWrapper />
+            
           </div>
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
