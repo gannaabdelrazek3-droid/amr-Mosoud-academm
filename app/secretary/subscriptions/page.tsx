@@ -7,14 +7,19 @@ interface SubItem {
   fullName: string
   remaining: number
   totalSessions: number
-  endDate: string
-  status: 'active' | 'expiring' | 'expired'
+  endDate: string | null
+  status: 'active' | 'expiring' | 'expired' | 'pending'
+  hasPendingRenewal: boolean
+  pendingTotal: number
+  pendingPaid: number
+  pendingRemaining: number
 }
 
 const statusInfo = {
   active: { label: 'نشط', color: '#22c55e' },
   expiring: { label: 'قرب الانتهاء', color: '#d4af37' },
   expired: { label: 'منتهي', color: '#ef4444' },
+  pending: { label: 'دفع معلّق', color: '#d4af37' },
 }
 
 const cardStyle = {
@@ -55,11 +60,13 @@ export default function SecretarySubscriptionsPage() {
   const [loading, setLoading] = useState(true)
   const [openId, setOpenId] = useState('')
 
-  const [amount, setAmount] = useState('')
+  const [totalAmount, setTotalAmount] = useState('')
+  const [paidAmountNow, setPaidAmountNow] = useState('')
   const [sessions, setSessions] = useState('')
   const [duration, setDuration] = useState('30')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageColor, setMessageColor] = useState('#22c55e')
 
   const loadSubs = useCallback(() => {
     setLoading(true)
@@ -73,30 +80,51 @@ export default function SecretarySubscriptionsPage() {
     loadSubs()
   }, [loadSubs])
 
-  function openRenew(playerId: string) {
-    setOpenId(playerId)
-    setAmount('')
+  function openRenew(s: SubItem) {
+    setOpenId(s.playerId)
+    setTotalAmount(s.hasPendingRenewal ? s.pendingTotal.toString() : '')
+    setPaidAmountNow('')
     setSessions('')
     setDuration('30')
     setMessage('')
   }
 
-  async function handleRenew(e: React.FormEvent) {
+  async function handleRenew(e: React.FormEvent, item: SubItem) {
     e.preventDefault()
     setSaving(true)
     setMessage('')
 
+    const body: Record<string, unknown> = {
+      playerId: openId,
+      paidAmountNow,
+    }
+    if (!item.hasPendingRenewal) {
+      body.totalAmount = totalAmount
+      body.totalSessions = sessions
+      body.durationDays = duration
+    }
+
     const res = await fetch('/api/secretary/renew-subscription', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerId: openId, amount, totalSessions: sessions, durationDays: duration }),
+      body: JSON.stringify(body),
     })
 
+    const data = await res.json()
     setSaving(false)
 
     if (!res.ok) {
-      setMessage('حدثت مشكلة، حاول مرة أخرى')
+      setMessageColor('#ef4444')
+      setMessage(data.error || 'حدثت مشكلة، حاول مرة أخرى')
       return
+    }
+
+    if (data.activated) {
+      setMessageColor('#22c55e')
+      setMessage(`✅ تم دفع المبلغ بالكامل وتفعيل اشتراك ${item.fullName} بنجاح.`)
+    } else {
+      setMessageColor('#d4af37')
+      setMessage(`💰 تم تسجيل دفعة جزئية لـ ${item.fullName}. الاشتراك لن يتفعّل إلا بعد سداد المتبقي: ${data.remainingAmount.toFixed(2)} جنيه.`)
     }
 
     setOpenId('')
@@ -107,7 +135,13 @@ export default function SecretarySubscriptionsPage() {
     <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
       <div style={{ maxWidth: 700, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
         <h1 style={{ color: '#f8fafc' }}>متابعة الاشتراكات</h1>
-        <p style={{ color: '#94a3b8', marginBottom: 24 }}>حالة اشتراكات كل اللاعبين، مع إمكانية التجديد المباشر</p>
+        <p style={{ color: '#94a3b8', marginBottom: 24 }}>حالة اشتراكات كل اللاعبين، مع إمكانية استكمال الدفع والتجديد</p>
+
+        {message && (
+          <p style={{ color: messageColor, fontWeight: 700, marginBottom: 16, padding: '10px 16px', background: `${messageColor}15`, borderRadius: 10, border: `1px solid ${messageColor}40` }}>
+            {message}
+          </p>
+        )}
 
         {loading ? (
           <p>جارٍ التحميل...</p>
@@ -120,33 +154,55 @@ export default function SecretarySubscriptionsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
                   <div>
                     <p style={{ fontWeight: 700, margin: 0, fontSize: 16 }}>{s.fullName}</p>
-                    <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
-                      {s.remaining} من {s.totalSessions} حصة — ينتهي {new Date(s.endDate).toLocaleDateString('ar-EG')}
-                    </p>
+                    {s.endDate && (
+                      <p style={{ color: '#94a3b8', fontSize: 13, margin: '4px 0 0' }}>
+                        {s.remaining} من {s.totalSessions} حصة — ينتهي {new Date(s.endDate).toLocaleDateString('ar-EG')}
+                      </p>
+                    )}
+                    {s.hasPendingRenewal && (
+                      <p style={{ fontSize: 13, margin: '6px 0 0', color: '#d4af37', fontWeight: 700 }}>
+                        ⏳ دفع {s.pendingPaid.toFixed(2)} من {s.pendingTotal.toFixed(2)} جنيه — متبقي {s.pendingRemaining.toFixed(2)} جنيه
+                      </p>
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <span style={{ color: statusInfo[s.status].color, fontWeight: 800, fontSize: 14 }}>
                       {statusInfo[s.status].label}
                     </span>
-                    <button type="button" onClick={() => openRenew(s.playerId)} style={buttonStyle}>
-                      تجديد
+                    <button type="button" onClick={() => openRenew(s)} style={buttonStyle}>
+                      {s.hasPendingRenewal ? 'إكمال الدفع' : 'تجديد'}
                     </button>
                   </div>
                 </div>
 
                 {openId === s.playerId && (
-                  <form onSubmit={handleRenew} style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(148,163,184,0.2)' }}>
-                    <label style={labelStyle}>المبلغ (جنيه)</label>
-                    <input type="number" step="0.5" value={amount} onChange={(e) => setAmount(e.target.value)} style={inputStyle} required />
+                  <form onSubmit={(e) => handleRenew(e, s)} style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(148,163,184,0.2)' }}>
+                    {!s.hasPendingRenewal && (
+                      <>
+                        <label style={labelStyle}>قيمة الاشتراك الكاملة (جنيه)</label>
+                        <input type="number" step="0.5" min="0" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} style={inputStyle} required />
 
-                    <label style={labelStyle}>عدد الحصص</label>
-                    <input type="number" min="1" value={sessions} onChange={(e) => setSessions(e.target.value)} style={inputStyle} required />
+                        <label style={labelStyle}>عدد الحصص</label>
+                        <input type="number" min="1" value={sessions} onChange={(e) => setSessions(e.target.value)} style={inputStyle} required />
 
-                    <label style={labelStyle}>مدة الاشتراك (أيام)</label>
-                    <input type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} style={inputStyle} required />
+                        <label style={labelStyle}>مدة الاشتراك (أيام)</label>
+                        <input type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} style={inputStyle} required />
+                      </>
+                    )}
+
+                    {s.hasPendingRenewal && (
+                      <div style={{ margin: '4px 0 14px', padding: '10px 14px', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 8 }}>
+                        <span style={{ color: '#d4af37', fontSize: 13, fontWeight: 700 }}>
+                          الإجمالي: {s.pendingTotal.toFixed(2)} جنيه — المدفوع: {s.pendingPaid.toFixed(2)} جنيه — المتبقي: {s.pendingRemaining.toFixed(2)} جنيه
+                        </span>
+                      </div>
+                    )}
+
+                    <label style={labelStyle}>المبلغ المدفوع الآن (جنيه)</label>
+                    <input type="number" step="0.5" min="0" value={paidAmountNow} onChange={(e) => setPaidAmountNow(e.target.value)} style={inputStyle} required />
 
                     <button type="submit" disabled={saving} style={{ ...buttonStyle, width: '100%' }}>
-                      {saving ? 'جارٍ الحفظ...' : 'تأكيد التجديد'}
+                      {saving ? 'جارٍ الحفظ...' : 'تأكيد الدفع'}
                     </button>
                   </form>
                 )}
@@ -154,8 +210,6 @@ export default function SecretarySubscriptionsPage() {
             ))}
           </div>
         )}
-
-        {message && <p style={{ color: '#fca5a5', marginTop: 14 }}>{message}</p>}
       </div>
     </div>
   )

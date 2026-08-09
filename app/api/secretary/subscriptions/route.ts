@@ -18,25 +18,39 @@ export async function GET() {
 
   const now = new Date()
   const result = players
-    .filter((p) => p.subscriptions.length > 0)
+    .filter((p) => p.subscriptions.length > 0 || p.pendingRenewalTotalAmount !== null)
     .map((p) => {
       const sub = p.subscriptions[0]
-      const daysLeft = Math.ceil((new Date(sub.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-      let status: 'active' | 'expiring' | 'expired' = 'active'
-      if (daysLeft < 0) status = 'expired'
-      else if (daysLeft <= 7) status = 'expiring'
+      const hasPending = p.pendingRenewalTotalAmount !== null
+
+      let status: 'active' | 'expiring' | 'expired' | 'pending' = 'active'
+      let daysLeft: number | null = null
+
+      if (sub) {
+        daysLeft = Math.ceil((new Date(sub.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        if (daysLeft < 0) status = 'expired'
+        else if (daysLeft <= 7) status = 'expiring'
+      } else {
+        status = 'expired'
+      }
+
+      if (hasPending) status = 'pending'
 
       return {
         playerId: p.id,
         fullName: p.fullName,
-        remaining: sub.remaining,
-        totalSessions: sub.totalSessions,
-        endDate: sub.endDate,
+        remaining: sub?.remaining ?? 0,
+        totalSessions: sub?.totalSessions ?? 0,
+        endDate: sub?.endDate ?? null,
         status,
+        hasPendingRenewal: hasPending,
+        pendingTotal: hasPending ? Number(p.pendingRenewalTotalAmount) : 0,
+        pendingPaid: hasPending ? Number(p.pendingRenewalPaidAmount) : 0,
+        pendingRemaining: hasPending ? Number(p.pendingRenewalTotalAmount) - Number(p.pendingRenewalPaidAmount) : 0,
       }
     })
     .sort((a, b) => {
-      const order = { expired: 0, expiring: 1, active: 2 }
+      const order = { pending: 0, expired: 1, expiring: 2, active: 3 }
       return order[a.status] - order[b.status]
     })
 

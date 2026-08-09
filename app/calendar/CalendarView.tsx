@@ -12,6 +12,7 @@ type EventItem = {
   location: string | null
   category: string | null
   notes: string | null
+  extraInfo: string | null
   sportName: string | null
 }
 
@@ -56,6 +57,7 @@ export default function CalendarView({
   const [location, setLocation] = useState('')
   const [category, setCategory] = useState('')
   const [notes, setNotes] = useState('')
+  const [extraInfo, setExtraInfo] = useState('')
   const [sportId, setSportId] = useState('')
 
   const year = currentDate.getFullYear()
@@ -87,7 +89,7 @@ export default function CalendarView({
     const res = await fetch('/api/admin/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, type, date, time, location, category, notes, sportId }),
+      body: JSON.stringify({ title, type, date, time, location, category, notes, extraInfo, sportId }),
     })
     setLoading(false)
     if (res.ok) {
@@ -98,6 +100,7 @@ export default function CalendarView({
       setLocation('')
       setCategory('')
       setNotes('')
+      setExtraInfo('')
       setSportId('')
       router.refresh()
     } else {
@@ -261,6 +264,7 @@ export default function CalendarView({
               {selectedEvent.location && <p style={{ margin: 0 }}>📍 المكان: {selectedEvent.location}</p>}
               {selectedEvent.sportName && <p style={{ margin: 0 }}>🥋 الرياضة: {selectedEvent.sportName}</p>}
               {selectedEvent.category && <p style={{ margin: 0 }}>👥 الفئة: {selectedEvent.category}</p>}
+              {selectedEvent.extraInfo && <p style={{ margin: 0 }}>ℹ️ تفاصيل إضافية: {selectedEvent.extraInfo}</p>}
               {selectedEvent.notes && <p style={{ margin: 0 }}>📝 ملاحظات: {selectedEvent.notes}</p>}
             </div>
 
@@ -331,13 +335,21 @@ export default function CalendarView({
               <label style={labelStyle}>الرياضة (اتركه فارغًا ليكون الحدث عامًا للجميع)</label>
               <select value={sportId} onChange={(e) => setSportId(e.target.value)} style={inputStyle}>
                 <option value="">عام - لكل الأكاديمية</option>
-                {sports.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
+                {sports.map((sp) => (
+                  <option key={sp.id} value={sp.id}>{sp.name}</option>
                 ))}
               </select>
 
               <label style={labelStyle}>الفئة/المجموعة (اختياري)</label>
               <input placeholder="مثال: تحت 18 سنة" value={category} onChange={(e) => setCategory(e.target.value)} style={inputStyle} />
+
+              <label style={labelStyle}>تفاصيل إضافية (اختياري)</label>
+              <input
+                placeholder="مثال: مطلوب اشتراك نشط للحضور / مفتوح للجميع / أي معلومة تانية"
+                value={extraInfo}
+                onChange={(e) => setExtraInfo(e.target.value)}
+                style={inputStyle}
+              />
 
               <label style={labelStyle}>ملاحظات (اختياري)</label>
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} style={{ ...inputStyle, minHeight: 70, resize: 'vertical' as const }} />

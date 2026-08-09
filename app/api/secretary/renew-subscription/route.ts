@@ -11,10 +11,10 @@ export async function POST(req: NextRequest) {
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
   if (!profile || profile.role !== 'SECRETARY') return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
 
-  const { playerId, amount, totalSessions, durationDays } = await req.json()
+  const { playerId, totalAmount, paidAmountNow, totalSessions, durationDays } = await req.json()
 
-  if (!playerId || !amount || !totalSessions || !durationDays) {
-    return NextResponse.json({ error: 'كل البيانات مطلوبة' }, { status: 400 })
+  if (!playerId || paidAmountNow === undefined) {
+    return NextResponse.json({ error: 'بيانات غير كافية' }, { status: 400 })
   }
 
   const player = await prisma.player.findUnique({ where: { id: playerId } })
@@ -22,41 +22,116 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
   }
 
-  const startDate = new Date()
-  const endDate = new Date()
-  endDate.setDate(endDate.getDate() + parseInt(durationDays))
+  const parsedPaidNow = parseFloat(paidAmountNow)
+  if (isNaN(parsedPaidNow) || parsedPaidNow < 0) {
+    return NextResponse.json({ error: 'قيمة المبلغ غير صحيحة' }, { status: 400 })
+  }
 
-  const subscription = await prisma.subscription.create({
-    data: {
-      playerId,
-      tenantId: profile.tenantId,
-      totalSessions: parseInt(totalSessions),
-      remaining: parseInt(totalSessions),
-      startDate,
-      endDate,
-    },
-  })
+  const hasPending = player.pendingRenewalTotalAmount !== null
 
-  await prisma.payment.create({
-    data: {
-      tenantId: profile.tenantId,
-      playerId,
-      subscriptionId: subscription.id,
-      amount: parseFloat(amount),
-      source: 'SUBSCRIPTION',
-      description: `تجديد اشتراك بواسطة السكرتيرة`,
-    },
-  })
+  let effectiveTotal: number
+  let effectiveSessions: number
+  let effectiveDuration: number
+  let paidSoFar: number
+
+  if (hasPending) {
+    effectiveTotal = Number(player.pendingRenewalTotalAmount)
+    effectiveSessions = player.pendingRenewalSessions as number
+    effectiveDuration = player.pendingRenewalDurationDays as number
+    paidSoFar = Number(player.pendingRenewalPaidAmount) + parsedPaidNow
+  } else {
+    if (totalAmount === undefined || !totalSessions || !durationDays) {
+      return NextResponse.json({ error: 'يجب إدخال قيمة الاشتراك وعدد الحصص والمدة عند بدء تجديد جديد' }, { status: 400 })
+    }
+    effectiveTotal = parseFloat(totalAmount)
+    effectiveSessions = parseInt(totalSessions)
+    effectiveDuration = parseInt(durationDays)
+    paidSoFar = parsedPaidNow
+
+    if (isNaN(effectiveTotal) || effectiveTotal <= 0) {
+      return NextResponse.json({ error: 'قيمة الاشتراك غير صحيحة' }, { status: 400 })
+    }
+  }
+
+  const remainingAmount = Math.max(0, effectiveTotal - paidSoFar)
+  const isFullyPaid = remainingAmount <= 0
+
+  let createdSubscriptionId: string | null = null
+
+  if (isFullyPaid) {
+    const startDate = new Date()
+    const endDate = new Date()
+    endDate.setDate(endDate.getDate() + effectiveDuration)
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        playerId,
+        tenantId: profile.tenantId,
+        totalSessions: effectiveSessions,
+        remaining: effectiveSessions,
+        startDate,
+        endDate,
+        totalAmount: effectiveTotal,
+        paidAmount: effectiveTotal,
+        remainingAmount: 0,
+        paymentStatus: 'PAID',
+      },
+    })
+    createdSubscriptionId = subscription.id
+
+    await prisma.player.update({
+      where: { id: playerId },
+      data: {
+        pendingRenewalTotalAmount: null,
+        pendingRenewalPaidAmount: null,
+        pendingRenewalSessions: null,
+        pendingRenewalDurationDays: null,
+      },
+    })
+  } else {
+    await prisma.player.update({
+      where: { id: playerId },
+      data: {
+        pendingRenewalTotalAmount: effectiveTotal,
+        pendingRenewalPaidAmount: paidSoFar,
+        pendingRenewalSessions: effectiveSessions,
+        pendingRenewalDurationDays: effectiveDuration,
+      },
+    })
+  }
+
+  if (parsedPaidNow > 0) {
+    await prisma.payment.create({
+      data: {
+        tenantId: profile.tenantId,
+        playerId,
+        subscriptionId: createdSubscriptionId,
+        amount: parsedPaidNow,
+        source: 'SUBSCRIPTION',
+        description: isFullyPaid
+          ? 'دفعة أخيرة أكملت التجديد بواسطة السكرتيرة - تم تفعيل الاشتراك'
+          : `دفعة جزئية بواسطة السكرتيرة - متبقي ${remainingAmount.toFixed(2)} جنيه`,
+      },
+    })
+  }
 
   await logAudit({
     tenantId: profile.tenantId,
     userId: user.id,
     userRole: profile.role,
-    action: 'CREATE',
+    action: isFullyPaid ? 'CREATE' : 'UPDATE',
     entity: 'Subscription',
-    entityId: subscription.id,
-    details: `تجديد اشتراك اللاعب ${player.fullName} بواسطة السكرتيرة`,
+    entityId: createdSubscriptionId || playerId,
+    details: isFullyPaid
+      ? `اكتمل تجديد اشتراك اللاعب ${player.fullName} بواسطة السكرتيرة وتم تفعيله`
+      : `دفعة جزئية لتجديد اشتراك اللاعب ${player.fullName} بواسطة السكرتيرة - متبقي ${remainingAmount.toFixed(2)} جنيه`,
   })
 
-  return NextResponse.json({ success: true, subscription })
+  return NextResponse.json({
+    success: true,
+    activated: isFullyPaid,
+    remainingAmount,
+    totalAmount: effectiveTotal,
+    paidSoFar,
+  })
 }

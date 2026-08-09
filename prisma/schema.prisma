@@ -145,6 +145,10 @@ model Player {
   sportsBackground   String?
   medicalCheckExpiry DateTime?
   joinDate           DateTime? @default(now())
+  pendingRenewalTotalAmount  Decimal?  @db.Decimal(10, 2)
+  pendingRenewalPaidAmount   Decimal?  @db.Decimal(10, 2)
+  pendingRenewalSessions     Int?
+  pendingRenewalDurationDays Int?
   
   avatarUrl          String?
   currentBelt        String?
@@ -493,6 +497,7 @@ model Event {
   location String?
   category String?
   notes    String?
+  extraInfo String?
 
   sportId String?
   sport   Sport?  @relation(fields: [sportId], references: [id])

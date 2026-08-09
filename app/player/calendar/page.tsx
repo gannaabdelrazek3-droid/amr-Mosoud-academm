@@ -29,12 +29,13 @@ export default async function PlayerCalendarPage() {
   const formattedEvents = events.map((e) => ({
     id: e.id,
     title: e.title,
-    type: e.type,
+    type: e.type as 'TRAINING' | 'TOURNAMENT' | 'TEST' | 'ACTIVITY' | 'MATCH' | 'MEETING' | 'CAMP' | 'OTHER',
     date: e.date.toISOString(),
     time: e.time,
     location: e.location,
     category: e.category,
     notes: e.notes,
+    extraInfo: e.extraInfo,
     sportName: e.sport?.name || null,
   }))
 

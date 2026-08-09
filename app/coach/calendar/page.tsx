@@ -29,12 +29,13 @@ export default async function CoachCalendarPage() {
   const formattedEvents = events.map((e) => ({
     id: e.id,
     title: e.title,
-    type: e.type,
+    type: e.type as 'TRAINING' | 'TOURNAMENT' | 'TEST' | 'ACTIVITY' | 'MATCH' | 'MEETING' | 'CAMP' | 'OTHER',
     date: e.date.toISOString(),
     time: e.time,
     location: e.location,
     category: e.category,
     notes: e.notes,
+    extraInfo: e.extraInfo,
     sportName: e.sport?.name || null,
   }))
 
@@ -43,7 +44,7 @@ export default async function CoachCalendarPage() {
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 20px' }}>
         <h1 style={{ color: '#f8fafc', fontFamily: "'Tajawal', sans-serif", marginBottom: 4 }}>التقويم</h1>
         <p style={{ color: '#94a3b8', fontFamily: "'Tajawal', sans-serif", marginBottom: 24 }}>
-          مواعيد رياضاتك وأحداث الأكاديمية العامة
+          مواعيدك وأحداث الأكاديمية العامة
         </p>
         <CalendarView events={formattedEvents} canManage={false} sports={[]} />
       </div>

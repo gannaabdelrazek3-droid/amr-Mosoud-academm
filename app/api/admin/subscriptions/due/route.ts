@@ -35,16 +35,24 @@ export async function GET() {
   const duePlayers = players
     .filter((p) => {
       const latest = p.subscriptions[0]
-      if (!latest) return true // لسه معملوش اشتراك خالص
-      return new Date(latest.endDate) <= nextWeek // خلص أو قرب يخلص
+      const hasPending = p.pendingRenewalTotalAmount !== null
+      if (hasPending) return true
+      if (!latest) return true
+      return new Date(latest.endDate) <= nextWeek
     })
     .map((p) => {
       const latest = p.subscriptions[0]
+      const hasPending = p.pendingRenewalTotalAmount !== null
+
       return {
         id: p.id,
         fullName: p.fullName,
         lastEndDate: latest ? latest.endDate : null,
         lastRemaining: latest ? latest.remaining : null,
+        hasPendingRenewal: hasPending,
+        pendingTotal: hasPending ? Number(p.pendingRenewalTotalAmount) : 0,
+        pendingPaid: hasPending ? Number(p.pendingRenewalPaidAmount) : 0,
+        pendingRemaining: hasPending ? Number(p.pendingRenewalTotalAmount) - Number(p.pendingRenewalPaidAmount) : 0,
       }
     })
 
