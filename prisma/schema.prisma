@@ -39,6 +39,7 @@ model Tenant {
   academyInfo AcademyInfo?
   newsPosts   NewsPost[]
   belts Belt[]
+  nutritionPrograms NutritionProgram[]
 }
 
 enum Role {
@@ -674,6 +675,20 @@ model Belt {
 
   name         String
   color        String?
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+}
+model NutritionProgram {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  title        String
+  content      String
   isActive     Boolean  @default(true)
   displayOrder Int      @default(0)
 

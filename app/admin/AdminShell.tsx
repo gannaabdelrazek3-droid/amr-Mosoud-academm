@@ -23,6 +23,7 @@ const navLinks = [
   { href: '/admin/featured-players', label: 'اللاعبون المميزون', icon: '⭐' },
   { href: '/admin/academy-info', label: 'معلومات الأكاديمية', icon: 'ℹ️' },
 { href: '/admin/news', label: 'الأخبار', icon: '📰' },
+{ href: '/admin/nutrition-programs', label: 'البرامج الغذائية', icon: '🥗' },
 ]
 
 export default function AdminShell({
