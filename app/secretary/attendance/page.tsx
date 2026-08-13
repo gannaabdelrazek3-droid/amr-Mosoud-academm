@@ -28,7 +28,9 @@ export default function SecretaryAttendancePage() {
   const [allCoaches, setAllCoaches] = useState<Coach[]>([])
   const [groupBy, setGroupBy] = useState<GroupBy>('sport')
   const [loading, setLoading] = useState(true)
-  const [markingId, setMarkingId] = useState<string | null>(null)
+  const [savingKey, setSavingKey] = useState<string>('')
+  const [markedToday, setMarkedToday] = useState<Record<string, 'present' | 'absent'>>({})
+  const [message, setMessage] = useState('')
 
   function loadPlayers() {
     fetch('/api/secretary/attendance')
@@ -45,18 +47,41 @@ export default function SecretaryAttendancePage() {
     loadPlayers()
   }, [])
 
-  async function markPresent(playerId: string, sportId: string) {
-    setMarkingId(playerId)
-    await fetch('/api/secretary/attendance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerId, sportId }),
-    })
-    setMarkingId(null)
-    loadPlayers()
+  async function markAttendance(playerId: string, sportId: string, present: boolean) {
+    const key = `${playerId}-${sportId}`
+    setSavingKey(key)
+    setMessage('')
+
+    try {
+      const res = await fetch('/api/secretary/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, sportId, present }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setMessage(data.error || 'حدث خطأ')
+        return
+      }
+
+      setMarkedToday((prev) => ({
+        ...prev,
+        [key]: present ? 'present' : 'absent',
+      }))
+    } catch {
+      setMessage('حدث خطأ في الاتصال')
+    } finally {
+      setSavingKey('')
+    }
   }
 
-  function renderPlayerRow(p: PlayerItem) {
+  function renderPlayerRow(p: PlayerItem, currentSportId?: string) {
+    const targetSports = currentSportId
+      ? p.sports.filter((s) => s.id === currentSportId)
+      : p.sports
+
     return (
       <div
         key={p.id}
@@ -78,46 +103,61 @@ export default function SecretaryAttendancePage() {
           </p>
         </div>
 
-        {p.markedToday ? (
-          <span style={{ color: '#22c55e', fontWeight: 700, fontSize: 13 }}>✓ تم</span>
-        ) : p.sports.length === 1 ? (
-          <button
-            onClick={() => markPresent(p.id, p.sports[0].id)}
-            disabled={markingId === p.id}
-            style={{
-              padding: '9px 18px',
-              background: '#d4af37',
-              color: '#0f172a',
-              border: 'none',
-              borderRadius: 8,
-              fontWeight: 700,
-              fontFamily: "'Tajawal', sans-serif",
-              cursor: 'pointer',
-            }}
-          >
-            {markingId === p.id ? '...' : 'حضر ✓'}
-          </button>
-        ) : p.sports.length > 1 ? (
-          <select
-            onChange={(e) => e.target.value && markPresent(p.id, e.target.value)}
-            defaultValue=""
-            style={{
-              padding: '9px 12px',
-              borderRadius: 8,
-              border: '1px solid rgba(212,175,55,0.3)',
-              background: 'rgba(15,23,42,0.6)',
-              color: '#f1f5f9',
-              fontFamily: "'Tajawal', sans-serif",
-              fontSize: 12.5,
-            }}
-          >
-            <option value="">حضر في...</option>
-            {p.sports.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
-        ) : (
+        {targetSports.length === 0 ? (
           <span style={{ color: '#94a3b8', fontSize: 12 }}>لا توجد رياضة</span>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {targetSports.map((sp) => {
+              const key = `${p.id}-${sp.id}`
+              const status = markedToday[key]
+              const isSaving = savingKey === key
+
+              return (
+                <div key={sp.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {targetSports.length > 1 && (
+                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{sp.name}:</span>
+                  )}
+                  <button
+                    onClick={() => markAttendance(p.id, sp.id, true)}
+                    disabled={isSaving || !!status}
+                    style={{
+                      padding: '8px 14px',
+                      background: status === 'present' ? '#22c55e' : status === 'absent' ? 'rgba(148,163,184,0.1)' : '#d4af37',
+                      color: status === 'present' ? '#ffffff' : status === 'absent' ? '#64748b' : '#0f172a',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      fontFamily: "'Tajawal', sans-serif",
+                      cursor: isSaving || !!status ? 'default' : 'pointer',
+                      fontSize: 12.5,
+                      opacity: isSaving ? 0.6 : 1,
+                    }}
+                  >
+                    {isSaving ? '...' : status === 'present' ? 'حضر ✓' : 'حضر'}
+                  </button>
+
+                  <button
+                    onClick={() => markAttendance(p.id, sp.id, false)}
+                    disabled={isSaving || !!status}
+                    style={{
+                      padding: '8px 14px',
+                      background: status === 'absent' ? '#ef4444' : status === 'present' ? 'rgba(148,163,184,0.1)' : 'rgba(239,68,68,0.2)',
+                      color: status === 'absent' ? '#ffffff' : status === 'present' ? '#64748b' : '#ef4444',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      fontFamily: "'Tajawal', sans-serif",
+                      cursor: isSaving || !!status ? 'default' : 'pointer',
+                      fontSize: 12.5,
+                      opacity: isSaving ? 0.6 : 1,
+                    }}
+                  >
+                    {isSaving ? '...' : status === 'absent' ? 'غائب ✕' : 'غائب'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     )
@@ -128,6 +168,8 @@ export default function SecretaryAttendancePage() {
       <div style={{ maxWidth: 650, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
         <h1 style={{ color: '#f8fafc' }}>تسجيل الحضور اليومي</h1>
         <p style={{ color: '#94a3b8', marginBottom: 20 }}>{new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+
+        {message && <p style={{ color: '#fca5a5', marginBottom: 16 }}>{message}</p>}
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           <button
@@ -178,7 +220,7 @@ export default function SecretaryAttendancePage() {
                   <h3 style={{ color: '#d4af37', fontSize: 15, fontWeight: 900, marginBottom: 10 }}>
                     🏅 {sport.name} ({sportPlayers.length})
                   </h3>
-                  {sportPlayers.map((p) => renderPlayerRow(p))}
+                  {sportPlayers.map((p) => renderPlayerRow(p, sport.id))}
                 </div>
               )
             })}

@@ -192,8 +192,8 @@ export default function LoginPage() {
               cursor: 'pointer',
             }}
           >
-          إدارة / مدرب / سكرتيرة
-          </button>
+         إدارة / مدرب
+         </button>
           <button
             onClick={() => { setMode('player'); setError('') }}
             style={{

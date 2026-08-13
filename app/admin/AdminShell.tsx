@@ -24,6 +24,8 @@ const navLinks = [
   { href: '/admin/academy-info', label: 'معلومات الأكاديمية', icon: 'ℹ️' },
 { href: '/admin/news', label: 'الأخبار', icon: '📰' },
 { href: '/admin/nutrition-programs', label: 'البرامج الغذائية', icon: '🥗' },
+{ href: '/admin/coach-schedules', label: 'مواعيد التدريب', icon: '🗓️' },
+{ href: '/admin/attendance-log', label: 'سجل الحضور', icon: '✅' },
 ]
 
 export default function AdminShell({

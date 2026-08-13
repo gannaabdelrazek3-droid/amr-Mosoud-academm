@@ -13,6 +13,7 @@ const cardStyle = { maxWidth: 700, margin: '0 auto', background: 'rgba(30,41,59,
 const inputStyle = { width: '100%', padding: '12px 14px', marginBottom: 14, fontSize: 15, fontFamily: "'Tajawal', sans-serif", border: '1px solid rgba(148,163,184,0.3)', borderRadius: 10, background: 'rgba(15,23,42,0.5)', color: '#f1f5f9', boxSizing: 'border-box' as const }
 const labelStyle = { display: 'block', color: '#e2e8f0', fontSize: 14, fontWeight: 600, marginBottom: 6 }
 const buttonStyle = { width: '100%', padding: 14, fontSize: 16, fontWeight: 700, fontFamily: "'Tajawal', sans-serif", background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 10, cursor: 'pointer' }
+const sectionTitle = { color: '#d4af37', fontSize: 16, fontWeight: 900, margin: '24px 0 14px', paddingBottom: 8, borderBottom: '1px solid rgba(212,175,55,0.2)' }
 
 interface Sport { id: string; name: string }
 interface Coach { id: string; fullName: string; role: string }
@@ -31,6 +32,15 @@ export default function SecretaryAddPlayerPage() {
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
+
+  // بيانات الاشتراك
+  const [subSportId, setSubSportId] = useState('')
+  const [subSessions, setSubSessions] = useState('')
+  const [subEndDate, setSubEndDate] = useState('')
+  const [totalAmount, setTotalAmount] = useState('')
+  const [paidAmount, setPaidAmount] = useState('')
+
+  const remainingAmount = Math.max(0, Number(totalAmount || 0) - Number(paidAmount || 0))
 
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -73,10 +83,23 @@ export default function SecretaryAddPlayerPage() {
     setSaving(true)
     setMessage('')
 
+    const newSubscription =
+      subSessions && subEndDate
+        ? {
+            sportId: subSportId || null,
+            totalSessions: Number(subSessions),
+            sessionsPerWeek: null,
+            endDate: subEndDate,
+            totalAmount: Number(totalAmount || 0),
+            paidAmount: Number(paidAmount || 0),
+            remainingAmount,
+          }
+        : null
+
     const res = await fetch('/api/admin/add-player', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fullName, phone, birthDate, joinDate, coachId, sportIds: selectedSportIds, avatarUrl }),
+      body: JSON.stringify({ fullName, phone, birthDate, joinDate, coachId, sportIds: selectedSportIds, avatarUrl, newSubscription }),
     })
 
     const data = await res.json()
@@ -132,6 +155,34 @@ export default function SecretaryAddPlayerPage() {
               </label>
             ))}
           </div>
+
+          <h3 style={sectionTitle}>💰 الاشتراك (اختياري)</h3>
+
+          <label style={labelStyle}>النشاط التابع له الاشتراك</label>
+          <select value={subSportId} onChange={(e) => setSubSportId(e.target.value)} style={inputStyle}>
+            <option value="">اختر النشاط</option>
+            {allSports.map((sp) => <option key={sp.id} value={sp.id}>{sp.name}</option>)}
+          </select>
+
+          <label style={labelStyle}>إجمالي عدد الحصص</label>
+          <input type="number" min={1} value={subSessions} onChange={(e) => setSubSessions(e.target.value)} style={inputStyle} />
+
+          <label style={labelStyle}>تاريخ انتهاء الاشتراك</label>
+          <input type="date" value={subEndDate} onChange={(e) => setSubEndDate(e.target.value)} style={inputStyle} />
+
+          <label style={labelStyle}>قيمة الاشتراك الكاملة (جنيه)</label>
+          <input type="number" min={0} step="0.5" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} style={inputStyle} />
+
+          <label style={labelStyle}>المبلغ المدفوع الآن (جنيه)</label>
+          <input type="number" min={0} step="0.5" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} style={inputStyle} />
+
+          {totalAmount && paidAmount && (
+            <div style={{ marginBottom: 16, padding: '10px 14px', background: remainingAmount > 0 ? 'rgba(212,175,55,0.1)' : 'rgba(34,197,94,0.1)', border: `1px solid ${remainingAmount > 0 ? 'rgba(212,175,55,0.35)' : 'rgba(34,197,94,0.35)'}`, borderRadius: 8 }}>
+              <span style={{ color: remainingAmount > 0 ? '#d4af37' : '#22c55e', fontWeight: 700, fontSize: 13.5 }}>
+                {remainingAmount > 0 ? `متبقي على اللاعب: ${remainingAmount.toFixed(2)} جنيه` : 'الاشتراك مدفوع بالكامل ✅'}
+              </span>
+            </div>
+          )}
 
           <button type="submit" disabled={saving || uploadingImage} style={buttonStyle}>
             {saving ? 'جارٍ الحفظ...' : 'حفظ وإضافة اللاعب'}

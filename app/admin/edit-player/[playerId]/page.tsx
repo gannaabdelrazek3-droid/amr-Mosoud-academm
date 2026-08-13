@@ -143,11 +143,18 @@ export default function EditPlayerPage() {
   const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState('')
 
+  const [nutritionPlans, setNutritionPlans] = useState<{ id: string; title: string; content: string; createdAt: string }[]>([])
+  const [npTitle, setNpTitle] = useState('')
+  const [npContent, setNpContent] = useState('')
+  const [addingNp, setAddingNp] = useState(false)
+
   useEffect(() => {
     if (!playerId) return
 
     let isMounted = true
     setLoading(true)
+
+    loadNutritionPlans()
 
     Promise.all([
       fetch(`/api/admin/player-details?playerId=${playerId}`).then((res) => res.json()),
@@ -446,6 +453,35 @@ export default function EditPlayerPage() {
     const refetch = await fetch(`/api/admin/player-details?playerId=${playerId}`)
     const refetchData = await refetch.json()
     if (refetchData.player) setPlayer(refetchData.player)
+  }
+
+  function loadNutritionPlans() {
+    fetch(`/api/nutrition-plans?playerId=${playerId}`)
+      .then((res) => res.json())
+      .then((data) => setNutritionPlans(data.plans || []))
+  }
+
+  async function handleAddNutritionPlan(e: React.FormEvent) {
+    e.preventDefault()
+    if (!npTitle || !npContent) return
+    setAddingNp(true)
+    const res = await fetch('/api/nutrition-plans', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId, title: npTitle, content: npContent }),
+    })
+    setAddingNp(false)
+    if (res.ok) {
+      setNpTitle('')
+      setNpContent('')
+      loadNutritionPlans()
+    }
+  }
+
+  async function handleDeleteNutritionPlan(id: string) {
+    if (!confirm('حذف هذا البرنامج؟')) return
+    await fetch(`/api/nutrition-plans?id=${id}`, { method: 'DELETE' })
+    loadNutritionPlans()
   }
 
   async function handleDelete() {
@@ -888,6 +924,37 @@ export default function EditPlayerPage() {
             </label>
             <button type="submit" disabled={addingWeight} className="btn-primary" style={{ ...s.button, marginTop: 12 }}>
               {addingWeight ? 'جارٍ الإضافة...' : '+ إضافة وزن'}
+            </button>
+          </form>
+        </div>
+
+        <div style={{ ...s.formCard, marginBottom: 20 }}>
+          <h3 style={sectionTitle}>🥗 البرنامج الغذائي الخاص باللاعب</h3>
+          {nutritionPlans.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              {nutritionPlans.map((np) => (
+                <div key={np.id} style={{ ...rowStyle, flexDirection: 'column' as const, alignItems: 'flex-start' as const }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                    <strong style={{ color: '#f8fafc', fontSize: 14.5 }}>{np.title}</strong>
+                    <button type="button" onClick={() => handleDeleteNutritionPlan(np.id)} style={{ ...smallBtn, background: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5' }}>حذف</button>
+                  </div>
+                  <p style={{ color: '#94a3b8', fontSize: 13.5, margin: '6px 0 0', whiteSpace: 'pre-wrap' as const }}>{np.content}</p>
+                  <span style={{ color: '#64748b', fontSize: 11.5, marginTop: 6 }}>{new Date(np.createdAt).toLocaleDateString('ar-EG')}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <form onSubmit={handleAddNutritionPlan}>
+            <label style={s.label}>
+              عنوان البرنامج
+              <input type="text" value={npTitle} onChange={(e) => setNpTitle(e.target.value)} style={s.input} placeholder="مثال: برنامج زيادة الكتلة العضلية" />
+            </label>
+            <label style={s.label}>
+              تفاصيل البرنامج
+              <textarea value={npContent} onChange={(e) => setNpContent(e.target.value)} style={{ ...s.input, minHeight: 120, resize: 'vertical' as const }} />
+            </label>
+            <button type="submit" disabled={addingNp} className="btn-primary" style={{ ...s.button, marginTop: 12 }}>
+              {addingNp ? 'جارٍ الإضافة...' : '+ إضافة برنامج غذائي'}
             </button>
           </form>
         </div>

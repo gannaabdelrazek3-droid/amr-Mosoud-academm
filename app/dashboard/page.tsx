@@ -63,10 +63,12 @@ export default async function DashboardPage() {
         where: { tenantId: profile.tenantId, status: 'pending' },
       }),
       prisma.player.findMany({
-        where: { coachId: profile.id },
+        where: { tenantId: profile.tenantId },
         include: {
+          coach: { select: { fullName: true } },
           subscriptions: { orderBy: { endDate: 'desc' }, take: 1 },
         },
+        orderBy: { fullName: 'asc' },
       }),
       prisma.subscription.findMany({
         where: {
@@ -164,7 +166,7 @@ export default async function DashboardPage() {
 
           {myPlayers.length > 0 && (
             <div style={{ marginTop: 36 }}>
-              <h3 style={{ marginBottom: 14, color: '#f8fafc', fontSize: 20 }}>👑 فريقي ({myPlayers.length} لاعبًا)</h3>
+              <h3 style={{ marginBottom: 14, color: '#f8fafc', fontSize: 20 }}>👥 كل اللاعبين ({myPlayers.length} لاعبًا)</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {myPlayers.map((p) => {
                   const sub = p.subscriptions[0]
@@ -189,7 +191,10 @@ export default async function DashboardPage() {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 700 }}>{p.fullName}</span>
+                        <div>
+                          <span style={{ fontWeight: 700 }}>{p.fullName}</span>
+                          <span style={{ color: '#94a3b8', fontSize: 12.5, marginRight: 10 }}>🏋️ المدرب: {p.coach?.fullName || 'بدون مدرب'}</span>
+                        </div>
                         <span>←</span>
                       </div>
                       {subWarning && <p style={{ color: '#fca5a5', margin: '4px 0 0', fontSize: 13 }}>🔴 الاشتراك على وشك الانتهاء</p>}

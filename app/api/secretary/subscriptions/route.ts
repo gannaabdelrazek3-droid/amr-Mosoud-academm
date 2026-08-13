@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { prisma } from '@/lib/prisma'
+import { autoRenewTenantSubscriptions } from '@/lib/autoRenewSubscriptions'
 
 export async function GET() {
   const supabase = await createClient()
@@ -9,6 +10,8 @@ export async function GET() {
 
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
   if (!profile || profile.role !== 'SECRETARY') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+
+  await autoRenewTenantSubscriptions(profile.tenantId)
 
   const players = await prisma.player.findMany({
     where: { tenantId: profile.tenantId },
@@ -23,12 +26,13 @@ export async function GET() {
       const sub = p.subscriptions[0]
       const hasPending = p.pendingRenewalTotalAmount !== null
 
-      let status: 'active' | 'expiring' | 'expired' | 'pending' = 'active'
+      let status: 'active' | 'expiring' | 'expired' | 'pending' | 'stopped' = 'active'
       let daysLeft: number | null = null
 
       if (sub) {
         daysLeft = Math.ceil((new Date(sub.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-        if (daysLeft < 0) status = 'expired'
+        if (sub.isStopped) status = 'stopped'
+        else if (daysLeft < 0) status = 'expired'
         else if (daysLeft <= 7) status = 'expiring'
       } else {
         status = 'expired'
@@ -47,10 +51,12 @@ export async function GET() {
         pendingTotal: hasPending ? Number(p.pendingRenewalTotalAmount) : 0,
         pendingPaid: hasPending ? Number(p.pendingRenewalPaidAmount) : 0,
         pendingRemaining: hasPending ? Number(p.pendingRenewalTotalAmount) - Number(p.pendingRenewalPaidAmount) : 0,
+        subscriptionId: sub?.id ?? null,
+        isStopped: sub?.isStopped ?? false,
       }
     })
     .sort((a, b) => {
-      const order = { pending: 0, expired: 1, expiring: 2, active: 3 }
+      const order = { pending: 0, expired: 1, expiring: 2, stopped: 3, active: 4 }
       return order[a.status] - order[b.status]
     })
 

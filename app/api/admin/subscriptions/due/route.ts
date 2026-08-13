@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
+import { autoRenewTenantSubscriptions } from '@/lib/autoRenewSubscriptions'
 
 export async function GET() {
   const supabase = await createClient()
@@ -17,6 +18,8 @@ export async function GET() {
   if (!profile || profile.role !== 'ADMIN') {
     return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
   }
+
+  await autoRenewTenantSubscriptions(profile.tenantId)
 
   const players = await prisma.player.findMany({
     where: { tenantId: profile.tenantId },
@@ -38,6 +41,7 @@ export async function GET() {
       const hasPending = p.pendingRenewalTotalAmount !== null
       if (hasPending) return true
       if (!latest) return true
+      if (latest.isStopped) return true
       return new Date(latest.endDate) <= nextWeek
     })
     .map((p) => {
@@ -53,6 +57,9 @@ export async function GET() {
         pendingTotal: hasPending ? Number(p.pendingRenewalTotalAmount) : 0,
         pendingPaid: hasPending ? Number(p.pendingRenewalPaidAmount) : 0,
         pendingRemaining: hasPending ? Number(p.pendingRenewalTotalAmount) - Number(p.pendingRenewalPaidAmount) : 0,
+        subscriptionId: latest ? latest.id : null,
+        isStopped: latest ? latest.isStopped : false,
+        autoRenew: latest ? latest.autoRenew : true,
       }
     })
 

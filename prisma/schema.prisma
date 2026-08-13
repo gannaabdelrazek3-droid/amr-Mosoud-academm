@@ -40,6 +40,8 @@ model Tenant {
   newsPosts   NewsPost[]
   belts Belt[]
   nutritionPrograms NutritionProgram[]
+  coachSchedules CoachSchedule[]
+  playerNutritionPlans PlayerNutritionPlan[]
 }
 
 enum Role {
@@ -79,6 +81,7 @@ model Profile {
   achievements  CoachAchievement[]
   certificates  CoachCertificate[]
   galleryItems  CoachGalleryItem[]
+  schedules CoachSchedule[]
 
   createdAt DateTime @default(now())
 
@@ -168,6 +171,7 @@ model Player {
   tournaments   Tournament[]
   sports        PlayerSport[]
   skillRatings  SkillRating[]
+  nutritionPlans PlayerNutritionPlan[]
 
   createdAt DateTime @default(now())
 
@@ -195,6 +199,7 @@ model Sport {
   events        Event[]
   tournaments   Tournament[]
   subscriptions Subscription[]
+  schedules CoachSchedule[]
 
   createdAt DateTime @default(now())
 
@@ -250,6 +255,8 @@ model Subscription {
   payments Payment[]
 
   createdAt DateTime @default(now())
+  autoRenew Boolean @default(true)
+  isStopped Boolean @default(false)
 
   @@index([tenantId, playerId])
   @@index([playerId, endDate])
@@ -427,6 +434,10 @@ model ProductSale {
   pricePerUnit Decimal? @db.Decimal(10, 2)
   totalAmount  Decimal? @db.Decimal(10, 2)
   date         DateTime @default(now())
+  buyerName       String?
+  paidAmount      Decimal @db.Decimal(10, 2) @default(0)
+  remainingAmount Decimal @db.Decimal(10, 2) @default(0)
+  paymentStatus   String  @default("PAID")
 
   paymentId String?  @unique
   payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: Cascade)
@@ -699,5 +710,43 @@ model NutritionProgram {
 
   createdAt    DateTime @default(now())
 
+  @@index([tenantId])
+}
+model CoachSchedule {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  coachId   String
+  coach     Profile  @relation(fields: [coachId], references: [id])
+
+  sportId   String
+  sport     Sport    @relation(fields: [sportId], references: [id])
+
+  groupName String
+  dayOfWeek Int
+  time      String
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([coachId])
+  @@index([sportId])
+}
+model PlayerNutritionPlan {
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+
+  playerId      String
+  player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  title         String
+  content       String
+  createdByRole String
+
+  createdAt     DateTime @default(now())
+
+  @@index([playerId])
   @@index([tenantId])
 }

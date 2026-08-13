@@ -6,6 +6,7 @@ import AdminShell from '../AdminShell'
 
 interface DuePlayer {
   id: string
+  subscriptionId?: string
   fullName: string
   lastEndDate: string | null
   lastRemaining: number | null
@@ -13,6 +14,7 @@ interface DuePlayer {
   pendingTotal: number
   pendingPaid: number
   pendingRemaining: number
+  isStopped?: boolean
 }
 
 export default function SubscriptionsPage() {
@@ -135,14 +137,32 @@ export default function SubscriptionsPage() {
                     </p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => openRenew(p)}
-                  className="btn-primary"
-                  style={{ padding: '10px 20px', background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
-                >
-                  {p.hasPendingRenewal ? 'إكمال الدفع' : 'تجديد'}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {p.subscriptionId && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await fetch('/api/admin/subscriptions/toggle-stop', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ subscriptionId: p.subscriptionId, isStopped: !p.isStopped }),
+                        })
+                        loadPlayers()
+                      }}
+                      style={{ padding: '10px 16px', background: p.isStopped ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', color: p.isStopped ? '#22c55e' : '#ef4444', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {p.isStopped ? '▶️ تفعيل التجديد' : '⏸️ إيقاف التجديد'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => openRenew(p)}
+                    className="btn-primary"
+                    style={{ padding: '10px 20px', background: '#d4af37', color: '#0f172a', border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {p.hasPendingRenewal ? 'إكمال الدفع' : 'تجديد'}
+                  </button>
+                </div>
               </div>
 
               {openId === p.id && (
