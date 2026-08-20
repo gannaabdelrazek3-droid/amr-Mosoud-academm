@@ -5,7 +5,6 @@ import { adminStyles as s } from '../admin/adminStyles'
 import AdminShell from '../admin/AdminShell'
 import DashboardCharts from './DashboardCharts'
 import SignOutButtonGeneric from '../SignOutButtonGeneric'
-import QuickAddPlayerClientWrapper from './QuickAddPlayerClientWrapper'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -31,6 +30,7 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
+  // ==================== لوحة الأدمن (ADMIN) ====================
   if (profile.role === 'ADMIN') {
     const nextWeek = new Date()
     nextWeek.setDate(nextWeek.getDate() + 7)
@@ -130,7 +130,6 @@ export default async function DashboardPage() {
               <h1 style={s.title}>لوحة التحكم</h1>
               <p style={{ color: '#94a3b8', margin: 0 }}>مرحبًا بك، {profile.fullName} 👑</p>
             </div>
-            
           </div>
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -263,9 +262,17 @@ export default async function DashboardPage() {
     )
   }
 
+  // ==================== لوحة المدرب (COACH) ====================
   if (profile.role === 'COACH') {
+    // 💡 يجلب لاعبي المدرب المباشرين + اللاعبين غير المعينين لمدرب آخر
     const myPlayers = await prisma.player.findMany({
-      where: { coachId: profile.id },
+      where: {
+        tenantId: profile.tenantId,
+        OR: [
+          { coachId: profile.id },
+          { coachId: null }
+        ]
+      },
       include: {
         subscriptions: {
           orderBy: { endDate: 'desc' },
@@ -276,13 +283,14 @@ export default async function DashboardPage() {
           take: 3,
         },
       },
+      orderBy: { fullName: 'asc' }
     })
 
     return (
       <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
           <h1 style={{ color: '#f8fafc' }}>مرحبًا أيها المدرب {profile.fullName} 🏃</h1>
-          <p style={{ color: '#94a3b8' }}>فريقك ({myPlayers.length} لاعبًا)</p>
+          <p style={{ color: '#94a3b8' }}>لاعبو فريقك والمتاحون ({myPlayers.length} لاعبًا)</p>
 
           <div style={{ marginTop: 10, marginBottom: 10 }}>
             <SignOutButtonGeneric />
@@ -330,7 +338,10 @@ export default async function DashboardPage() {
                     style={{ display: 'block', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 14, padding: 18, marginBottom: 12, color: '#e2e8f0', textDecoration: 'none' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 700 }}>{p.fullName}</span>
+                      <div>
+                        <span style={{ fontWeight: 700 }}>{p.fullName}</span>
+                        {!p.coachId && <span style={{ color: '#d4af37', fontSize: 12, marginRight: 8, background: 'rgba(212,175,55,0.1)', padding: '2px 6px', borderRadius: 4 }}>غير معين لمدرب</span>}
+                      </div>
                       <span>←</span>
                     </div>
 
@@ -341,7 +352,7 @@ export default async function DashboardPage() {
                 )
               })
             ) : (
-              <p>لا يوجد لاعبون مسجّلون في فريقك حتى الآن</p>
+              <p>لا يوجد لاعبون مسجّلون حتى الآن</p>
             )}
           </div>
         </div>

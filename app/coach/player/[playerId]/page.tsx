@@ -25,11 +25,22 @@ export default function CoachPlayerPage() {
 
   const [loading, setLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
+  const [email, setEmail] = useState('')
+  const [hasAccount, setHasAccount] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [phone, setPhone] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [sportsBackground, setSportsBackground] = useState('')
+  const [medicalCheckExpiry, setMedicalCheckExpiry] = useState('')
+
   const [sports, setSports] = useState<Sport[]>([])
   const [belts, setBelts] = useState<Belt[]>([])
   const [currentBelt, setCurrentBelt] = useState('')
   const [targetBelt, setTargetBelt] = useState('')
   const [coachNote, setCoachNote] = useState('')
+
+  const [savingAccount, setSavingAccount] = useState(false)
+  const [accountMsg, setAccountMsg] = useState('')
 
   const [attendanceSportId, setAttendanceSportId] = useState('')
   const [attendanceDate, setAttendanceDate] = useState(() => {
@@ -49,7 +60,6 @@ export default function CoachPlayerPage() {
   const [addingWeight, setAddingWeight] = useState(false)
   const [weightMsg, setWeightMsg] = useState('')
 
-  // ✅ النظام الغذائي للمدرب: عرض فقط، بدون إضافة
   const [nutritionPlans, setNutritionPlans] = useState<NutritionPlan[]>([])
   const [nutritionError, setNutritionError] = useState('')
 
@@ -82,6 +92,12 @@ export default function CoachPlayerPage() {
       .then((data) => {
         if (data.player) {
           setPlayerName(data.player.fullName)
+          setEmail(data.player.email || '')
+          setHasAccount(!!data.player.userId || !!data.player.email)
+          setPhone(data.player.phone || '')
+          setBirthDate(data.player.birthDate ? data.player.birthDate.split('T')[0] : '')
+          setSportsBackground(data.player.sportsBackground || '')
+          setMedicalCheckExpiry(data.player.medicalCheckExpiry ? data.player.medicalCheckExpiry.split('T')[0] : '')
           setCurrentBelt(data.player.currentBelt || '')
           setTargetBelt(data.player.targetBelt || '')
           setSports(data.playerSports || [])
@@ -97,6 +113,36 @@ export default function CoachPlayerPage() {
     loadNutritionPlans()
     loadTrainingPlans()
   }, [playerId])
+
+  async function handleSaveAccountData(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingAccount(true)
+    setAccountMsg('')
+
+    const { ok, error } = await safeFetchJson('/api/coach/edit-player', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerId,
+        email,
+        newPassword: newPassword || undefined,
+        phone,
+        birthDate,
+        sportsBackground,
+        medicalCheckExpiry,
+      }),
+    })
+
+    setSavingAccount(false)
+
+    if (ok) {
+      setAccountMsg('✅ تم حفظ البيانات بنجاح')
+      if (email) setHasAccount(true)
+      setNewPassword('')
+    } else {
+      setAccountMsg(error || 'حدث خطأ أثناء حفظ البيانات')
+    }
+  }
 
   async function handleMarkAttendance(present: boolean) {
     if (!attendanceSportId) {
@@ -203,6 +249,48 @@ export default function CoachPlayerPage() {
   return (
     <div style={pageStyle}>
       <h1 style={{ color: '#f8fafc', textAlign: 'center' as const, marginBottom: 24 }}>{playerName}</h1>
+
+      <div style={cardStyle}>
+        <h3 style={sectionTitle}>📝 بيانات الحساب والتواصل</h3>
+        <form onSubmit={handleSaveAccountData}>
+          <label style={labelStyle}>البريد الإلكتروني (اختياري لإنشاء حساب)</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={inputStyle}
+            disabled={hasAccount}
+            placeholder={hasAccount ? "يمتلك اللاعب حساباً بالفعل" : "example@domain.com"}
+          />
+
+          <label style={labelStyle}>كلمة المرور (اختياري)</label>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            style={inputStyle}
+            minLength={6}
+            placeholder={hasAccount ? "أدخل كلمة مرور جديدة للتغيير" : "تعيين كلمة مرور للحساب الجديد (6 أحرف على الأقل)"}
+          />
+
+          <label style={labelStyle}>رقم الهاتف</label>
+          <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={inputStyle} />
+
+          <label style={labelStyle}>تاريخ الميلاد</label>
+          <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={inputStyle} />
+
+          <label style={labelStyle}>الخلفية الرياضية</label>
+          <input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={inputStyle} />
+
+          <label style={labelStyle}>تاريخ انتهاء الكشف الطبي</label>
+          <input type="date" value={medicalCheckExpiry} onChange={(e) => setMedicalCheckExpiry(e.target.value)} style={inputStyle} />
+
+          <button type="submit" disabled={savingAccount} style={{ ...buttonStyle, width: '100%', marginTop: 16 }}>
+            {savingAccount ? 'جارٍ الحفظ...' : 'حفظ البيانات والحساب'}
+          </button>
+          {accountMsg && <p style={{ color: accountMsg.includes('✅') ? '#22c55e' : '#ef4444', marginTop: 10, fontSize: 13.5 }}>{accountMsg}</p>}
+        </form>
+      </div>
 
       <div style={cardStyle}>
         <h3 style={sectionTitle}>✅ تسجيل الحضور</h3>

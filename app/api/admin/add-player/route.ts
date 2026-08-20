@@ -45,15 +45,10 @@ export async function GET() {
       orderBy: { name: 'asc' },
     })
 
-    // التعديل هنا: جلب كل المدربين والآدمن بدون قيود الـ tenantId لضمان ظهورهم في خانة المدرب
     const coaches = await prisma.profile.findMany({
-      where: { 
-        role: { in: ['COACH', 'ADMIN'] } 
-      },
+      where: { role: { in: ['COACH', 'ADMIN'] } },
       select: { id: true, fullName: true, role: true },
     })
-
-    console.log("Coaches fetched from DB:", coaches)
 
     return NextResponse.json({ allSports: sports, coaches })
   } catch (err) {
@@ -69,7 +64,8 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+
     const body = await req.json()
     const parsed = addPlayerSchema.safeParse(body)
     if (!parsed.success) {
@@ -78,22 +74,9 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
     }
 
     const {
-      fullName,
-      phone,
-      playerCode,
-      birthDate,
-      sportsBackground,
-      medicalCheckExpiry,
-      joinDate,
-      email,
-      password,
-      coachId,
-      sportIds,
-      avatarUrl,
-      currentBelt,
-      targetBelt,
-      newSubscription,
-      skillRatings,
+      fullName, phone, playerCode, birthDate, sportsBackground, medicalCheckExpiry,
+      joinDate, email, password, coachId, sportIds, avatarUrl, currentBelt, targetBelt,
+      newSubscription, skillRatings,
     } = parsed.data
 
     if (coachId) {
@@ -103,18 +86,30 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
       }
     }
 
+    // 1. الفحص المسبق: البحث عن وجود لاعب مسبقاً بنفس رقم الهاتف
+    let existingPlayer = null
+    if (phone && phone.trim() !== '') {
+      existingPlayer = await prisma.player.findFirst({
+        where: { phone, tenantId: profile.tenantId }
+      })
+
+      // إذا كان اللاعب موجوداً ولديه حساب مرتب بالفعل، نمنع التكرار
+      if (existingPlayer && existingPlayer.userId) {
+        return NextResponse.json({ error: 'يوجد لاعب مسجل ومربوط بالحساب بالفعل بهذا الرقم' }, { status: 400 })
+      }
+    }
+
     let userId: string | undefined
     let createdAuthUserId: string | null = null
 
+    // 2. إنشاء حساب Supabase فقط عند تقديم البريد وكلمة المرور
     if (email && password) {
       const adminSupabase = createAdminClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       )
       const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
+        email, password, email_confirm: true,
       })
       if (authError || !authData.user) {
         return NextResponse.json({ error: authError?.message || 'حدث خطأ في إنشاء الحساب، قد يكون البريد مستخدمًا بالفعل' }, { status: 500 })
@@ -132,28 +127,52 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
         : []
 
       const player = await prisma.$transaction(async (tx) => {
-        const created = await tx.player.create({
-          data: {
-            tenantId: profile.tenantId,
-            fullName,
-            phone: phone || null,
-            playerCode: playerCode || null,
-            email: email || null,
-            userId: userId || null,
-            birthDate: birthDate ? new Date(birthDate) : null,
-            sportsBackground: sportsBackground || null,
-            medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : null,
-            joinDate: joinDate ? new Date(joinDate) : new Date(),
-            coachId: coachId || null,
-            avatarUrl: avatarUrl || null,
-            currentBelt: currentBelt || null,
-            targetBelt: targetBelt || null,
-          },
-        })
+        let playerRecord
+
+        if (existingPlayer) {
+          // دمج وتحديث سجل اللاعب القائم (الذي أضافه المدرب بالهاتف سابقاً)
+          playerRecord = await tx.player.update({
+            where: { id: existingPlayer.id },
+            data: {
+              fullName: fullName || existingPlayer.fullName,
+              playerCode: playerCode || existingPlayer.playerCode,
+              email: email || existingPlayer.email,
+              userId: userId || existingPlayer.userId,
+              birthDate: birthDate ? new Date(birthDate) : existingPlayer.birthDate,
+              sportsBackground: sportsBackground || existingPlayer.sportsBackground,
+              medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : existingPlayer.medicalCheckExpiry,
+              joinDate: joinDate ? new Date(joinDate) : existingPlayer.joinDate,
+              coachId: coachId || existingPlayer.coachId,
+              avatarUrl: avatarUrl || existingPlayer.avatarUrl,
+              currentBelt: currentBelt || existingPlayer.currentBelt,
+              targetBelt: targetBelt || existingPlayer.targetBelt,
+            },
+          })
+        } else {
+          // إنشاء سجل جديد تماماً إذا لم يكن موجوداً
+          playerRecord = await tx.player.create({
+            data: {
+              tenantId: profile.tenantId,
+              fullName,
+              phone: phone || null,
+              playerCode: playerCode || null,
+              email: email || null,
+              userId: userId || null,
+              birthDate: birthDate ? new Date(birthDate) : null,
+              sportsBackground: sportsBackground || null,
+              medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : null,
+              joinDate: joinDate ? new Date(joinDate) : new Date(),
+              coachId: coachId || null,
+              avatarUrl: avatarUrl || null,
+              currentBelt: currentBelt || null,
+              targetBelt: targetBelt || null,
+            },
+          })
+        }
 
         if (validSportIds.length > 0) {
           await tx.playerSport.createMany({
-            data: validSportIds.map((sportId: string) => ({ playerId: created.id, sportId })),
+            data: validSportIds.map((sportId: string) => ({ playerId: playerRecord.id, sportId })),
             skipDuplicates: true,
           })
         }
@@ -174,7 +193,7 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
 
           const subscription = await tx.subscription.create({
             data: {
-              playerId: created.id,
+              playerId: playerRecord.id,
               tenantId: profile.tenantId,
               sportId: newSubscription.sportId || null,
               totalSessions: Number(newSubscription.totalSessions),
@@ -192,11 +211,11 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
             await tx.payment.create({
               data: {
                 tenantId: profile.tenantId,
-                playerId: created.id,
+                playerId: playerRecord.id,
                 subscriptionId: subscription.id,
                 amount: paidAmt,
                 source: 'SUBSCRIPTION',
-                description: `دفعة اشتراك أولية للاعب: ${fullName}`,
+                description: `دفعة اشتراك للاعب: ${fullName}`,
                 date: new Date(),
               },
             })
@@ -205,37 +224,28 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
 
         if (skillRatings && Object.keys(skillRatings).length > 0) {
           const ratingData = Object.entries(skillRatings).map(([skillId, value]) => ({
-            playerId: created.id,
-            skillId,
-            tenantId: profile.tenantId,
-            value: Number(value),
+            playerId: playerRecord.id, skillId, tenantId: profile.tenantId, value: Number(value),
           }))
-
-          await tx.skillRating.createMany({
-            data: ratingData,
-          })
+          await tx.skillRating.createMany({ data: ratingData, skipDuplicates: true })
         }
 
-        return created
+        return playerRecord
       })
 
       await logAudit({
-        tenantId: profile.tenantId,
-        userId: user.id,
-        userRole: profile.role,
-        action: 'CREATE',
-        entity: 'Player',
-        entityId: player.id,
-        details: `إضافة لاعب جديد: ${fullName}`,
+        tenantId: profile.tenantId, userId: user.id, userRole: profile.role,
+        action: existingPlayer ? 'UPDATE' : 'CREATE',
+        entity: 'Player', entityId: player.id,
+        details: existingPlayer ? `ربط وتحديث بيانات لاعب قائم: ${fullName}` : `إضافة لاعب جديد: ${fullName}`,
       })
 
       return NextResponse.json({ success: true, playerId: player.id })
     } catch (dbError) {
       if (createdAuthUserId) {
         const adminSupabase = createAdminClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
         await adminSupabase.auth.admin.deleteUser(createdAuthUserId)
       }
       console.error(dbError)

@@ -9,6 +9,7 @@ import { calculateSubscriptionEndDate } from '@/lib/subscriptionSchedule'
 const editSchema = z.object({
   playerId: z.string().min(1),
   fullName: z.string().min(1),
+  email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   birthDate: z.string().optional(),
   sportsBackground: z.string().optional(),
@@ -40,7 +41,9 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
 
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-  if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
+    return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+  }
 
   const body = await req.json()
   const parsed = editSchema.safeParse(body)
@@ -51,6 +54,7 @@ export async function POST(req: NextRequest) {
   const {
     playerId,
     fullName,
+    email,
     phone,
     birthDate,
     sportsBackground,
@@ -78,22 +82,30 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ✅ الإصلاح: حفظ avatarUrl و currentBelt و targetBelt فعليًا عند التعديل
-  await prisma.player.update({
-    where: { id: playerId },
-    data: {
-      fullName,
-      phone: phone || null,
-      birthDate: birthDate ? new Date(birthDate) : null,
-      sportsBackground: sportsBackground || null,
-      medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : null,
-      joinDate: joinDate ? new Date(joinDate) : null,
-      coachId: coachId || null,
-      avatarUrl: avatarUrl || null,
-      currentBelt: currentBelt || null,
-      targetBelt: targetBelt || null,
-    },
-  })
+  let createdAuthUserId: string | null = null
+
+  if (email && !player.userId) {
+    if (!newPassword || newPassword.length < 6) {
+      return NextResponse.json({ error: 'يجب كتابة كلمة مرور لا تقل عن 6 أحرف لإنشاء الحساب' }, { status: 400 })
+    }
+
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+      email,
+      password: newPassword,
+      email_confirm: true,
+    })
+
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: authError?.message || 'حدث خطأ في إنشاء الحساب، قد يكون البريد مستخدمًا بالفعل' }, { status: 400 })
+    }
+
+    createdAuthUserId = authData.user.id
+  }
 
   if (newPassword && player.userId) {
     const adminSupabase = createAdminClient(
@@ -105,6 +117,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'حدثت مشكلة في تحديث كلمة المرور' }, { status: 500 })
     }
   }
+
+  await prisma.player.update({
+    where: { id: playerId },
+    data: {
+      fullName,
+      email: email || player.email || null,
+      userId: createdAuthUserId || player.userId || null,
+      phone: phone || null,
+      birthDate: birthDate ? new Date(birthDate) : null,
+      sportsBackground: sportsBackground || null,
+      medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : null,
+      joinDate: joinDate ? new Date(joinDate) : null,
+      coachId: coachId || null,
+      avatarUrl: avatarUrl || null,
+      currentBelt: currentBelt || null,
+      targetBelt: targetBelt || null,
+    },
+  })
 
   if (Array.isArray(sportIds)) {
     const validSports = await prisma.sport.findMany({
@@ -133,30 +163,28 @@ export async function POST(req: NextRequest) {
 
   if (newSubscription && newSubscription.totalSessions) {
     const sessions = Number(newSubscription.totalSessions)
-    if (isNaN(sessions) || sessions <= 0) {
-      return NextResponse.json({ error: 'عدد الحصص غير صالح' }, { status: 400 })
+    if (!isNaN(sessions) && sessions > 0) {
+      const finalCoachId = coachId || player.coachId
+      const startDate = new Date()
+      const calculatedEndDate = await calculateSubscriptionEndDate(
+        finalCoachId || null,
+        newSubscription.sportId || null,
+        sessions,
+        startDate
+      )
+
+      await prisma.subscription.create({
+        data: {
+          playerId,
+          tenantId: profile.tenantId,
+          sportId: newSubscription.sportId || null,
+          totalSessions: sessions,
+          remaining: sessions,
+          startDate,
+          endDate: calculatedEndDate,
+        },
+      })
     }
-
-    const finalCoachId = coachId || player.coachId
-    const startDate = new Date()
-    const calculatedEndDate = await calculateSubscriptionEndDate(
-      finalCoachId || null,
-      newSubscription.sportId || null,
-      sessions,
-      startDate
-    )
-
-    await prisma.subscription.create({
-      data: {
-        playerId,
-        tenantId: profile.tenantId,
-        sportId: newSubscription.sportId || null,
-        totalSessions: sessions,
-        remaining: sessions,
-        startDate,
-        endDate: calculatedEndDate,
-      },
-    })
   }
 
   if (skillRatings && typeof skillRatings === 'object') {

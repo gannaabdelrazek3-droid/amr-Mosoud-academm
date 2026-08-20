@@ -32,7 +32,12 @@ export default function AddPlayerPage() {
   const [birthDate, setBirthDate] = useState('')
   const [sportsBackground, setSportsBackground] = useState('')
   const [medicalCheckExpiry, setMedicalCheckExpiry] = useState('')
-  const [joinDate, setJoinDate] = useState('')
+
+  // 💡 ضبط تاريخ الانضمام تلقائياً لتاريخ اليوم لتجنب أخطاء الفورم
+  const [joinDate, setJoinDate] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })
   const [coachId, setCoachId] = useState('')
 
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -101,10 +106,10 @@ export default function AddPlayerPage() {
       if (uploadError) throw uploadError
       const { data } = supabase.storage.from('player-avatars').getPublicUrl(fileName)
       setAvatarUrl(data.publicUrl)
-      setMessage('تم رفع الصورة بنجاح!')
+      setMessage('✅ تم رفع الصورة بنجاح!')
     } catch (error) {
       console.error(error)
-      setMessage('حدث خطأ أثناء رفع الصورة.')
+      setMessage('❌ حدث خطأ أثناء رفع الصورة.')
     } finally {
       setUploadingImage(false)
     }
@@ -124,25 +129,31 @@ export default function AddPlayerPage() {
         remainingAmount: remainingAmount,
       } : null
 
-    const res = await fetch('/api/admin/add-player', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fullName, phone, playerCode, email, password, birthDate, sportsBackground,
-        medicalCheckExpiry, joinDate, coachId, sportIds: selectedSportIds,
-        newSubscription, skillRatings, avatarUrl, currentBelt, targetBelt,
-      }),
-    })
+    try {
+      const res = await fetch('/api/admin/add-player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName, phone, playerCode, email, password, birthDate, sportsBackground,
+          medicalCheckExpiry, joinDate, coachId, sportIds: selectedSportIds,
+          newSubscription, skillRatings, avatarUrl, currentBelt, targetBelt,
+        }),
+      })
 
-    const data = await res.json()
-    setSaving(false)
+      const data = await res.json()
+      setSaving(false)
 
-    if (!res.ok) {
-      setMessage(data.error || 'حدثت مشكلة أثناء إضافة اللاعب')
-      return
+      if (!res.ok) {
+        setMessage(`❌ ${data.error || 'حدثت مشكلة أثناء إضافة اللاعب'}`)
+        return
+      }
+
+      router.push('/dashboard')
+    } catch (err) {
+      console.error(err)
+      setSaving(false)
+      setMessage('❌ حدث خطأ في الاتصال بالشبكة، حاول مرة أخرى')
     }
-
-    router.push('/dashboard')
   }
 
   if (loading) {
@@ -276,11 +287,20 @@ export default function AddPlayerPage() {
             </div>
           </div>
 
+          {message && (
+            <p style={{
+              color: message.startsWith('✅') ? '#22c55e' : '#ef4444',
+              margin: '15px 0',
+              fontWeight: 'bold',
+              fontSize: 14
+            }}>
+              {message}
+            </p>
+          )}
+
           <button type="submit" disabled={saving || uploadingImage} className="btn-primary" style={s.button}>
             {saving ? 'جارٍ الحفظ...' : 'حفظ وإضافة اللاعب'}
           </button>
-
-          {message && <p style={{ ...s.error, marginTop: 15 }}>{message}</p>}
         </form>
       </div>
     </AdminShell>

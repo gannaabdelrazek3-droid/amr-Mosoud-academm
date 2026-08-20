@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
 
 const editSchema = z.object({
   playerId: z.string().min(1),
+  email: z.string().email().optional().or(z.literal('')),
+  newPassword: z.string().min(6).optional().or(z.literal('')),
   phone: z.string().optional(),
   birthDate: z.string().optional(),
   sportsBackground: z.string().optional(),
@@ -34,16 +37,56 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
     }
-    const { playerId, phone, birthDate, sportsBackground, medicalCheckExpiry, newSubscription, skillRatings } = parsed.data
+    const { playerId, email, newPassword, phone, birthDate, sportsBackground, medicalCheckExpiry, newSubscription, skillRatings } = parsed.data
 
     const player = await prisma.player.findUnique({ where: { id: playerId } })
     if (!player || player.coachId !== profile.id) {
       return NextResponse.json({ error: 'اللاعب غير موجود أو ليس ضمن فريقك' }, { status: 404 })
     }
 
+    let createdAuthUserId: string | null = null
+
+    // 1. إنشاء حساب جديد إذا لم يكن لدى اللاعب حساب وأدخل المدرب بريداً إلكترونياً
+    if (email && !player.userId) {
+      if (!newPassword || newPassword.length < 6) {
+        return NextResponse.json({ error: 'يجب كتابة كلمة مرور لا تقل عن 6 أحرف لإنشاء الحساب' }, { status: 400 })
+      }
+
+      const adminSupabase = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+
+      const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+        email,
+        password: newPassword,
+        email_confirm: true,
+      })
+
+      if (authError || !authData.user) {
+        return NextResponse.json({ error: authError?.message || 'حدث خطأ في إنشاء الحساب، قد يكون البريد مستخدمًا بالفعل' }, { status: 400 })
+      }
+
+      createdAuthUserId = authData.user.id
+    }
+
+    // 2. تحديث كلمة المرور فقط إذا كان الحساب موجوداً بالفعل
+    if (newPassword && player.userId) {
+      const adminSupabase = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+      const { error } = await adminSupabase.auth.admin.updateUserById(player.userId, { password: newPassword })
+      if (error) {
+        return NextResponse.json({ error: 'حدثت مشكلة في تحديث كلمة المرور' }, { status: 500 })
+      }
+    }
+
     await prisma.player.update({
       where: { id: playerId },
       data: {
+        email: email || player.email || null,
+        userId: createdAuthUserId || player.userId || null,
         phone: phone || null,
         birthDate: birthDate ? new Date(birthDate) : null,
         sportsBackground: sportsBackground || null,
@@ -70,10 +113,9 @@ export async function POST(req: NextRequest) {
     if (skillRatings && typeof skillRatings === 'object') {
       for (const [skillId, value] of Object.entries(skillRatings)) {
         if (value === null || value === undefined || String(value).trim() === '') continue
-const numValue = Number(value)
+        const numValue = Number(value)
         if (isNaN(numValue) || numValue < 0 || numValue > 100) continue
 
-        // تأكيد إن المهارة فعلًا تابعة لرياضة من رياضات المدرب قبل ما نسجّل التقييم
         const skill = await prisma.skill.findUnique({ where: { id: skillId } })
         if (!skill || skill.tenantId !== profile.tenantId) continue
         const coachSport = await prisma.coachSport.findFirst({ where: { coachId: profile.id, sportId: skill.sportId } })

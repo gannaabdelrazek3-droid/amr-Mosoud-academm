@@ -52,6 +52,8 @@ export default function EditPlayerPage() {
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [hasAccount, setHasAccount] = useState(false)
   const [birthDate, setBirthDate] = useState('')
   const [sportsBackground, setSportsBackground] = useState('')
   const [medicalCheckExpiry, setMedicalCheckExpiry] = useState('')
@@ -64,7 +66,6 @@ export default function EditPlayerPage() {
   const [currentBelt, setCurrentBelt] = useState('')
   const [targetBelt, setTargetBelt] = useState('')
 
-  // حفظ النسخة الأصلية لحمايتها من المسح بالخطأ
   const [originalData, setOriginalData] = useState({ currentBelt: '', targetBelt: '', avatarUrl: '' })
 
   const [selectedSportIds, setSelectedSportIds] = useState<string[]>([])
@@ -117,7 +118,7 @@ export default function EditPlayerPage() {
       const [detailsResult, beltsResult] = await Promise.all([
         safeFetchJson<{
           player: {
-            fullName: string; phone: string | null; birthDate: string | null; sportsBackground: string | null
+            fullName: string; phone: string | null; email: string | null; userId: string | null; birthDate: string | null; sportsBackground: string | null
             medicalCheckExpiry: string | null; joinDate: string | null; coachId: string | null
             avatarUrl: string | null; currentBelt: string | null; targetBelt: string | null
           }
@@ -137,6 +138,8 @@ export default function EditPlayerPage() {
       const data = detailsResult.data
       setFullName(data.player.fullName)
       setPhone(data.player.phone || '')
+      setEmail(data.player.email || '')
+      setHasAccount(!!data.player.userId || !!data.player.email)
       setBirthDate(data.player.birthDate ? data.player.birthDate.split('T')[0] : '')
       setSportsBackground(data.player.sportsBackground || '')
       setMedicalCheckExpiry(data.player.medicalCheckExpiry ? data.player.medicalCheckExpiry.split('T')[0] : '')
@@ -151,7 +154,6 @@ export default function EditPlayerPage() {
       setCurrentBelt(loadedCurrentBelt)
       setTargetBelt(loadedTargetBelt)
 
-      // حفظ النسخة الأصلية
       setOriginalData({
         currentBelt: loadedCurrentBelt,
         targetBelt: loadedTargetBelt,
@@ -202,7 +204,7 @@ export default function EditPlayerPage() {
         merged.push(...sportSkills)
       })
       setSkills(merged)
-      if (hadError) setSkillsError('حدث خطأ أثناء تحميل المهارات، تأكدي من إعادة تشغيل السيرفر')
+      if (hadError) setSkillsError('حدث خطأ أثناء تحميل المهارات، تأكد من إعادة تشغيل السيرفر')
     }
 
     loadSkills()
@@ -236,7 +238,7 @@ export default function EditPlayerPage() {
   async function handleAddWeight(e: React.FormEvent) {
     e.preventDefault()
     if (!newWeight || !weightSportId) {
-      setWeightMsg('اختاري الرياضة وأدخلي الوزن')
+      setWeightMsg('اختر الرياضة وأدخل الوزن')
       return
     }
     setAddingWeight(true)
@@ -331,10 +333,9 @@ export default function EditPlayerPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        playerId, fullName, phone, birthDate, sportsBackground, medicalCheckExpiry,
+        playerId, fullName, phone, email, birthDate, sportsBackground, medicalCheckExpiry,
         joinDate, coachId, newPassword: newPassword || undefined,
         sportIds: selectedSportIds, 
-        // حماية البيانات القديمة من المسح في حال أُرسلت فارغة
         avatarUrl: avatarUrl || originalData.avatarUrl, 
         currentBelt: currentBelt || originalData.currentBelt, 
         targetBelt: targetBelt || originalData.targetBelt,
@@ -350,6 +351,8 @@ export default function EditPlayerPage() {
     }
 
     setMessage('تم حفظ التعديلات بنجاح ✅')
+    if (email) setHasAccount(true)
+    setNewPassword('')
     setSkillRatings({})
     loadCurrentRatings()
   }
@@ -388,14 +391,38 @@ export default function EditPlayerPage() {
 
         <form onSubmit={handleSubmit}>
           <div style={{ ...s.formCard, marginBottom: 20 }}>
-            <h3 style={sectionTitle}>📝 البيانات الأساسية</h3>
+            <h3 style={sectionTitle}>📝 البيانات الأساسية وتجهيز الحساب</h3>
             <label style={s.label}>الاسم الكامل *<input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} style={s.input} required /></label>
             <label style={s.label}>رقم الموبايل<input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} style={s.input} /></label>
+            
+            <label style={s.label}>
+              البريد الإلكتروني (اختياري لإنشاء حساب للاعب)
+              <input 
+                type="email" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                style={s.input} 
+                disabled={hasAccount}
+                placeholder={hasAccount ? "يمتلك اللاعب حساباً بالفعل" : "example@domain.com"}
+              />
+            </label>
+
+            <label style={s.label}>
+              كلمة المرور (اختياري)
+              <input 
+                type="password" 
+                value={newPassword} 
+                onChange={(e) => setNewPassword(e.target.value)} 
+                style={s.input} 
+                minLength={6} 
+                placeholder={hasAccount ? "أدخل كلمة مرور جديدة للتغيير" : "تعيين كلمة مرور للحساب الجديد (6 أحرف على الأقل)"}
+              />
+            </label>
+
             <label style={s.label}>تاريخ الميلاد<input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} style={s.input} /></label>
             <label style={s.label}>الخلفية الرياضية<input type="text" value={sportsBackground} onChange={(e) => setSportsBackground(e.target.value)} style={s.input} /></label>
             <label style={s.label}>تاريخ الانضمام<input type="date" value={joinDate} onChange={(e) => setJoinDate(e.target.value)} style={s.input} /></label>
             <label style={s.label}>تاريخ انتهاء الكشف الطبي<input type="date" value={medicalCheckExpiry} onChange={(e) => setMedicalCheckExpiry(e.target.value)} style={s.input} /></label>
-            <label style={s.label}>كلمة مرور جديدة (اتركيها فارغة إن لم ترغبي بالتغيير)<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={s.input} minLength={6} /></label>
           </div>
 
           <div style={{ ...s.formCard, marginBottom: 20 }}>
@@ -460,7 +487,7 @@ export default function EditPlayerPage() {
 
             {skills.length > 0 ? (
               <>
-                <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 10 }}>إضافة تقييم جديد (سيتم حفظه مع بقية التعديلات عند الضغط على &quot;حفظ التعديلات&quot;):</p>
+                <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 10 }}>إضافة تقييم جديد (سيتم حفظه عند الضغط على &quot;حفظ التعديلات&quot;):</p>
                 {skills.map((skill) => (
                   <label key={skill.id} style={s.label}>
                     {skill.name} <span style={{ color: '#94a3b8', fontSize: 12 }}>({skill.sportName})</span>
@@ -472,8 +499,8 @@ export default function EditPlayerPage() {
               !skillsError && (
                 <p style={{ color: '#94a3b8', fontSize: 13 }}>
                   {selectedSportIds.length === 0
-                    ? 'اختاري رياضة للاعب من قسم "الأنشطة" فوق عشان تظهر مهاراتها هنا.'
-                    : 'الرياضة مختارة، لكن لا توجد مهارات مضافة لها بعد. أضيفي مهارات لهذه الرياضة من صفحة "إدارة الرياضات" في القائمة الجانبية، ثم رجعي هنا.'}
+                    ? 'اختر رياضة للاعب من قسم "الأنشطة" أعلاه لتظهر مهاراتها هنا.'
+                    : 'الرياضة مختارة، لكن لا توجد مهارات مضافة لها بعد.'}
                 </p>
               )
             )}
@@ -482,7 +509,7 @@ export default function EditPlayerPage() {
           <div style={{ ...s.formCard, marginBottom: 20 }}>
             <h3 style={sectionTitle}>💰 إضافة اشتراك جديد (اختياري)</h3>
             <p style={{ color: '#94a3b8', fontSize: 12.5, marginTop: -6, marginBottom: 16 }}>
-              📅 تاريخ انتهاء الاشتراك بيتحسب تلقائيًا حسب عدد أيام تدريب المدرب أسبوعيًا
+              📅 تاريخ انتهاء الاشتراك يحسب تلقائيًا حسب عدد أيام تدريب المدرب أسبوعيًا
             </p>
             <label style={s.label}>
               النشاط التابع له الاشتراك
