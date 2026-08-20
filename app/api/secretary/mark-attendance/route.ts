@@ -42,8 +42,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب في هذه الرياضة اليوم بالفعل' }, { status: 400 })
   }
 
+  // توليد تاريخ اليوم بالصيغة النصية المطلوبة لحقل dateKey
+  const dateKeyStr = now.toISOString().split('T')[0]
+
   await prisma.attendance.create({
-    data: { playerId, sportId, tenantId: profile.tenantId, date: now, present, recordedById: user.id },
+    data: { 
+      playerId, 
+      sportId, 
+      tenantId: profile.tenantId, 
+      date: now, 
+      dateKey: dateKeyStr, // الحقل الإجباري المضاف حديثاً لتفادي خطأ الـ Build
+      present, 
+      recordedById: user.id 
+    },
   })
 
   if (present) {
