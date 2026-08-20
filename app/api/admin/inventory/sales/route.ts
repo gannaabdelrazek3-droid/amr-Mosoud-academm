@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET() {
+export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'غير مسموح' }, { status: 401 })
@@ -10,22 +10,30 @@ export async function GET() {
   const profile = await prisma.profile.findUnique({ where: { id: user.id } })
   if (!profile || profile.role !== 'ADMIN') return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
 
-  const sales = await prisma.productSale.findMany({
-    where: { tenantId: profile.tenantId, remainingAmount: { gt: 0 } },
-    include: { product: { select: { name: true } } },
-    orderBy: { date: 'desc' },
+  const { saleId } = await req.json()
+  if (!saleId) return NextResponse.json({ error: 'المعرف مطلوب' }, { status: 400 })
+
+  const sale = await prisma.productSale.findUnique({ where: { id: saleId }, include: { product: true } })
+  if (!sale || sale.tenantId !== profile.tenantId) return NextResponse.json({ error: 'غير موجود' }, { status: 404 })
+
+  const remaining = Number(sale.remainingAmount)
+  if (remaining <= 0) return NextResponse.json({ error: 'لا يوجد مبلغ متبقي' }, { status: 400 })
+
+  const productName = sale.product?.name ?? 'منتج محذوف'
+
+  await prisma.payment.create({
+    data: {
+      tenantId: profile.tenantId,
+      amount: remaining,
+      source: 'PRODUCT_SALE',
+      description: `تحصيل باقي ثمن ${productName}${sale.buyerName ? ` - ${sale.buyerName}` : ''}`,
+    },
   })
 
-  const result = sales.map((s) => ({
-    id: s.id,
-    productName: s.product.name,
-    buyerName: s.buyerName,
-    quantity: s.quantity,
-    totalAmount: Number(s.totalAmount),
-    paidAmount: Number(s.paidAmount),
-    remainingAmount: Number(s.remainingAmount),
-    date: s.date,
-  }))
+  await prisma.productSale.update({
+    where: { id: saleId },
+    data: { paidAmount: sale.totalAmount ?? 0, remainingAmount: 0, paymentStatus: 'PAID' },
+  })
 
-  return NextResponse.json({ sales: result })
+  return NextResponse.json({ success: true })
 }

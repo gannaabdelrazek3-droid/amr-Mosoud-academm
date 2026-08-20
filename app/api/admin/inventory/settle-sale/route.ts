@@ -19,12 +19,14 @@ export async function POST(req: NextRequest) {
   const remaining = Number(sale.remainingAmount)
   if (remaining <= 0) return NextResponse.json({ error: 'لا يوجد مبلغ متبقي' }, { status: 400 })
 
+  const productName = sale.product?.name ?? 'منتج محذوف'
+
   await prisma.payment.create({
     data: {
       tenantId: profile.tenantId,
       amount: remaining,
       source: 'PRODUCT_SALE',
-      description: `تحصيل باقي ثمن ${sale.product.name}${sale.buyerName ? ` - ${sale.buyerName}` : ''}`,
+      description: `تحصيل باقي ثمن ${productName}${sale.buyerName ? ` - ${sale.buyerName}` : ''}`,
     },
   })
 
