@@ -118,13 +118,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب في هذا اليوم بالفعل' }, { status: 400 })
     }
 
-    // حفظ الحضور بالتاريخ الصحيح تماماً
+    // تجهيز صيغة الـ dateKey المطلوبة من قاعدة البيانات
+    const dateKeyStr = targetDate.toISOString().split('T')[0]
+
+    // حفظ الحضور بالتاريخ الصحيح تماماً مع إضافة dateKey لتفادي خطأ البناء
     await prisma.attendance.create({
       data: {
         playerId,
         sportId,
         tenantId: profile.tenantId,
         date: targetDate,
+        dateKey: dateKeyStr,
         present: true,
       },
     })
