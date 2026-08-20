@@ -1,16 +1,30 @@
-import { prisma } from '../lib/prisma'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 async function main() {
-  const records = await prisma.attendance.findMany({ where: { dateKey: null } })
-  console.log(`Found ${records.length} records to update`)
+  // جلب كل سجلات الحضور لتحديثها بالـ dateKey المناسب لتجنب مشاكل النوع
+  const records = await prisma.attendance.findMany()
+  console.log(`Found ${records.length} records to process`)
 
   for (const r of records) {
-    const d = new Date(r.date)
-    const dateKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
-    await prisma.attendance.update({ where: { id: r.id }, data: { dateKey } })
+    // استخراج التاريخ بصيغة YYYY-MM-DD من حقل الـ date الموجود فعلياً
+    const dateStr = new Date(r.date).toISOString().split('T')[0]
+
+    await prisma.attendance.update({
+      where: { id: r.id },
+      data: { dateKey: dateStr },
+    })
   }
 
-  console.log('Done!')
+  console.log('Backfill completed successfully!')
 }
 
-main().finally(() => prisma.$disconnect())
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
