@@ -21,6 +21,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
   }
 
+  const sportCheck = await prisma.sport.findUnique({ where: { id: sportId } })
+  if (!sportCheck || sportCheck.tenantId !== profile.tenantId) {
+    return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
+  }
+
+  const playerSport = await prisma.playerSport.findFirst({ where: { playerId, sportId } })
+  if (!playerSport) {
+    return NextResponse.json({ error: 'اللاعب غير مسجّل في هذه الرياضة' }, { status: 400 })
+  }
+
   const now = new Date()
   const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0)
   const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999)

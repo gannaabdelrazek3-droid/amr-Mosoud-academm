@@ -25,7 +25,10 @@ const navLinks = [
 { href: '/admin/news', label: 'الأخبار', icon: '📰' },
 { href: '/admin/nutrition-programs', label: 'البرامج الغذائية', icon: '🥗' },
 { href: '/admin/coach-schedules', label: 'مواعيد التدريب', icon: '🗓️' },
-{ href: '/admin/attendance-log', label: 'سجل الحضور', icon: '✅' },
+{ href: '/admin/expenses', label: 'المصروفات', icon: '🧾' },
+{ href: '/admin/withdrawals', label: 'المسحوبات', icon: '💸' },
+{ href: '/admin/financial-report', label: 'التقرير المالي', icon: '📊' },
+{ href: '/admin/attendance-matrix', label: 'لوحة الحضور', icon: '🚦' },
 ]
 
 export default function AdminShell({

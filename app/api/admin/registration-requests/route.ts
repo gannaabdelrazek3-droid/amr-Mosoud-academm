@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const tempPassword = generateTempPassword()
+const tempPassword = request.password || generateTempPassword()
 
     const adminSupabase = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,266 +1,177 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { safeFetchJson } from '@/lib/safeFetch'
 
-interface Sport {
-  id: string
-  name: string
-}
-
-interface Coach {
-  id: string
-  fullName: string
-}
-
-interface PlayerItem {
-  id: string
-  fullName: string
-  sports: Sport[]
+interface PlayerRow { id: string; fullName: string; alreadyMarked: 'PRESENT' | 'ABSENT' | null }
+interface Group {
+  scheduleId: string
+  coachId: string
   coachName: string
-  markedToday: boolean
+  sportId: string
+  sportName: string
+  groupName: string
+  time: string
+  players: PlayerRow[]
 }
+interface UngroupedPlayer { id: string; fullName: string; sportIds: string[] }
 
-type GroupBy = 'sport' | 'coach'
+const pageStyle = { background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px' }
+
+function getLocalDateString(d: Date) {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 export default function SecretaryAttendancePage() {
-  const [players, setPlayers] = useState<PlayerItem[]>([])
-  const [allSports, setAllSports] = useState<Sport[]>([])
-  const [allCoaches, setAllCoaches] = useState<Coach[]>([])
-  const [groupBy, setGroupBy] = useState<GroupBy>('sport')
+  const [date, setDate] = useState(() => getLocalDateString(new Date()))
+  const [groups, setGroups] = useState<Group[]>([])
+  const [ungrouped, setUngrouped] = useState<UngroupedPlayer[]>([])
   const [loading, setLoading] = useState(true)
-  const [savingKey, setSavingKey] = useState<string>('')
-  const [markedToday, setMarkedToday] = useState<Record<string, 'present' | 'absent'>>({})
+  const [saving, setSaving] = useState(false)
+  const [localMarks, setLocalMarks] = useState<Record<string, boolean>>({})
   const [message, setMessage] = useState('')
+  const [saved, setSaved] = useState(false)
 
-  function loadPlayers() {
-    fetch('/api/secretary/attendance')
-      .then((res) => res.json())
-      .then((data) => {
-        setPlayers(data.players || [])
-        setAllSports(data.allSports || [])
-        setAllCoaches(data.allCoaches || [])
-      })
-      .finally(() => setLoading(false))
+  const loadGroups = useCallback(async (clearOldMessage: boolean) => {
+    setLoading(true)
+    if (clearOldMessage) {
+      setMessage('')
+      setSaved(false)
+    }
+    const { ok, data, error } = await safeFetchJson<{ groups: Group[]; ungroupedPlayers: UngroupedPlayer[] }>(
+      `/api/secretary/attendance-groups?date=${date}`
+    )
+    if (ok && data) {
+      setGroups(data.groups || [])
+      setUngrouped(data.ungroupedPlayers || [])
+    } else if (error) {
+      setMessage(error)
+      setSaved(false)
+    }
+    setLoading(false)
+  }, [date])
+
+  function handleDateChange(newDate: string) {
+    setDate(newDate)
+    setLocalMarks({})
+    setMessage('')
+    setSaved(false)
   }
 
   useEffect(() => {
-    loadPlayers()
-  }, [])
+    loadGroups(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date])
 
-  async function markAttendance(playerId: string, sportId: string, present: boolean) {
-    const key = `${playerId}-${sportId}`
-    setSavingKey(key)
+  // تم التعديل: استخدام الفاصل المزدوج :: لتجنب التعارض مع الـ UUID
+  function mark(playerId: string, sportId: string, present: boolean) {
+    const key = `${playerId}::${sportId}`
+    setLocalMarks((prev) => ({ ...prev, [key]: present }))
+    setSaved(false)
     setMessage('')
-
-    try {
-      const res = await fetch('/api/secretary/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId, sportId, present }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setMessage(data.error || 'حدث خطأ')
-        return
-      }
-
-      setMarkedToday((prev) => ({
-        ...prev,
-        [key]: present ? 'present' : 'absent',
-      }))
-    } catch {
-      setMessage('حدث خطأ في الاتصال')
-    } finally {
-      setSavingKey('')
-    }
   }
 
-  function renderPlayerRow(p: PlayerItem, currentSportId?: string) {
-    const targetSports = currentSportId
-      ? p.sports.filter((s) => s.id === currentSportId)
-      : p.sports
+  const markedCount = Object.keys(localMarks).length
+
+  // تم التعديل: التقسيم الصحيح والآمن باستخدام الفاصل المزدوج
+  async function handleSaveAll() {
+    if (markedCount === 0) {
+      setMessage('لم يتم تحديد أي حضور أو غياب بعد')
+      setSaved(false)
+      return
+    }
+    setSaving(true)
+    setMessage('')
+
+    const records = Object.entries(localMarks).map(([key, present]) => {
+      const [playerId, sportId] = key.split('::')
+      return { playerId, sportId, present }
+    })
+
+    const { ok, data, error } = await safeFetchJson<{ savedCount: number; skippedCount: number; dateKey: string }>(
+      '/api/secretary/mark-attendance-batch',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ records, date }),
+      }
+    )
+
+    setSaving(false)
+
+    if (!ok || !data) {
+      setSaved(false)
+      setMessage(error || 'حدث خطأ أثناء الحفظ')
+      return
+    }
+
+    setSaved(true)
+    setMessage(`✅ تم حفظ ${data.savedCount} سجل بنجاح`)
+    setLocalMarks({})
+    loadGroups(false)
+  }
+
+  function renderPlayerRow(playerId: string, sportId: string, playerName: string, alreadyMarked: 'PRESENT' | 'ABSENT' | null) {
+    const key = `${playerId}::${sportId}`
+    const local = localMarks[key]
+    const displayStatus = local !== undefined ? (local ? 'PRESENT' : 'ABSENT') : alreadyMarked
 
     return (
-      <div
-        key={p.id}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: 'rgba(30,41,59,0.6)',
-          border: p.markedToday ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(212,175,55,0.2)',
-          borderRadius: 14,
-          padding: '14px 18px',
-          marginBottom: 8,
-        }}
-      >
-        <div>
-          <p style={{ fontWeight: 700, margin: 0, fontSize: 15 }}>{p.fullName}</p>
-          <p style={{ color: '#94a3b8', fontSize: 12, margin: '4px 0 0' }}>
-            {p.coachName} — {p.sports.map((s) => s.name).join('، ') || 'لا توجد رياضة'}
-          </p>
+      <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15,23,42,0.5)', borderRadius: 8, padding: '8px 12px', marginBottom: 6 }}>
+        <span style={{ fontSize: 13.5, color: '#e2e8f0' }}>
+          {playerName} {alreadyMarked && <span style={{ color: '#64748b', fontSize: 11 }}>(محفوظ)</span>}
+        </span>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => mark(playerId, sportId, true)}
+            style={{ padding: '6px 14px', background: displayStatus === 'PRESENT' ? '#22c55e' : 'rgba(34,197,94,0.15)', color: displayStatus === 'PRESENT' ? '#0f172a' : '#22c55e', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 12.5 }}
+          >✅ حضور</button>
+          <button
+            onClick={() => mark(playerId, sportId, false)}
+            style={{ padding: '6px 14px', background: displayStatus === 'ABSENT' ? '#ef4444' : 'rgba(239,68,68,0.15)', color: displayStatus === 'ABSENT' ? '#fff' : '#ef4444', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 12.5 }}
+          >❌ غياب</button>
         </div>
-
-        {targetSports.length === 0 ? (
-          <span style={{ color: '#94a3b8', fontSize: 12 }}>لا توجد رياضة</span>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {targetSports.map((sp) => {
-              const key = `${p.id}-${sp.id}`
-              const status = markedToday[key]
-              const isSaving = savingKey === key
-
-              return (
-                <div key={sp.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {targetSports.length > 1 && (
-                    <span style={{ fontSize: 12, color: '#94a3b8' }}>{sp.name}:</span>
-                  )}
-                  <button
-                    onClick={() => markAttendance(p.id, sp.id, true)}
-                    disabled={isSaving || !!status}
-                    style={{
-                      padding: '8px 14px',
-                      background: status === 'present' ? '#22c55e' : status === 'absent' ? 'rgba(148,163,184,0.1)' : '#d4af37',
-                      color: status === 'present' ? '#ffffff' : status === 'absent' ? '#64748b' : '#0f172a',
-                      border: 'none',
-                      borderRadius: 8,
-                      fontWeight: 700,
-                      fontFamily: "'Tajawal', sans-serif",
-                      cursor: isSaving || !!status ? 'default' : 'pointer',
-                      fontSize: 12.5,
-                      opacity: isSaving ? 0.6 : 1,
-                    }}
-                  >
-                    {isSaving ? '...' : status === 'present' ? 'حضر ✓' : 'حضر'}
-                  </button>
-
-                  <button
-                    onClick={() => markAttendance(p.id, sp.id, false)}
-                    disabled={isSaving || !!status}
-                    style={{
-                      padding: '8px 14px',
-                      background: status === 'absent' ? '#ef4444' : status === 'present' ? 'rgba(148,163,184,0.1)' : 'rgba(239,68,68,0.2)',
-                      color: status === 'absent' ? '#ffffff' : status === 'present' ? '#64748b' : '#ef4444',
-                      border: 'none',
-                      borderRadius: 8,
-                      fontWeight: 700,
-                      fontFamily: "'Tajawal', sans-serif",
-                      cursor: isSaving || !!status ? 'default' : 'pointer',
-                      fontSize: 12.5,
-                      opacity: isSaving ? 0.6 : 1,
-                    }}
-                  >
-                    {isSaving ? '...' : status === 'absent' ? 'غائب ✕' : 'غائب'}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
       </div>
     )
   }
 
   return (
-    <div style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 650, margin: '0 auto', fontFamily: "'Tajawal', sans-serif", padding: '32px 20px', color: '#e2e8f0' }}>
+    <div style={pageStyle}>
+      <div style={{ maxWidth: 800, margin: '0 auto', color: '#e2e8f0' }}>
         <h1 style={{ color: '#f8fafc' }}>تسجيل الحضور اليومي</h1>
-        <p style={{ color: '#94a3b8', marginBottom: 20 }}>{new Date().toLocaleDateString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+        <label style={{ display: 'block', color: '#cbd5e1', fontWeight: 700, fontSize: 13, marginBottom: 6 }}>التاريخ</label>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => handleDateChange(e.target.value)}
+          style={{ padding: '10px 14px', fontSize: 14, border: '1px solid rgba(148,163,184,0.3)', borderRadius: 8, background: 'rgba(15,23,42,0.5)', color: '#f1f5f9', marginBottom: 20 }}
+        />
 
-        {message && <p style={{ color: '#fca5a5', marginBottom: 16 }}>{message}</p>}
+        {message && <p style={{ color: saved ? '#22c55e' : '#fca5a5', marginBottom: 16, fontWeight: 700 }}>{message}</p>}
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {loading ? <p>جارٍ التحميل...</p> : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 90 }}>
+            {groups.map((g) => (
+              <div key={g.scheduleId} style={{ background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 14, padding: 16 }}>
+                <strong style={{ color: '#d4af37' }}>{g.groupName}</strong>
+                {g.players.map((p) => renderPlayerRow(p.id, g.sportId, p.fullName, p.alreadyMarked))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'rgba(15,23,42,0.98)', padding: '16px 20px', display: 'flex', justifyContent: 'center' }}>
           <button
-            onClick={() => setGroupBy('sport')}
-            style={{
-              padding: '9px 18px',
-              borderRadius: 8,
-              border: 'none',
-              fontWeight: 700,
-              fontFamily: "'Tajawal', sans-serif",
-              fontSize: 13,
-              cursor: 'pointer',
-              background: groupBy === 'sport' ? '#d4af37' : 'rgba(148,163,184,0.15)',
-              color: groupBy === 'sport' ? '#0f172a' : '#e2e8f0',
-            }}
+            onClick={handleSaveAll}
+            disabled={saving || markedCount === 0}
+            style={{ padding: '14px 50px', background: markedCount > 0 ? '#d4af37' : '#475569', color: '#000', border: 'none', borderRadius: 12, fontWeight: 900, cursor: markedCount > 0 ? 'pointer' : 'not-allowed' }}
           >
-            🏅 تجميع حسب الرياضة
-          </button>
-          <button
-            onClick={() => setGroupBy('coach')}
-            style={{
-              padding: '9px 18px',
-              borderRadius: 8,
-              border: 'none',
-              fontWeight: 700,
-              fontFamily: "'Tajawal', sans-serif",
-              fontSize: 13,
-              cursor: 'pointer',
-              background: groupBy === 'coach' ? '#d4af37' : 'rgba(148,163,184,0.15)',
-              color: groupBy === 'coach' ? '#0f172a' : '#e2e8f0',
-            }}
-          >
-            🏋️ تجميع حسب المدرب
+            {saving ? 'جارٍ الحفظ...' : `💾 حفظ (${markedCount})`}
           </button>
         </div>
-
-        {loading ? (
-          <p>جارٍ التحميل...</p>
-        ) : players.length === 0 ? (
-          <p style={{ color: '#94a3b8' }}>لا يوجد لاعبون مسجّلون</p>
-        ) : groupBy === 'sport' ? (
-          <>
-            {allSports.map((sport) => {
-              const sportPlayers = players.filter((p) => p.sports.some((s) => s.id === sport.id))
-              if (sportPlayers.length === 0) return null
-              return (
-                <div key={sport.id} style={{ marginBottom: 26 }}>
-                  <h3 style={{ color: '#d4af37', fontSize: 15, fontWeight: 900, marginBottom: 10 }}>
-                    🏅 {sport.name} ({sportPlayers.length})
-                  </h3>
-                  {sportPlayers.map((p) => renderPlayerRow(p, sport.id))}
-                </div>
-              )
-            })}
-            {(() => {
-              const noSportPlayers = players.filter((p) => p.sports.length === 0)
-              if (noSportPlayers.length === 0) return null
-              return (
-                <div style={{ marginBottom: 26 }}>
-                  <h3 style={{ color: '#94a3b8', fontSize: 15, fontWeight: 900, marginBottom: 10 }}>بدون رياضة محددة</h3>
-                  {noSportPlayers.map((p) => renderPlayerRow(p))}
-                </div>
-              )
-            })()}
-          </>
-        ) : (
-          <>
-            {allCoaches.map((coach) => {
-              const coachPlayers = players.filter((p) => p.coachName === coach.fullName)
-              if (coachPlayers.length === 0) return null
-              return (
-                <div key={coach.id} style={{ marginBottom: 26 }}>
-                  <h3 style={{ color: '#d4af37', fontSize: 15, fontWeight: 900, marginBottom: 10 }}>
-                    🏋️ {coach.fullName} ({coachPlayers.length})
-                  </h3>
-                  {coachPlayers.map((p) => renderPlayerRow(p))}
-                </div>
-              )
-            })}
-            {(() => {
-              const noCoachPlayers = players.filter((p) => p.coachName === 'بدون مدرب')
-              if (noCoachPlayers.length === 0) return null
-              return (
-                <div style={{ marginBottom: 26 }}>
-                  <h3 style={{ color: '#94a3b8', fontSize: 15, fontWeight: 900, marginBottom: 10 }}>بدون مدرب</h3>
-                  {noCoachPlayers.map((p) => renderPlayerRow(p))}
-                </div>
-              )
-            })()}
-          </>
-        )}
       </div>
     </div>
   )

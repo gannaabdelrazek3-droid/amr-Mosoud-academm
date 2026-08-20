@@ -4,6 +4,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
+import { calculateSubscriptionEndDate } from '@/lib/subscriptionSchedule'
 
 const editSchema = z.object({
   playerId: z.string().min(1),
@@ -16,10 +17,13 @@ const editSchema = z.object({
   coachId: z.string().optional(),
   newPassword: z.string().min(6).optional().or(z.literal('')),
   sportIds: z.array(z.string()).optional(),
+  avatarUrl: z.string().optional().or(z.literal('')),
+  currentBelt: z.string().optional().or(z.literal('')),
+  targetBelt: z.string().optional().or(z.literal('')),
   newSubscription: z
     .object({
+      sportId: z.string().optional().nullable(),
       totalSessions: z.union([z.string(), z.number()]),
-      endDate: z.string(),
     })
     .nullable()
     .optional(),
@@ -41,6 +45,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const parsed = editSchema.safeParse(body)
   if (!parsed.success) {
+    console.error(parsed.error)
     return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
   }
   const {
@@ -54,6 +59,9 @@ export async function POST(req: NextRequest) {
     coachId,
     newPassword,
     sportIds,
+    avatarUrl,
+    currentBelt,
+    targetBelt,
     newSubscription,
     skillRatings,
   } = parsed.data
@@ -70,6 +78,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ✅ الإصلاح: حفظ avatarUrl و currentBelt و targetBelt فعليًا عند التعديل
   await prisma.player.update({
     where: { id: playerId },
     data: {
@@ -80,6 +89,9 @@ export async function POST(req: NextRequest) {
       medicalCheckExpiry: medicalCheckExpiry ? new Date(medicalCheckExpiry) : null,
       joinDate: joinDate ? new Date(joinDate) : null,
       coachId: coachId || null,
+      avatarUrl: avatarUrl || null,
+      currentBelt: currentBelt || null,
+      targetBelt: targetBelt || null,
     },
   })
 
@@ -119,18 +131,30 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (newSubscription && newSubscription.totalSessions && newSubscription.endDate) {
+  if (newSubscription && newSubscription.totalSessions) {
     const sessions = Number(newSubscription.totalSessions)
     if (isNaN(sessions) || sessions <= 0) {
       return NextResponse.json({ error: 'عدد الحصص غير صالح' }, { status: 400 })
     }
+
+    const finalCoachId = coachId || player.coachId
+    const startDate = new Date()
+    const calculatedEndDate = await calculateSubscriptionEndDate(
+      finalCoachId || null,
+      newSubscription.sportId || null,
+      sessions,
+      startDate
+    )
+
     await prisma.subscription.create({
       data: {
         playerId,
         tenantId: profile.tenantId,
+        sportId: newSubscription.sportId || null,
         totalSessions: sessions,
         remaining: sessions,
-        endDate: new Date(newSubscription.endDate),
+        startDate,
+        endDate: calculatedEndDate,
       },
     })
   }

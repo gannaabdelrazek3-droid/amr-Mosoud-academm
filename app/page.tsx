@@ -848,13 +848,27 @@ export default function HomePage() {
                   <p style={{ color: '#e2e8f0', fontSize: 14, lineHeight: 1.8, margin: 0 }}>{academyInfo.activitiesText}</p>
                 </div>
               )}
-              {(academyInfo.phone || academyInfo.whatsapp || academyInfo.email || academyInfo.address) && (
+              {(academyInfo.phone || academyInfo.whatsapp || academyInfo.email || academyInfo.address || academyInfo.facebookUrl || academyInfo.instagramUrl) && (
                 <div style={{ background: 'rgba(30, 41, 59, 0.55)', border: '1px solid rgba(212, 175, 55, 0.18)', borderRadius: 18, padding: 24 }}>
                   <p style={{ color: '#d4af37', fontWeight: 800, fontSize: 15, margin: '0 0 10px' }}>📞 بيانات التواصل</p>
                   {academyInfo.phone && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>☎️ {academyInfo.phone}</p>}
-                  {academyInfo.whatsapp && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>💬 {academyInfo.whatsapp}</p>}
+                  {academyInfo.whatsapp && (
+                    <a href={`https://wa.me/${academyInfo.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px', display: 'block', textDecoration: 'none' }}>
+                      💬 {academyInfo.whatsapp}
+                    </a>
+                  )}
                   {academyInfo.email && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>✉️ {academyInfo.email}</p>}
-                  {academyInfo.address && <p style={{ color: '#e2e8f0', fontSize: 14, margin: 0 }}>📍 {academyInfo.address}</p>}
+                  {academyInfo.address && <p style={{ color: '#e2e8f0', fontSize: 14, margin: '0 0 6px' }}>📍 {academyInfo.address}</p>}
+                  {academyInfo.facebookUrl && (
+                    <a href={academyInfo.facebookUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontSize: 14, margin: '0 0 6px', display: 'block', textDecoration: 'none' }}>
+                      📘 فيسبوك الأكاديمية
+                    </a>
+                  )}
+                  {academyInfo.instagramUrl && (
+                    <a href={academyInfo.instagramUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#e4405f', fontSize: 14, margin: 0, display: 'block', textDecoration: 'none' }}>
+                      📷 انستجرام الأكاديمية
+                    </a>
+                  )}
                 </div>
               )}
             </div>

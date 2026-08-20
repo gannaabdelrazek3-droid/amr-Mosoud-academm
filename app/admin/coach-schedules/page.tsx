@@ -19,6 +19,16 @@ interface Schedule {
 
 const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 
+interface GroupedSchedule {
+  key: string
+  coachId: string
+  coachName: string
+  sportName: string
+  groupName: string
+  time: string
+  days: number[]
+}
+
 export default function CoachSchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [coaches, setCoaches] = useState<Coach[]>([])
@@ -29,7 +39,7 @@ export default function CoachSchedulesPage() {
   const [coachId, setCoachId] = useState('')
   const [sportId, setSportId] = useState('')
   const [groupName, setGroupName] = useState('')
-  const [dayOfWeek, setDayOfWeek] = useState('0')
+  const [selectedDays, setSelectedDays] = useState<number[]>([])
   const [time, setTime] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -48,39 +58,58 @@ export default function CoachSchedulesPage() {
 
   useEffect(() => { loadAll() }, [])
 
+  function toggleDay(day: number) {
+    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]))
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    if (!coachId || !sportId || !groupName || !time) return
+    if (!coachId || !sportId || !groupName || !time || selectedDays.length === 0) {
+      setMessage('من فضلك اختاري يوم واحد على الأقل')
+      return
+    }
     setSaving(true)
     setMessage('')
 
     const res = await fetch('/api/admin/coach-schedules', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ coachId, sportId, groupName, dayOfWeek: Number(dayOfWeek), time }),
+      body: JSON.stringify({ coachId, sportId, groupName, days: selectedDays, time }),
     })
     const data = await res.json()
     setSaving(false)
 
-    if (!res.ok) {
-      setMessage(data.error || 'حدث خطأ')
-      return
-    }
+    if (!res.ok) { setMessage(data.error || 'حدث خطأ'); return }
 
     setGroupName('')
     setTime('')
+    setSelectedDays([])
     loadAll()
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('حذف هذا الموعد؟')) return
-    await fetch(`/api/admin/coach-schedules?id=${id}`, { method: 'DELETE' })
+  async function handleDeleteGroup(groupName: string, coachId: string) {
+    if (!confirm(`حذف كل مواعيد مجموعة "${groupName}"؟`)) return
+    await fetch(`/api/admin/coach-schedules?groupName=${encodeURIComponent(groupName)}&coachId=${coachId}`, { method: 'DELETE' })
     loadAll()
   }
 
-  if (loading) {
-    return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
-  }
+  if (loading) return <AdminShell fullName=""><div style={s.page}><p style={{ color: '#e2e8f0' }}>جارٍ التحميل...</p></div></AdminShell>
+
+  // تجميع الجداول حسب المجموعة (مدرب + رياضة + اسم مجموعة + وقت) لعرضها كصف واحد بكل أيامها
+  const grouped: GroupedSchedule[] = []
+  schedules.forEach((sc) => {
+    const key = `${sc.coachId}-${sc.sportId}-${sc.groupName}-${sc.time}`
+    const existing = grouped.find((g) => g.key === key)
+    if (existing) {
+      existing.days.push(sc.dayOfWeek)
+    } else {
+      grouped.push({
+        key, coachId: sc.coachId, coachName: sc.coach.fullName, sportName: sc.sport.name,
+        groupName: sc.groupName, time: sc.time, days: [sc.dayOfWeek],
+      })
+    }
+  })
+  grouped.forEach((g) => g.days.sort((a, b) => a - b))
 
   return (
     <AdminShell fullName="">
@@ -88,7 +117,7 @@ export default function CoachSchedulesPage() {
         <div style={s.headerBar}>
           <div>
             <h1 style={s.title}>مواعيد التدريب</h1>
-            <p style={{ color: '#94a3b8', margin: 0 }}>تحديد مواعيد كل مدرب ومجموعاته لكل رياضة</p>
+            <p style={{ color: '#94a3b8', margin: 0 }}>تحديد مواعيد كل مدرب ومجموعاته لكل رياضة (يمكن اختيار أكثر من يوم للمجموعة الواحدة)</p>
           </div>
         </div>
 
@@ -115,12 +144,17 @@ export default function CoachSchedulesPage() {
               اسم المجموعة
               <input type="text" value={groupName} onChange={(e) => setGroupName(e.target.value)} style={s.input} placeholder="مثال: مجموعة الأطفال" required />
             </label>
-            <label style={s.label}>
-              اليوم
-              <select value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)} style={s.input}>
-                {dayNames.map((d, i) => <option key={i} value={i}>{d}</option>)}
-              </select>
-            </label>
+
+            <label style={{ ...s.label, display: 'block' }}>أيام التدريب (يمكن اختيار أكثر من يوم)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8, marginBottom: 16 }}>
+              {dayNames.map((d, i) => (
+                <label key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, background: selectedDays.includes(i) ? 'rgba(212,175,55,0.2)' : 'rgba(15,23,42,0.5)', border: selectedDays.includes(i) ? '1px solid rgba(212,175,55,0.5)' : '1px solid rgba(148,163,184,0.2)', padding: '8px 14px', borderRadius: 8, color: '#e2e8f0', fontSize: 13.5, cursor: 'pointer' }}>
+                  <input type="checkbox" checked={selectedDays.includes(i)} onChange={() => toggleDay(i)} />
+                  {d}
+                </label>
+              ))}
+            </div>
+
             <label style={s.label}>
               الوقت
               <input type="text" value={time} onChange={(e) => setTime(e.target.value)} style={s.input} placeholder="مثال: 2:00 م" required />
@@ -138,21 +172,21 @@ export default function CoachSchedulesPage() {
                 <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}>المدرب</th>
                 <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}>الرياضة</th>
                 <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}>المجموعة</th>
-                <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}>اليوم</th>
+                <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}>الأيام</th>
                 <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}>الوقت</th>
                 <th style={{ padding: 12, textAlign: 'right' as const, color: '#d4af37' }}></th>
               </tr>
             </thead>
             <tbody>
-              {schedules.map((sc) => (
-                <tr key={sc.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <td style={{ padding: 12, color: '#e2e8f0' }}>{sc.coach.fullName}</td>
-                  <td style={{ padding: 12, color: '#94a3b8' }}>{sc.sport.name}</td>
-                  <td style={{ padding: 12, color: '#94a3b8' }}>{sc.groupName}</td>
-                  <td style={{ padding: 12, color: '#94a3b8' }}>{dayNames[sc.dayOfWeek]}</td>
-                  <td style={{ padding: 12, color: '#94a3b8' }}>{sc.time}</td>
+              {grouped.map((g) => (
+                <tr key={g.key} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <td style={{ padding: 12, color: '#e2e8f0' }}>{g.coachName}</td>
+                  <td style={{ padding: 12, color: '#94a3b8' }}>{g.sportName}</td>
+                  <td style={{ padding: 12, color: '#94a3b8' }}>{g.groupName}</td>
+                  <td style={{ padding: 12, color: '#94a3b8' }}>{g.days.map((d) => dayNames[d]).join('، ')}</td>
+                  <td style={{ padding: 12, color: '#94a3b8' }}>{g.time}</td>
                   <td style={{ padding: 12 }}>
-                    <button onClick={() => handleDelete(sc.id)} style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>🗑️</button>
+                    <button onClick={() => handleDeleteGroup(g.groupName, g.coachId)} style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer' }}>🗑️</button>
                   </td>
                 </tr>
               ))}

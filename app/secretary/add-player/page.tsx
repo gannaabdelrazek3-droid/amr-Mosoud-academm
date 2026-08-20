@@ -17,11 +17,13 @@ const sectionTitle = { color: '#d4af37', fontSize: 16, fontWeight: 900, margin: 
 
 interface Sport { id: string; name: string }
 interface Coach { id: string; fullName: string; role: string }
+interface Belt { id: string; name: string }
 
 export default function SecretaryAddPlayerPage() {
   const router = useRouter()
   const [allSports, setAllSports] = useState<Sport[]>([])
   const [coaches, setCoaches] = useState<Coach[]>([])
+  const [belts, setBelts] = useState<Belt[]>([])
   const [loading, setLoading] = useState(true)
 
   const [fullName, setFullName] = useState('')
@@ -33,10 +35,11 @@ export default function SecretaryAddPlayerPage() {
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingImage, setUploadingImage] = useState(false)
 
-  // بيانات الاشتراك
+  const [currentBelt, setCurrentBelt] = useState('')
+  const [targetBelt, setTargetBelt] = useState('')
+
   const [subSportId, setSubSportId] = useState('')
   const [subSessions, setSubSessions] = useState('')
-  const [subEndDate, setSubEndDate] = useState('')
   const [totalAmount, setTotalAmount] = useState('')
   const [paidAmount, setPaidAmount] = useState('')
 
@@ -46,13 +49,14 @@ export default function SecretaryAddPlayerPage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/add-player')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.allSports) setAllSports(data.allSports)
-        if (data.coaches) setCoaches(data.coaches)
-      })
-      .finally(() => setLoading(false))
+    Promise.all([
+      fetch('/api/admin/add-player').then((res) => res.json()),
+      fetch('/api/admin/belts-list').then((res) => res.json()),
+    ]).then(([playerData, beltsData]) => {
+      if (playerData.allSports) setAllSports(playerData.allSports)
+      if (playerData.coaches) setCoaches(playerData.coaches)
+      if (beltsData.belts) setBelts(beltsData.belts.filter((b: Belt & { isActive: boolean }) => b.isActive))
+    }).finally(() => setLoading(false))
   }, [])
 
   function toggleSport(sportId: string) {
@@ -70,9 +74,10 @@ export default function SecretaryAddPlayerPage() {
       if (uploadError) throw uploadError
       const { data } = supabase.storage.from('player-avatars').getPublicUrl(fileName)
       setAvatarUrl(data.publicUrl)
+      setMessage('تم رفع الصورة بنجاح!')
     } catch (error) {
       console.error(error)
-      setMessage('حدث خطأ أثناء رفع الصورة.')
+      setMessage('حدث خطأ أثناء رفع الصورة - تأكدي من صلاحيات bucket المسمى player-avatars.')
     } finally {
       setUploadingImage(false)
     }
@@ -84,12 +89,10 @@ export default function SecretaryAddPlayerPage() {
     setMessage('')
 
     const newSubscription =
-      subSessions && subEndDate
+      subSessions
         ? {
             sportId: subSportId || null,
             totalSessions: Number(subSessions),
-            sessionsPerWeek: null,
-            endDate: subEndDate,
             totalAmount: Number(totalAmount || 0),
             paidAmount: Number(paidAmount || 0),
             remainingAmount,
@@ -99,7 +102,12 @@ export default function SecretaryAddPlayerPage() {
     const res = await fetch('/api/admin/add-player', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fullName, phone, birthDate, joinDate, coachId, sportIds: selectedSportIds, avatarUrl, newSubscription }),
+      body: JSON.stringify({
+        fullName, phone, birthDate, joinDate, coachId,
+        sportIds: selectedSportIds, avatarUrl,
+        currentBelt, targetBelt,
+        newSubscription,
+      }),
     })
 
     const data = await res.json()
@@ -137,13 +145,26 @@ export default function SecretaryAddPlayerPage() {
           <label style={labelStyle}>صورة اللاعب</label>
           <input type="file" accept="image/*" onChange={handleImageUpload} style={inputStyle} />
           {uploadingImage && <p style={{ color: '#d4af37', fontSize: 13 }}>جاري رفع الصورة...</p>}
+          {avatarUrl && <p style={{ color: '#22c55e', fontSize: 13 }}>تم الرفع بنجاح ✅</p>}
 
+          <h3 style={sectionTitle}>🥋 الأحزمة</h3>
+          <label style={labelStyle}>الحزام الحالي</label>
+          <select value={currentBelt} onChange={(e) => setCurrentBelt(e.target.value)} style={inputStyle}>
+            <option value="">اختر الحزام الحالي</option>
+            {belts.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
+          </select>
+
+          <label style={labelStyle}>الحزام المطلوب</label>
+          <select value={targetBelt} onChange={(e) => setTargetBelt(e.target.value)} style={inputStyle}>
+            <option value="">اختر الحزام المطلوب</option>
+            {belts.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
+          </select>
+
+          <h3 style={sectionTitle}>🏋️ المدرب والأنشطة</h3>
           <label style={labelStyle}>المدرب المسؤول</label>
           <select value={coachId} onChange={(e) => setCoachId(e.target.value)} style={inputStyle}>
             <option value="">بدون مدرب</option>
-            {coaches.map((c) => (
-              <option key={c.id} value={c.id}>{c.fullName}</option>
-            ))}
+            {coaches.map((c) => <option key={c.id} value={c.id}>{c.fullName}</option>)}
           </select>
 
           <label style={labelStyle}>الأنشطة المسجّل بها</label>
@@ -157,6 +178,7 @@ export default function SecretaryAddPlayerPage() {
           </div>
 
           <h3 style={sectionTitle}>💰 الاشتراك (اختياري)</h3>
+          <p style={{ color: '#94a3b8', fontSize: 12.5, marginBottom: 12 }}>تاريخ الانتهاء بيتحسب تلقائيًا حسب مواعيد تدريب المدرب المختار</p>
 
           <label style={labelStyle}>النشاط التابع له الاشتراك</label>
           <select value={subSportId} onChange={(e) => setSubSportId(e.target.value)} style={inputStyle}>
@@ -166,9 +188,6 @@ export default function SecretaryAddPlayerPage() {
 
           <label style={labelStyle}>إجمالي عدد الحصص</label>
           <input type="number" min={1} value={subSessions} onChange={(e) => setSubSessions(e.target.value)} style={inputStyle} />
-
-          <label style={labelStyle}>تاريخ انتهاء الاشتراك</label>
-          <input type="date" value={subEndDate} onChange={(e) => setSubEndDate(e.target.value)} style={inputStyle} />
 
           <label style={labelStyle}>قيمة الاشتراك الكاملة (جنيه)</label>
           <input type="number" min={0} step="0.5" value={totalAmount} onChange={(e) => setTotalAmount(e.target.value)} style={inputStyle} />

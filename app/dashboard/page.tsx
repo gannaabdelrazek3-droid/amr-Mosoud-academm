@@ -79,7 +79,7 @@ export default async function DashboardPage() {
       }),
       prisma.payment.findMany({
         where: { tenantId: profile.tenantId, date: { gte: sixMonthsAgo }, status: 'ACTIVE' },
-        select: { amount: true, date: true },
+        select: { amount: true, date: true, source: true },
       }),
       prisma.subscription.findMany({
         where: { tenantId: profile.tenantId },
@@ -87,20 +87,21 @@ export default async function DashboardPage() {
       }),
     ])
 
-    const monthlyRevenue: Record<string, number> = {}
+    const monthlyRevenue: Record<string, { subscriptionAmount: number; inventoryAmount: number }> = {}
     for (let i = 5; i >= 0; i--) {
       const d = new Date()
       d.setMonth(d.getMonth() - i)
       const key = d.toLocaleDateString('ar-EG', { month: 'short' })
-      monthlyRevenue[key] = 0
+      monthlyRevenue[key] = { subscriptionAmount: 0, inventoryAmount: 0 }
     }
     recentPayments.forEach((p) => {
       const key = new Date(p.date).toLocaleDateString('ar-EG', { month: 'short' })
       if (monthlyRevenue[key] !== undefined) {
-        monthlyRevenue[key] += Number(p.amount)
+        if (p.source === 'SUBSCRIPTION' || p.source === 'MANUAL') monthlyRevenue[key].subscriptionAmount += Number(p.amount)
+        else if (p.source === 'PRODUCT_SALE') monthlyRevenue[key].inventoryAmount += Number(p.amount)
       }
     })
-    const revenueChartData = Object.entries(monthlyRevenue).map(([month, amount]) => ({ month, amount }))
+    const revenueChartData = Object.entries(monthlyRevenue).map(([month, v]) => ({ month, ...v }))
 
     const now = new Date()
     let active = 0

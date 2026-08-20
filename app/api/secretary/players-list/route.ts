@@ -16,10 +16,21 @@ export async function GET() {
     orderBy: { fullName: 'asc' },
   })
 
+  const now = new Date()
+  const startOfDay = new Date(now); startOfDay.setHours(0, 0, 0, 0)
+  const endOfDay = new Date(now); endOfDay.setHours(23, 59, 59, 999)
+
+  const todayRecords = await prisma.attendance.findMany({
+    where: { tenantId: profile.tenantId, date: { gte: startOfDay, lte: endOfDay } },
+  })
+
   const result = players.map((p) => ({
     id: p.id,
     fullName: p.fullName,
-    sports: p.sports.map((ps) => ({ id: ps.sport.id, name: ps.sport.name })),
+    sports: p.sports.map((ps) => {
+      const rec = todayRecords.find((r) => r.playerId === p.id && r.sportId === ps.sport.id)
+      return { id: ps.sport.id, name: ps.sport.name, alreadyMarked: rec ? (rec.present ? 'PRESENT' : 'ABSENT') : null }
+    }),
   }))
 
   return NextResponse.json({ players: result })

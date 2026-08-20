@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'غير مصرح - لم يتم تسجيل الدخول' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
     if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
@@ -40,11 +40,12 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'غير مصرح - لم يتم تسجيل الدخول' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
-      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    // ✅ الإضافة مقصورة على الأدمن فقط
+    if (!profile || profile.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'إضافة البرنامج الغذائي متاحة للأدمن فقط' }, { status: 403 })
     }
 
     const body = await req.json()
@@ -57,9 +58,6 @@ export async function POST(req: NextRequest) {
     const player = await prisma.player.findUnique({ where: { id: playerId } })
     if (!player || player.tenantId !== profile.tenantId) {
       return NextResponse.json({ error: 'اللاعب غير موجود' }, { status: 404 })
-    }
-    if (profile.role === 'COACH' && player.coachId !== profile.id) {
-      return NextResponse.json({ error: 'اللاعب ليس ضمن فريقك' }, { status: 403 })
     }
 
     const plan = await prisma.playerNutritionPlan.create({
@@ -83,22 +81,20 @@ export async function DELETE(req: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    if (!user) return NextResponse.json({ error: 'غير مصرح - لم يتم تسجيل الدخول' }, { status: 401 })
 
     const profile = await prisma.profile.findUnique({ where: { id: user.id } })
-    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'COACH')) {
-      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    // ✅ الحذف مقصور على الأدمن فقط
+    if (!profile || profile.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'حذف البرنامج الغذائي متاح للأدمن فقط' }, { status: 403 })
     }
 
     const id = req.nextUrl.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'المعرف مطلوب' }, { status: 400 })
 
-    const plan = await prisma.playerNutritionPlan.findUnique({ where: { id }, include: { player: true } })
+    const plan = await prisma.playerNutritionPlan.findUnique({ where: { id } })
     if (!plan || plan.tenantId !== profile.tenantId) {
       return NextResponse.json({ error: 'البرنامج غير موجود' }, { status: 404 })
-    }
-    if (profile.role === 'COACH' && plan.player.coachId !== profile.id) {
-      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
     }
 
     await prisma.playerNutritionPlan.delete({ where: { id } })

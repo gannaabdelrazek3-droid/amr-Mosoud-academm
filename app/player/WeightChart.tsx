@@ -4,13 +4,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 export default function WeightChart({ data }: { data: { date: string; weight: number }[] }) {
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis domain={['auto', 'auto']} />
-        <Tooltip />
-        <Line type="monotone" dataKey="weight" stroke="#111" strokeWidth={2} dot={{ r: 4 }} />
+        <CartesianGrid stroke="rgba(148,163,184,0.15)" />
+        <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+        <YAxis domain={['auto', 'auto']} stroke="#94a3b8" fontSize={12} />
+        <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #d4af37', borderRadius: 8, color: '#fff' }} />
+        <Line type="monotone" dataKey="weight" stroke="#d4af37" strokeWidth={3} dot={{ r: 4, fill: '#d4af37' }} />
       </LineChart>
     </ResponsiveContainer>
   )

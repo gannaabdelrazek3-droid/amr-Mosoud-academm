@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { checkRateLimit } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -12,45 +11,43 @@ const registerSchema = z.object({
   level: z.string().min(1),
   hasCompeted: z.boolean().optional(),
   email: z.string().email(),
+  password: z.string().min(6),
 })
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get('x-forwarded-for') || 'unknown'
-    const allowed = checkRateLimit(`register:${ip}`, 5, 10 * 60 * 1000)
-    if (!allowed) {
-      return NextResponse.json({ error: 'تم إرسال طلبات كثيرة، برجاء المحاولة لاحقًا' }, { status: 429 })
-    }
-
     const body = await req.json()
     const parsed = registerSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'برجاء ملء جميع الحقول المطلوبة بشكل صحيح' }, { status: 400 })
+      console.error(parsed.error)
+      return NextResponse.json({ error: 'بيانات غير صالحة، تأكدي من ملء كل الحقول' }, { status: 400 })
     }
-    const { fullName, age, phone, governorate, sport, level, hasCompeted, email } = parsed.data
 
-    const ageNum = Number(age)
-    if (isNaN(ageNum) || ageNum < 3 || ageNum > 80) {
-      return NextResponse.json({ error: 'السن غير صالح' }, { status: 400 })
-    }
+    const { fullName, age, phone, governorate, sport, level, hasCompeted, email, password } = parsed.data
 
     const tenant = await prisma.tenant.findFirst()
     if (!tenant) {
-      return NextResponse.json({ error: 'حدث خطأ في النظام' }, { status: 500 })
+      return NextResponse.json({ error: 'حدثت مشكلة في النظام، حاولي لاحقًا' }, { status: 500 })
+    }
+
+    const existingEmail = await prisma.registrationRequest.findFirst({ where: { email, status: 'pending' } })
+    if (existingEmail) {
+      return NextResponse.json({ error: 'يوجد طلب معلّق بالفعل بهذا البريد الإلكتروني' }, { status: 400 })
     }
 
     await prisma.registrationRequest.create({
       data: {
         tenantId: tenant.id,
         fullName,
-        age: ageNum,
+        age: Number(age),
         phone,
         governorate,
         sport,
         level,
-        hasCompeted: Boolean(hasCompeted),
+        hasCompeted: hasCompeted ?? false,
         email,
-        password: '',
+        password,
+        status: 'pending',
       },
     })
 

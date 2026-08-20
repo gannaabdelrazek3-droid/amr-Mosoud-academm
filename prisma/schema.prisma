@@ -42,6 +42,9 @@ model Tenant {
   nutritionPrograms NutritionProgram[]
   coachSchedules CoachSchedule[]
   playerNutritionPlans PlayerNutritionPlan[]
+  expenses Expense[]
+  withdrawals Withdrawal[]
+  playerTrainingPlans PlayerTrainingPlan[]
 }
 
 enum Role {
@@ -172,6 +175,7 @@ model Player {
   sports        PlayerSport[]
   skillRatings  SkillRating[]
   nutritionPlans PlayerNutritionPlan[]
+  trainingPlans PlayerTrainingPlan[]
 
   createdAt DateTime @default(now())
 
@@ -275,16 +279,18 @@ model Attendance {
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
   date         DateTime @default(now())
+  dateKey      String
   present      Boolean
-  recordedById String?   
+  recordedById String?
 
   coachNote String?
+  status    String @default("PRESENT")
 
-  @@unique([playerId, sportId, date])
+@@unique([playerId, sportId, dateKey])
   @@index([tenantId, date])
   @@index([playerId, date])
+  @@index([dateKey])
 }
-
 model WeightLog {
   id       String @id @default(uuid())
   playerId String
@@ -743,6 +749,54 @@ model PlayerNutritionPlan {
 
   title         String
   content       String
+  createdByRole String
+
+  createdAt     DateTime @default(now())
+
+  @@index([playerId])
+  @@index([tenantId])
+}
+model Expense {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  title     String
+  category  String?
+  amount    Decimal  @db.Decimal(10, 2)
+  date      DateTime @default(now())
+  note      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, date])
+}
+
+model Withdrawal {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  amount      Decimal  @db.Decimal(10, 2)
+  withdrawnBy String
+  reason      String?
+  date        DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, date])
+}
+model PlayerTrainingPlan {
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id])
+
+  playerId      String
+  player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  title         String
+  content       String
+  eventDate     DateTime?
   createdByRole String
 
   createdAt     DateTime @default(now())

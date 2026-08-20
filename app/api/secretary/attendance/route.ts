@@ -7,6 +7,7 @@ import { z } from 'zod'
 const attendanceSchema = z.object({
   playerId: z.string().min(1),
   sportId: z.string().min(1),
+  date: z.string().min(1),
 })
 
 export async function GET() {
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'بيانات غير صالحة' }, { status: 400 })
     }
-    const { playerId, sportId } = parsed.data
+    const { playerId, sportId, date } = parsed.data
 
     const player = await prisma.player.findUnique({ where: { id: playerId } })
     if (!player || player.tenantId !== profile.tenantId) {
@@ -87,32 +88,50 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'الرياضة غير صالحة' }, { status: 400 })
     }
 
-    const now = new Date()
-    const startOfDay = new Date(now)
-    startOfDay.setHours(0, 0, 0, 0)
-    const endOfDay = new Date(now)
-    endOfDay.setHours(23, 59, 59, 999)
+    // معالجة آمنة لتاريخ الواجهة الأمامية بغض النظر عن صيغته (سواء بـ / أو -)
+    let targetDate: Date
+    if (date.includes('/')) {
+      const parts = date.split('/')
+      if (parts[2]?.length === 4) {
+        targetDate = new Date(`${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}T12:00:00.000Z`)
+      } else {
+        targetDate = new Date(`${date}T12:00:00.000Z`)
+      }
+    } else {
+      targetDate = new Date(`${date}T12:00:00.000Z`)
+    }
 
+    if (isNaN(targetDate.getTime())) {
+      targetDate = new Date()
+    }
+
+    const startOfDay = new Date(targetDate)
+    startOfDay.setUTCHours(0, 0, 0, 0)
+    const endOfDay = new Date(targetDate)
+    endOfDay.setUTCHours(23, 59, 59, 999)
+
+    // التحقق من وجود السجل في نفس اليوم المحدد فقط بدقة
     const existing = await prisma.attendance.findFirst({
       where: { playerId, sportId, date: { gte: startOfDay, lte: endOfDay } },
     })
     if (existing) {
-      return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب اليوم بالفعل' }, { status: 400 })
+      return NextResponse.json({ error: 'تم تسجيل حضور هذا اللاعب في هذا اليوم بالفعل' }, { status: 400 })
     }
 
+    // حفظ الحضور بالتاريخ الصحيح تماماً
     await prisma.attendance.create({
       data: {
         playerId,
         sportId,
         tenantId: profile.tenantId,
-        date: now,
+        date: targetDate,
         present: true,
       },
     })
 
     await prisma.$transaction(async (tx) => {
       const activeSub = await tx.subscription.findFirst({
-        where: { playerId, isFrozen: false, remaining: { gt: 0 }, endDate: { gte: now } },
+        where: { playerId, isFrozen: false, remaining: { gt: 0 }, endDate: { gte: targetDate } },
         orderBy: { endDate: 'desc' },
       })
       if (activeSub) {

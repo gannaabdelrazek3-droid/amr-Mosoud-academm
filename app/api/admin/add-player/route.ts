@@ -4,6 +4,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { prisma } from '@/lib/prisma'
 import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
+import { calculateSubscriptionEndDate } from '@/lib/subscriptionSchedule'
 
 const addPlayerSchema = z.object({
   fullName: z.string().min(1),
@@ -23,8 +24,6 @@ const addPlayerSchema = z.object({
   newSubscription: z.object({
     sportId: z.string().optional().nullable(),
     totalSessions: z.number(),
-    sessionsPerWeek: z.number().optional().nullable(),
-    endDate: z.string(),
     totalAmount: z.number(),
     paidAmount: z.number(),
     remainingAmount: z.number(),
@@ -159,11 +158,19 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
           })
         }
 
-        if (newSubscription && newSubscription.totalSessions && newSubscription.endDate) {
+        if (newSubscription && newSubscription.totalSessions) {
           const totalAmt = Number(newSubscription.totalAmount || 0)
           const paidAmt = Number(newSubscription.paidAmount || 0)
-          const remainingAmt = totalAmt - paidAmt
+          const remainingAmt = Math.max(0, totalAmt - paidAmt)
           const paymentSt = remainingAmt <= 0 ? 'PAID' : paidAmt > 0 ? 'PARTIAL' : 'UNPAID'
+          const startDateVal = joinDate ? new Date(joinDate) : new Date()
+
+          const calculatedEndDate = await calculateSubscriptionEndDate(
+            coachId || null,
+            newSubscription.sportId || null,
+            Number(newSubscription.totalSessions),
+            startDateVal
+          )
 
           const subscription = await tx.subscription.create({
             data: {
@@ -172,13 +179,12 @@ if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SECRETARY')) retu
               sportId: newSubscription.sportId || null,
               totalSessions: Number(newSubscription.totalSessions),
               remaining: Number(newSubscription.totalSessions),
-              sessionsPerWeek: newSubscription.sessionsPerWeek ? Number(newSubscription.sessionsPerWeek) : null,
               totalAmount: totalAmt,
               paidAmount: paidAmt,
               remainingAmount: remainingAmt,
               paymentStatus: paymentSt,
-              startDate: joinDate ? new Date(joinDate) : new Date(),
-              endDate: new Date(newSubscription.endDate),
+              startDate: startDateVal,
+              endDate: calculatedEndDate,
             },
           })
 

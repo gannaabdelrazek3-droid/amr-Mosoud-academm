@@ -1,66 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    }
 
-  if (!user) {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 401 })
+    const sportId = req.nextUrl.searchParams.get('sportId')
+    console.log('--- DEBUG SKILLS API --- sportId received:', sportId)
+
+    if (!sportId) {
+      return NextResponse.json({ error: 'معرف الرياضة مطلوب' }, { status: 400 })
+    }
+
+    // جلب كل المهارات للتأكد هل يوجد أي مهارات في الجدول أصلاً؟
+    const allSkillsInDb = await prisma.skill.findMany()
+    console.log('All skills in database:', allSkillsInDb.map(s => ({ name: s.name, sportId: s.sportId })))
+
+    const skills = await prisma.skill.findMany({
+      where: { sportId },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    console.log('Skills found for this sportId:', skills.length)
+
+    return NextResponse.json({ skills })
+  } catch (err) {
+    console.error('skills GET error:', err)
+    return NextResponse.json({ error: 'حدث خطأ في الخادم' }, { status: 500 })
   }
-
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-  })
-
-  if (!profile || profile.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
-  }
-
-  const sportId = req.nextUrl.searchParams.get('sportId')
-
-  if (!sportId) {
-    return NextResponse.json({ error: 'sportId مطلوب' }, { status: 400 })
-  }
-
-  const skills = await prisma.skill.findMany({
-    where: { sportId },
-    orderBy: { name: 'asc' },
-  })
-
-  return NextResponse.json({ skills })
-}
-
-export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 401 })
-  }
-
-  const profile = await prisma.profile.findUnique({
-    where: { id: user.id },
-  })
-
-  if (!profile || profile.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'غير مسموح' }, { status: 403 })
-  }
-
-  const { sportId, name } = await req.json()
-
-  if (!sportId || !name) {
-    return NextResponse.json({ error: 'بيانات ناقصة' }, { status: 400 })
-  }
-
-  const skill = await prisma.skill.create({
-    data: {
-      sportId,
-      name,
-      tenantId: profile.tenantId,
-    },
-  })
-
-  return NextResponse.json({ success: true, skill })
 }
