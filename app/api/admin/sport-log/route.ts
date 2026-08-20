@@ -24,6 +24,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'بيانات ناقصة' }, { status: 400 })
   }
 
+  // توليد تاريخ اليوم لتلبية شرط حقل dateKey في جدول الحضور
+  const todayDateKey = new Date().toISOString().split('T')[0]
+
   await prisma.attendance.create({
     data: {
       playerId,
@@ -31,6 +34,7 @@ export async function POST(req: NextRequest) {
       tenantId: profile.tenantId,
       present: present ?? true,
       coachNote: note || null,
+      dateKey: todayDateKey, // تم إضافة هذا الحقل الإجباري لمنع خطأ الـ Build
     },
   })
 
