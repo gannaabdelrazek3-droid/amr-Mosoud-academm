@@ -66,9 +66,17 @@ export async function DELETE(req: NextRequest) {
   if (!product || product.tenantId !== profile.tenantId) return NextResponse.json({ error: 'المنتج غير موجود' }, { status: 404 })
 
   try {
+    // 1. فك ارتباط سجلات البيع القديمة بهذا المنتج أولاً لتجنب قيود الحذف
+    await prisma.productSale.updateMany({
+      where: { productId: id },
+      data: { productId: null },
+    })
+
+    // 2. حذف المنتج بأمان مع بقاء الأرباح والمبيعات القديمة سليمة
     await prisma.product.delete({ where: { id } })
-  } catch {
-    return NextResponse.json({ error: 'لا يمكن حذف هذا المنتج لوجود عمليات بيع مرتبطة به' }, { status: 500 })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'حدث خطأ أثناء محاولة حذف المنتج' }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })
